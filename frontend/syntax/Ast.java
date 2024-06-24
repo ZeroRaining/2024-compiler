@@ -223,6 +223,13 @@ public class Ast {
             assert ops != null;
             assert RestExps != null;
         }
+
+        public Exp getFirstExp() {
+            return firstExp;
+        }
+        public ArrayList<Exp> getRestExps() {
+            return RestExps;
+        }
     }
 
     // UnaryExp -> {UnaryOp} PrimaryExp
@@ -236,6 +243,12 @@ public class Ast {
             this.primary = primary;
             assert ops != null;
             assert primary != null;
+        }
+        public ArrayList<Token> getUnaryOps() {
+            return ops;
+        }
+        public PrimaryExp getPrimaryExp() {
+            return primary;
         }
     }
 

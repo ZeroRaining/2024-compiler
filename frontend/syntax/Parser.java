@@ -263,23 +263,47 @@ public class Parser {
                 tokenList.getCharWithJudge(TokenType.SEMI);
                 return new Ast.Continue();
             case IDENT:
-                //TODO: 自己的写法，不知是否正确？
-                int previousIndex = tokenList.getIndex();
-                Ast.LVal lVal = parseLVal();
-                if (tokenList.checkAheadChar(0).getType() == TokenType.ASSIGN) {
-                    tokenList.getCharWithJudge(TokenType.ASSIGN);
-                    Ast.Exp exp = parseBinaryExp(BinaryExpType.ADD);
+                Ast.Exp tryExp = parseBinaryExp(BinaryExpType.ADD);
+                Ast.LVal tryLVal = tryGetLVal(tryExp);
+                if (tryLVal == null) {
                     tokenList.getCharWithJudge(TokenType.SEMI);
-                    return new Ast.Assign(lVal, exp);
+                    return new Ast.ExpStmt(tryExp);
                 } else {
-                    tokenList.setIndex(previousIndex);
-                    Ast.Exp exp = parseBinaryExp(BinaryExpType.ADD);
-                    tokenList.getCharWithJudge(TokenType.SEMI);
-                    return new Ast.ExpStmt(exp);
+                    if (tokenList.checkAheadChar(0).getType() == TokenType.ASSIGN) {
+                        tokenList.getChar();
+                        Ast.Exp right = parseBinaryExp(BinaryExpType.ADD);
+                        tokenList.getCharWithJudge(TokenType.SEMI);
+                        return new Ast.Assign(tryLVal, right);
+                    }else{
+                        tokenList.getCharWithJudge(TokenType.SEMI);
+                        return new Ast.ExpStmt(tryExp);
+                    }
                 }
-            default:
+            case SEMI:
                 tokenList.getChar();
                 return new Ast.ExpStmt(null);
+            default:
+                Ast.Exp exp = parseBinaryExp(BinaryExpType.ADD);
+                return new Ast.ExpStmt(exp);
+        }
+    }
+
+    private Ast.LVal tryGetLVal(Ast.Exp exp) {
+        Ast.Exp temp = exp;
+        while (temp instanceof Ast.BinaryExp) {
+            if (!((Ast.BinaryExp) temp).getRestExps().isEmpty()) {
+                return null;
+            }
+            temp = ((Ast.BinaryExp) temp).getFirstExp();
+        }
+        if (!(((Ast.UnaryExp) temp).getUnaryOps().isEmpty())) {
+            return null;
+        }
+        Ast.PrimaryExp primaryExp = ((Ast.UnaryExp) temp).getPrimaryExp();
+        if (primaryExp instanceof Ast.LVal) {
+            return (Ast.LVal) primaryExp;
+        } else {
+            return null;
         }
     }
 
