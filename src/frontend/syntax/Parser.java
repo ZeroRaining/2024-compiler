@@ -5,6 +5,7 @@ import frontend.lexer.TokenList;
 import frontend.lexer.TokenType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -319,7 +320,8 @@ public class Parser {
         private final List<TokenType> types;
 
         BinaryExpType(TokenType... types) {
-            this.types = List.of(types);
+            // todo: 这里原本用的是 List.of
+            this.types = Arrays.asList(types);
         }
 
         public boolean contains(TokenType type) {

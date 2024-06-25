@@ -1,4 +1,5 @@
 import arg.Arg;
+import frontend.ir.Program;
 import frontend.lexer.Token;
 import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;
@@ -23,7 +24,10 @@ public class Compiler {
         //LexerTest();
 
         //语法分析测试
-        ParserTest();
+        // ParserTest();
+        
+        //IR生成测试
+        IRTest();
     }
 
     public static void LexerTest() throws IOException {
@@ -36,14 +40,26 @@ public class Compiler {
             System.out.println(token.getType() + " " + token.getContent());
         }
     }
-
+    
     public static void ParserTest() throws IOException {
         //语法分析测试
-        FileInputStream in = new FileInputStream("parserTest.txt");
+        FileInputStream in = new FileInputStream("in.txt");
         BufferedInputStream source = new BufferedInputStream(in);
         TokenList tokenList = Lexer.getInstance().lex(source);
         Ast ast = new Parser(tokenList).parseAst();
         System.out.println(ast);
+    }
+    
+    public static void IRTest() throws IOException {
+        //语法分析测试
+        FileInputStream in = new FileInputStream("in.txt");
+        BufferedInputStream source = new BufferedInputStream(in);
+        TokenList tokenList = Lexer.getInstance().lex(source);
+        Ast ast = new Parser(tokenList).parseAst();
+        Program program = new Program(ast);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
+        program.printIR(writer);
+        writer.close();
     }
 }
 //

@@ -2,10 +2,12 @@
 
 package frontend.syntax;
 
+import frontend.ir.DataType;
 import frontend.lexer.Token;
 import frontend.lexer.TokenType;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 所有的语法树节点
@@ -88,6 +90,22 @@ public class Ast {
             assert params != null;
             assert body != null;
         }
+        
+        public Token getIdent() {
+            return ident;
+        }
+        
+        public Token getType() {
+            return type;
+        }
+        
+        public ArrayList<FuncFParam> getFParams() {
+            return params;
+        }
+        
+        public Block getBody() {
+            return body;
+        }
     }
 
     // FuncFParam -> BType Ident ['[' ']' { '[' Exp ']' }]
@@ -116,6 +134,10 @@ public class Ast {
         public Block(ArrayList<BlockItem> items) {
             this.items = items;
             assert items != null;
+        }
+        
+        public ArrayList<BlockItem> getItems() {
+            return items;
         }
     }
 
@@ -199,12 +221,19 @@ public class Ast {
         public Return(Exp returnValue) {
             this.returnValue = returnValue;
         }
+        
+        public Exp getReturnValue() {
+            return returnValue;
+        }
     }
 
     // PrimaryExp -> Call | '(' Exp ')' | LVal | Number
     // Init -> Exp | InitArray
     // Exp -> BinaryExp | UnaryExp
     public interface Exp extends Init, PrimaryExp {
+        DataType checkConstType();  // 约定：如果表达式不是常量，返回 VOID；如果是常量，则返回对应的数据类型
+        Integer getConstInt();
+        Float getConstFloat();
     }
 
     // BinaryExp: Arithmetic, Relation, Logical
@@ -230,6 +259,71 @@ public class Ast {
         public ArrayList<Exp> getRestExps() {
             return RestExps;
         }
+        
+        @Override
+        public DataType checkConstType() {
+            DataType constType = firstExp.checkConstType();
+            if (constType == DataType.VOID) {
+                return DataType.VOID;
+            }
+            for (Exp exp : RestExps) {
+                switch (exp.checkConstType()) {
+                    case VOID: return DataType.VOID;
+                    case FLOAT: constType = DataType.FLOAT;
+                }
+            }
+            return constType;
+        }
+        
+        @Override
+        public Integer getConstInt() {
+            Integer res = firstExp.getConstInt();
+            if (res == null) {
+                return null;
+            }
+            for (int i = 0; i < RestExps.size(); i++) {
+                Exp exp = RestExps.get(i);
+                Token op = ops.get(i);
+                Integer num = exp.getConstInt();
+                if (num == null) {
+                    return null;
+                }
+                switch (op.getType()) {
+                    case ADD: res += num; break;
+                    case SUB: res -= num; break;
+                    case MUL: res *= num; break;
+                    case DIV: res /= num; break;
+                    case MOD: res %= num; break;
+                    default: throw new RuntimeException("整数常量表达式中出现了未曾设想的运算符");
+                }
+            }
+            return res;
+        }
+        
+        @Override
+        public Float getConstFloat() {
+            Float res = firstExp.getConstFloat();
+            if (res == null) {
+                return null;
+            }
+            for (int i = 0; i < RestExps.size(); i++) {
+                Exp exp = RestExps.get(i);
+                Token op = ops.get(i);
+                Float num = exp.getConstFloat();
+                if (num == null) {
+                    return null;
+                }
+                switch (op.getType()) {
+                    case ADD: res += num; break;
+                    case SUB: res -= num; break;
+                    case MUL: res *= num; break;
+                    case DIV: res /= num; break;
+                    case MOD: res %= num; break;
+                    default: throw new RuntimeException("浮点数常量表达式中出现了未曾设想的运算符");
+                }
+            }
+            return res;
+        }
     }
 
     // UnaryExp -> {UnaryOp} PrimaryExp
@@ -249,6 +343,72 @@ public class Ast {
         }
         public PrimaryExp getPrimaryExp() {
             return primary;
+        }
+        
+        @Override
+        public DataType checkConstType() {
+            if (primary instanceof Exp) {
+                return ((Exp) primary).checkConstType();
+            } else if (primary instanceof Call) {
+                return DataType.VOID;
+            } else if (primary instanceof LVal) {
+                // todo : 这里应该判断这个左值是不是常量
+                return DataType.VOID;
+            } else if (primary instanceof Number) {
+                if (((Number) primary).isIntConst) {
+                    return DataType.INT;
+                } else if (((Number) primary).isFloatConst) {
+                    return DataType.FLOAT;
+                } else {
+                    throw new RuntimeException("出现了未定义的数值常量类型");
+                }
+            } else {
+                throw new RuntimeException("出现了未定义的基本表达式");
+            }
+        }
+        
+        @Override
+        public Integer getConstInt() {
+            if (primary instanceof Exp) {
+                return ((Exp) primary).getConstInt();
+            } else if (primary instanceof Call) {
+                return null;
+            } else if (primary instanceof LVal) {
+                // todo : 这里应该判断这个左值是不是常量
+                return null;
+            } else if (primary instanceof Number) {
+                if (((Number) primary).isIntConst) {
+                    return ((Number) primary).getIntConstValue();
+                } else if (((Number) primary).isFloatConst) {
+                    return null;
+                } else {
+                    throw new RuntimeException("出现了未定义的数值常量类型");
+                }
+            } else {
+                throw new RuntimeException("出现了未定义的基本表达式");
+            }
+        }
+        
+        @Override
+        public Float getConstFloat() {
+            if (primary instanceof Exp) {
+                return ((Exp) primary).getConstFloat();
+            } else if (primary instanceof Call) {
+                return null;
+            } else if (primary instanceof LVal) {
+                // todo : 这里应该判断这个左值是不是常量
+                return null;
+            } else if (primary instanceof Number) {
+                if (((Number) primary).isIntConst) {
+                    return (float) ((Number) primary).getIntConstValue();
+                } else if (((Number) primary).isFloatConst) {
+                    return ((Number) primary).getFloatConstValue();
+                } else {
+                    throw new RuntimeException("出现了未定义的数值常量类型");
+                }
+            } else {
+                throw new RuntimeException("出现了未定义的基本表达式");
+            }
         }
     }
 
@@ -273,11 +433,11 @@ public class Ast {
     // Number
     public static class Number implements PrimaryExp {
 
-        public Token number;
-        public boolean isIntConst = false;
-        public boolean isFloatConst = false;
-        public int intConstValue = 0;
-        public float floatConstValue = (float) 0.0;
+        private Token number;
+        private boolean isIntConst = false;
+        private boolean isFloatConst = false;
+        private int intConstValue = 0;
+        private float floatConstValue = (float) 0.0;
 
         public Number(Token number) {
             assert number != null;
@@ -285,12 +445,20 @@ public class Ast {
 
             if (number.isIntConst()) {
                 isIntConst = true;
-                intConstValue = switch (number.getType()) {
-                    case HEX_INT -> Integer.parseInt(number.getContent().substring(2), 16);
-                    case OCT_INT -> Integer.parseInt(number.getContent().substring(1), 8);
-                    case DEC_INT -> Integer.parseInt(number.getContent());
-                    default -> throw new AssertionError("Bad Number!");
-                };
+                // todo: 这里原本是高级 switch
+                switch (number.getType()) {
+                    case HEX_INT :
+                        intConstValue = Integer.parseInt(number.getContent().substring(2), 16);
+                        break;
+                    case OCT_INT :
+                        intConstValue = Integer.parseInt(number.getContent().substring(1), 8);
+                        break;
+                    case DEC_INT :
+                        intConstValue = Integer.parseInt(number.getContent());
+                        break;
+                    default:
+                        throw new AssertionError("Bad Number!");
+                }
                 floatConstValue = (float) intConstValue;
             } else if (number.isFloatConst()) {
                 isFloatConst = true;
@@ -299,6 +467,22 @@ public class Ast {
             } else {
                 assert isIntConst || isFloatConst;
             }
+        }
+        
+        public boolean isIntConst() {
+            return isIntConst;
+        }
+        
+        public boolean isFloatConst() {
+            return isFloatConst;
+        }
+        
+        public int getIntConstValue() {
+            return intConstValue;
+        }
+        
+        public float getFloatConstValue() {
+            return floatConstValue;
         }
     }
 
@@ -320,5 +504,9 @@ public class Ast {
     public Ast(ArrayList<CompUnit> nodes) {
         assert nodes != null;
         this.nodes = nodes;
+    }
+    
+    public List<CompUnit> getUnits() {
+        return this.nodes;
     }
 }
