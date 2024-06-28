@@ -25,9 +25,9 @@ public class Ast {
     // Decl -> ['const'] 'int' Def {',' Def} ';'
     public static class Decl implements CompUnit, BlockItem {
 
-        public boolean constant;
-        public Token type;
-        public ArrayList<Def> defs;
+        private final boolean constant;
+        private Token type;
+        private ArrayList<Def> defs;
 
         public Decl(boolean constant, Token bType, ArrayList<Def> defs) {
             this.constant = constant;
@@ -36,15 +36,27 @@ public class Ast {
             assert bType != null;
             assert defs != null;
         }
+        
+        public boolean isConst() {
+            return constant;
+        }
+        
+        public Token getType() {
+            return type;
+        }
+        
+        public List<Def> getDefList() {
+            return this.defs;
+        }
     }
 
     // Def -> Ident {'[' Exp ']'} ['=' Init]
     public static class Def {
 
-        public TokenType type;
-        public Token ident;
-        public ArrayList<Exp> indexList;
-        public Init init;
+        private TokenType type;
+        private Token ident;
+        private ArrayList<Exp> indexList;
+        private Init init;
 
         public Def(TokenType type, Token ident, ArrayList<Exp> indexList, Init init) {
             this.type = type;
@@ -54,6 +66,22 @@ public class Ast {
             assert type != null;
             assert ident != null;
             assert indexList != null;
+        }
+        
+        public TokenType getType() {
+            return type;
+        }
+        
+        public Token getIdent() {
+            return ident;
+        }
+        
+        public List<Exp> getIndexList() {
+            return indexList;
+        }
+        
+        public Init getInit() {
+            return init;
         }
     }
 

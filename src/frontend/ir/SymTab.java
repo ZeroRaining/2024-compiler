@@ -1,6 +1,10 @@
 package frontend.ir;
 
+import frontend.syntax.Ast;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class SymTab {
     private final HashMap<String, Symbol> symbolMap = new HashMap<>();
@@ -26,5 +30,42 @@ public class SymTab {
             return null;
         }
         return parent.getSym(sym);
+    }
+    
+    public void addSym(Symbol symbol) {
+        if (symbol == null) {
+            throw new NullPointerException();
+        }
+        String name = symbol.getName();
+        if (symbolMap.containsKey(name)) {
+            throw new RuntimeException("重名对象");
+        }
+        symbolMap.put(name, symbol);
+    }
+    
+    public void addSymbols(boolean isGlobal, Ast.Decl decl) {
+        if (decl == null) {
+            throw new NullPointerException();
+        }
+        boolean constant = decl.isConst();
+        DataType dataType;
+        switch (decl.getType().getType()) {
+            case INT:   dataType = DataType.INT;    break;
+            case FLOAT: dataType = DataType.FLOAT;  break;
+            default : throw new RuntimeException("出现了意料之外的声明类型");
+        }
+        for (Ast.Def def : decl.getDefList()) {
+            assert def.getType().equals(decl.getType().getType());
+            String name = def.getIdent().getContent();
+            List<Integer> limList = new ArrayList<>();
+            for (Ast.Exp exp : def.getIndexList()) {
+                if (exp.checkConstType() == DataType.INT) {
+                    limList.add(exp.getConstInt());
+                } else {
+                    throw new RuntimeException("数组各维长度必须是整数");
+                }
+            }
+            addSym(new Symbol(name, dataType, limList, constant, isGlobal));
+        }
     }
 }
