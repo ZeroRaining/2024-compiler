@@ -43,7 +43,7 @@ public class Compiler {
     
     public static void ParserTest() throws IOException {
         //语法分析测试
-        FileInputStream in = new FileInputStream("in.txt");
+        FileInputStream in = new FileInputStream("in.sy");
         BufferedInputStream source = new BufferedInputStream(in);
         TokenList tokenList = Lexer.getInstance().lex(source);
         Ast ast = new Parser(tokenList).parseAst();
@@ -52,7 +52,7 @@ public class Compiler {
     
     public static void IRTest() throws IOException {
         //语法分析测试
-        FileInputStream in = new FileInputStream("in.txt");
+        FileInputStream in = new FileInputStream("in.sy");
         BufferedInputStream source = new BufferedInputStream(in);
         TokenList tokenList = Lexer.getInstance().lex(source);
         Ast ast = new Parser(tokenList).parseAst();
