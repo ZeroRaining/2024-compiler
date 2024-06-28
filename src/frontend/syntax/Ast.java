@@ -369,8 +369,16 @@ public class Ast {
         
         @Override
         public Integer getConstInt() {
+            int sign = 1;
+            for (Token op : ops) {
+                if (op.getType() == TokenType.SUB) {
+                    sign *= -1;
+                } else if (op.getType() != TokenType.ADD) {
+                    throw new RuntimeException("出现了意料之外的符号");
+                }
+            }
             if (primary instanceof Exp) {
-                return ((Exp) primary).getConstInt();
+                return ((Exp) primary).getConstInt() * sign;
             } else if (primary instanceof Call) {
                 return null;
             } else if (primary instanceof LVal) {
@@ -378,7 +386,7 @@ public class Ast {
                 return null;
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
-                    return ((Number) primary).getIntConstValue();
+                    return ((Number) primary).getIntConstValue() * sign;
                 } else if (((Number) primary).isFloatConst) {
                     return null;
                 } else {
@@ -391,8 +399,16 @@ public class Ast {
         
         @Override
         public Float getConstFloat() {
+            int sign = 1;
+            for (Token op : ops) {
+                if (op.getType() == TokenType.SUB) {
+                    sign *= -1;
+                } else if (op.getType() != TokenType.ADD) {
+                    throw new RuntimeException("出现了意料之外的符号");
+                }
+            }
             if (primary instanceof Exp) {
-                return ((Exp) primary).getConstFloat();
+                return ((Exp) primary).getConstFloat() * sign;
             } else if (primary instanceof Call) {
                 return null;
             } else if (primary instanceof LVal) {
@@ -400,9 +416,9 @@ public class Ast {
                 return null;
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
-                    return (float) ((Number) primary).getIntConstValue();
+                    return (float) ((Number) primary).getIntConstValue() * sign;
                 } else if (((Number) primary).isFloatConst) {
-                    return ((Number) primary).getFloatConstValue();
+                    return ((Number) primary).getFloatConstValue() * sign;
                 } else {
                     throw new RuntimeException("出现了未定义的数值常量类型");
                 }
