@@ -195,8 +195,15 @@ public class Parser {
             tokenList.getCharWithJudge(TokenType.RBRACK);
         }
         //TODO: 常量赋值是否需要异常判断？如果需要，怎么判断？
-        tokenList.getCharWithJudge(TokenType.ASSIGN);
-        init = parseInit();
+        if (isConst) {
+            tokenList.getCharWithJudge(TokenType.ASSIGN);
+            init = parseInit();
+        } else {
+            if (tokenList.hasNext() && tokenList.checkAheadChar(0).getType() == TokenType.ASSIGN) {
+                tokenList.getChar();
+                init = parseInit();
+            }
+        }
         return new Ast.Def(type.getType(), ident, indexList, init);
     }
 
@@ -275,7 +282,7 @@ public class Parser {
                         Ast.Exp right = parseBinaryExp(BinaryExpType.ADD);
                         tokenList.getCharWithJudge(TokenType.SEMI);
                         return new Ast.Assign(tryLVal, right);
-                    }else{
+                    } else {
                         tokenList.getCharWithJudge(TokenType.SEMI);
                         return new Ast.ExpStmt(tryExp);
                     }
