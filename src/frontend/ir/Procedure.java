@@ -88,4 +88,8 @@ public class Procedure {
             block.printIR(writer);
         }
     }
+
+    public ArrayList<BasicBlock> getBasicBlocks() {
+        return basicBlocks;
+    }
 }

@@ -5,6 +5,7 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 
 public class Function {
     private final String name;
@@ -52,5 +53,9 @@ public class Function {
         writer.append("{\n");
         this.procedure.printIR(writer);
         writer.append("}\n");
+    }
+
+    public ArrayList<BasicBlock> getBasicBlocks() {
+        return procedure.getBasicBlocks();
     }
 }
