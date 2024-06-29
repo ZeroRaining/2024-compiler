@@ -1,5 +1,4 @@
 //TODO: 暂用于parser
-
 package frontend.syntax;
 
 import frontend.ir.DataType;
@@ -14,21 +13,21 @@ import java.util.List;
  * 为简化编译器实现难度, 对文法进行了改写(不影响语义)
  */
 public class Ast {
-
+    
     public ArrayList<CompUnit> nodes;
     boolean printPermission;
-
+    
     // CompUnit -> Decl | FuncDef
     public interface CompUnit {
     }
-
+    
     // Decl -> ['const'] 'int' Def {',' Def} ';'
     public static class Decl implements CompUnit, BlockItem {
-
-        public boolean constant;
-        public Token type;
-        public ArrayList<Def> defs;
-
+        
+        private final boolean constant;
+        private Token type;
+        private ArrayList<Def> defs;
+        
         public Decl(boolean constant, Token bType, ArrayList<Def> defs) {
             this.constant = constant;
             this.type = bType;
@@ -36,16 +35,28 @@ public class Ast {
             assert bType != null;
             assert defs != null;
         }
+        
+        public boolean isConst() {
+            return constant;
+        }
+        
+        public Token getType() {
+            return type;
+        }
+        
+        public List<Def> getDefList() {
+            return this.defs;
+        }
     }
-
+    
     // Def -> Ident {'[' Exp ']'} ['=' Init]
     public static class Def {
-
-        public TokenType type;
-        public Token ident;
-        public ArrayList<Exp> indexList;
-        public Init init;
-
+        
+        private TokenType type;
+        private Token ident;
+        private ArrayList<Exp> indexList;
+        private Init init;
+        
         public Def(TokenType type, Token ident, ArrayList<Exp> indexList, Init init) {
             this.type = type;
             this.ident = ident;
@@ -55,31 +66,47 @@ public class Ast {
             assert ident != null;
             assert indexList != null;
         }
+        
+        public TokenType getType() {
+            return type;
+        }
+        
+        public Token getIdent() {
+            return ident;
+        }
+        
+        public List<Exp> getIndexList() {
+            return indexList;
+        }
+        
+        public Init getInit() {
+            return init;
+        }
     }
-
+    
     // Init -> Exp | InitArray
     public interface Init {
     }
-
+    
     // InitArray -> '{' [ Init { ',' Init } ] '}'
     public static class InitArray implements Init {
         public ArrayList<Init> initList;
-
+        
         public InitArray(ArrayList<Init> initList) {
             this.initList = initList;
             assert initList != null;
         }
     }
-
+    
     // FuncDef -> FuncType Ident '(' [FuncFParams] ')' Block
     // FuncFParams -> FuncFParam {',' FuncFParam}
     public static class FuncDef implements CompUnit {
-
+        
         public Token type; // FuncType
         public Token ident; // name
         public ArrayList<FuncFParam> params;
         public Block body;
-
+        
         public FuncDef(Token type, Token ident, ArrayList<FuncFParam> params, Block body) {
             this.type = type;
             this.ident = ident;
@@ -107,15 +134,15 @@ public class Ast {
             return body;
         }
     }
-
+    
     // FuncFParam -> BType Ident ['[' ']' { '[' Exp ']' }]
     public static class FuncFParam {
-
+        
         public Token type;
         public Token ident;
         public boolean array; // whether it is an array
         public ArrayList<Exp> arrayItemList; // array sizes of each dim
-
+        
         public FuncFParam(Token type, Token ident, boolean array, ArrayList<Exp> arrayItemList) {
             this.type = type;
             this.ident = ident;
@@ -126,11 +153,11 @@ public class Ast {
             assert arrayItemList != null;
         }
     }
-
+    
     // Block
     public static class Block implements Stmt {
         public ArrayList<BlockItem> items;
-
+        
         public Block(ArrayList<BlockItem> items) {
             this.items = items;
             assert items != null;
@@ -140,21 +167,21 @@ public class Ast {
             return items;
         }
     }
-
+    
     // BlockItem -> Decl | Stmt
     public interface BlockItem {
     }
-
+    
     // Stmt -> Assign | ExpStmt | Block | IfStmt | WhileStmt | Break | Continue | Return
     public interface Stmt extends BlockItem {
     }
-
+    
     // Assign
     public static class Assign implements Stmt {
-
+        
         public LVal left;
         public Exp right;
-
+        
         public Assign(LVal left, Exp right) {
             this.left = left;
             this.right = right;
@@ -162,23 +189,23 @@ public class Ast {
             assert right != null;
         }
     }
-
+    
     // ExpStmt
     public static class ExpStmt implements Stmt {
         public Exp exp; // nullable, empty stmt if null
-
+        
         public ExpStmt(Exp exp) {
             this.exp = exp;
         }
     }
-
+    
     // IfStmt
     public static class IfStmt implements Stmt {
-
+        
         public Exp condition;
         public Stmt thenStmt;
         public Stmt elseStmt;
-
+        
         public IfStmt(Exp condition, Stmt thenTarget, Stmt elseTarget) {
             this.condition = condition;
             this.thenStmt = thenTarget;
@@ -187,13 +214,13 @@ public class Ast {
             assert thenTarget != null;
         }
     }
-
+    
     // WhileStmt
     public static class WhileStmt implements Stmt {
-
+        
         public Exp cond;
         public Stmt body;
-
+        
         public WhileStmt(Exp cond, Stmt body) {
             this.cond = cond;
             this.body = body;
@@ -201,23 +228,23 @@ public class Ast {
             assert body != null;
         }
     }
-
+    
     // Break
     public static class Break implements Stmt {
         public Break() {
         }
     }
-
+    
     // Continue
     public static class Continue implements Stmt {
         public Continue() {
         }
     }
-
+    
     // Return
     public static class Return implements Stmt {
         public Exp returnValue;
-
+        
         public Return(Exp returnValue) {
             this.returnValue = returnValue;
         }
@@ -226,7 +253,7 @@ public class Ast {
             return returnValue;
         }
     }
-
+    
     // PrimaryExp -> Call | '(' Exp ')' | LVal | Number
     // Init -> Exp | InitArray
     // Exp -> BinaryExp | UnaryExp
@@ -235,15 +262,15 @@ public class Ast {
         Integer getConstInt();
         Float getConstFloat();
     }
-
+    
     // BinaryExp: Arithmetic, Relation, Logical
     // BinaryExp -> Exp { Op Exp }, calc from left to right
     public static class BinaryExp implements Exp {
-
+        
         public Exp firstExp;
         public ArrayList<Token> ops;
         public ArrayList<Exp> RestExps;
-
+        
         public BinaryExp(Exp firstExp, ArrayList<Token> ops, ArrayList<Exp> RestExps) {
             this.firstExp = firstExp;
             this.ops = ops;
@@ -252,7 +279,7 @@ public class Ast {
             assert ops != null;
             assert RestExps != null;
         }
-
+        
         public Exp getFirstExp() {
             return firstExp;
         }
@@ -325,13 +352,13 @@ public class Ast {
             return res;
         }
     }
-
+    
     // UnaryExp -> {UnaryOp} PrimaryExp
     public static class UnaryExp implements Exp {
-
+        
         public ArrayList<Token> ops;
         public PrimaryExp primary;
-
+        
         public UnaryExp(ArrayList<Token> ops, PrimaryExp primary) {
             this.ops = ops;
             this.primary = primary;
@@ -427,17 +454,17 @@ public class Ast {
             }
         }
     }
-
+    
     // PrimaryExp -> Call | '(' Exp ')' | LVal | Number
     public interface PrimaryExp {
     }
-
+    
     // LVal -> Ident {'[' Exp ']'}
     public static class LVal implements PrimaryExp {
-
+        
         public Token ident;
         public ArrayList<Exp> indexList;
-
+        
         public LVal(Token ident, ArrayList<Exp> indexList) {
             this.ident = ident;
             this.indexList = indexList;
@@ -445,20 +472,20 @@ public class Ast {
             assert indexList != null;
         }
     }
-
+    
     // Number
     public static class Number implements PrimaryExp {
-
+        
         private Token number;
         private boolean isIntConst = false;
         private boolean isFloatConst = false;
         private int intConstValue = 0;
         private float floatConstValue = (float) 0.0;
-
+        
         public Number(Token number) {
             assert number != null;
             this.number = number;
-
+            
             if (number.isIntConst()) {
                 isIntConst = true;
                 // todo: 这里原本是高级 switch
@@ -501,14 +528,14 @@ public class Ast {
             return floatConstValue;
         }
     }
-
+    
     // Call -> Ident '(' [ Exp {',' Exp} ] ')'
     // FuncRParams -> Exp {',' Exp}, already inlined in Call
     public static class Call implements PrimaryExp {
-
+        
         public Token ident;
         public ArrayList<Exp> params;
-
+        
         public Call(Token ident, ArrayList<Exp> params) {
             assert ident != null;
             assert params != null;
@@ -516,7 +543,7 @@ public class Ast {
             this.params = params;
         }
     }
-
+    
     public Ast(ArrayList<CompUnit> nodes) {
         assert nodes != null;
         this.nodes = nodes;
