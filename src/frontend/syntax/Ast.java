@@ -1,8 +1,14 @@
 //TODO: 暂用于parser
-
 package frontend.syntax;
 
 import frontend.ir.DataType;
+import frontend.ir.Value;
+import frontend.ir.constvalue.ConstValue;
+import frontend.ir.symbols.SymTab;
+import frontend.ir.symbols.Symbol;
+import frontend.ir.constvalue.ConstFloat;
+import frontend.ir.symbols.InitVal;
+import frontend.ir.constvalue.ConstInt;
 import frontend.lexer.Token;
 import frontend.lexer.TokenType;
 
@@ -14,21 +20,21 @@ import java.util.List;
  * 为简化编译器实现难度, 对文法进行了改写(不影响语义)
  */
 public class Ast {
-
+    
     public ArrayList<CompUnit> nodes;
     boolean printPermission;
-
+    
     // CompUnit -> Decl | FuncDef
     public interface CompUnit {
     }
-
+    
     // Decl -> ['const'] 'int' Def {',' Def} ';'
     public static class Decl implements CompUnit, BlockItem {
-
-        public boolean constant;
-        public Token type;
-        public ArrayList<Def> defs;
-
+        
+        private final boolean constant;
+        private Token type;
+        private ArrayList<Def> defs;
+        
         public Decl(boolean constant, Token bType, ArrayList<Def> defs) {
             this.constant = constant;
             this.type = bType;
@@ -36,16 +42,28 @@ public class Ast {
             assert bType != null;
             assert defs != null;
         }
+        
+        public boolean isConst() {
+            return constant;
+        }
+        
+        public Token getType() {
+            return type;
+        }
+        
+        public List<Def> getDefList() {
+            return this.defs;
+        }
     }
-
+    
     // Def -> Ident {'[' Exp ']'} ['=' Init]
     public static class Def {
-
-        public TokenType type;
-        public Token ident;
-        public ArrayList<Exp> indexList;
-        public Init init;
-
+        
+        private TokenType type;
+        private Token ident;
+        private ArrayList<Exp> indexList;
+        private Init init;
+        
         public Def(TokenType type, Token ident, ArrayList<Exp> indexList, Init init) {
             this.type = type;
             this.ident = ident;
@@ -55,31 +73,47 @@ public class Ast {
             assert ident != null;
             assert indexList != null;
         }
+        
+        public TokenType getType() {
+            return type;
+        }
+        
+        public Token getIdent() {
+            return ident;
+        }
+        
+        public List<Exp> getIndexList() {
+            return indexList;
+        }
+        
+        public Init getInit() {
+            return init;
+        }
     }
-
+    
     // Init -> Exp | InitArray
     public interface Init {
     }
-
+    
     // InitArray -> '{' [ Init { ',' Init } ] '}'
     public static class InitArray implements Init {
         public ArrayList<Init> initList;
-
+        
         public InitArray(ArrayList<Init> initList) {
             this.initList = initList;
             assert initList != null;
         }
     }
-
+    
     // FuncDef -> FuncType Ident '(' [FuncFParams] ')' Block
     // FuncFParams -> FuncFParam {',' FuncFParam}
     public static class FuncDef implements CompUnit {
-
+        
         public Token type; // FuncType
         public Token ident; // name
         public ArrayList<FuncFParam> params;
         public Block body;
-
+        
         public FuncDef(Token type, Token ident, ArrayList<FuncFParam> params, Block body) {
             this.type = type;
             this.ident = ident;
@@ -107,15 +141,15 @@ public class Ast {
             return body;
         }
     }
-
+    
     // FuncFParam -> BType Ident ['[' ']' { '[' Exp ']' }]
     public static class FuncFParam {
-
+        
         public Token type;
         public Token ident;
         public boolean array; // whether it is an array
         public ArrayList<Exp> arrayItemList; // array sizes of each dim
-
+        
         public FuncFParam(Token type, Token ident, boolean array, ArrayList<Exp> arrayItemList) {
             this.type = type;
             this.ident = ident;
@@ -126,11 +160,11 @@ public class Ast {
             assert arrayItemList != null;
         }
     }
-
+    
     // Block
     public static class Block implements Stmt {
         public ArrayList<BlockItem> items;
-
+        
         public Block(ArrayList<BlockItem> items) {
             this.items = items;
             assert items != null;
@@ -140,21 +174,21 @@ public class Ast {
             return items;
         }
     }
-
+    
     // BlockItem -> Decl | Stmt
     public interface BlockItem {
     }
-
+    
     // Stmt -> Assign | ExpStmt | Block | IfStmt | WhileStmt | Break | Continue | Return
     public interface Stmt extends BlockItem {
     }
-
+    
     // Assign
     public static class Assign implements Stmt {
-
+        
         public LVal left;
         public Exp right;
-
+        
         public Assign(LVal left, Exp right) {
             this.left = left;
             this.right = right;
@@ -162,23 +196,23 @@ public class Ast {
             assert right != null;
         }
     }
-
+    
     // ExpStmt
     public static class ExpStmt implements Stmt {
         public Exp exp; // nullable, empty stmt if null
-
+        
         public ExpStmt(Exp exp) {
             this.exp = exp;
         }
     }
-
+    
     // IfStmt
     public static class IfStmt implements Stmt {
-
+        
         public Exp condition;
         public Stmt thenStmt;
         public Stmt elseStmt;
-
+        
         public IfStmt(Exp condition, Stmt thenTarget, Stmt elseTarget) {
             this.condition = condition;
             this.thenStmt = thenTarget;
@@ -187,13 +221,13 @@ public class Ast {
             assert thenTarget != null;
         }
     }
-
+    
     // WhileStmt
     public static class WhileStmt implements Stmt {
-
+        
         public Exp cond;
         public Stmt body;
-
+        
         public WhileStmt(Exp cond, Stmt body) {
             this.cond = cond;
             this.body = body;
@@ -201,23 +235,23 @@ public class Ast {
             assert body != null;
         }
     }
-
+    
     // Break
     public static class Break implements Stmt {
         public Break() {
         }
     }
-
+    
     // Continue
     public static class Continue implements Stmt {
         public Continue() {
         }
     }
-
+    
     // Return
     public static class Return implements Stmt {
         public Exp returnValue;
-
+        
         public Return(Exp returnValue) {
             this.returnValue = returnValue;
         }
@@ -226,24 +260,24 @@ public class Ast {
             return returnValue;
         }
     }
-
+    
     // PrimaryExp -> Call | '(' Exp ')' | LVal | Number
     // Init -> Exp | InitArray
     // Exp -> BinaryExp | UnaryExp
     public interface Exp extends Init, PrimaryExp {
-        DataType checkConstType();  // 约定：如果表达式不是常量，返回 VOID；如果是常量，则返回对应的数据类型
-        Integer getConstInt();
-        Float getConstFloat();
+        DataType checkConstType(SymTab symTab);  // 约定：如果表达式不是常量，返回 VOID；如果是常量，则返回对应的数据类型
+        Integer getConstInt(SymTab symTab);
+        Float getConstFloat(SymTab symTab);
     }
-
+    
     // BinaryExp: Arithmetic, Relation, Logical
     // BinaryExp -> Exp { Op Exp }, calc from left to right
     public static class BinaryExp implements Exp {
-
-        public Exp firstExp;
-        public ArrayList<Token> ops;
-        public ArrayList<Exp> RestExps;
-
+        
+        private Exp firstExp;
+        private ArrayList<Token> ops;
+        private ArrayList<Exp> RestExps;
+        
         public BinaryExp(Exp firstExp, ArrayList<Token> ops, ArrayList<Exp> RestExps) {
             this.firstExp = firstExp;
             this.ops = ops;
@@ -252,22 +286,27 @@ public class Ast {
             assert ops != null;
             assert RestExps != null;
         }
-
+        
         public Exp getFirstExp() {
             return firstExp;
         }
-        public ArrayList<Exp> getRestExps() {
+        
+        public List<Token> getOps() {
+            return ops;
+        }
+        
+        public List<Exp> getRestExps() {
             return RestExps;
         }
         
         @Override
-        public DataType checkConstType() {
-            DataType constType = firstExp.checkConstType();
+        public DataType checkConstType(SymTab symTab) {
+            DataType constType = firstExp.checkConstType(symTab);
             if (constType == DataType.VOID) {
                 return DataType.VOID;
             }
             for (Exp exp : RestExps) {
-                switch (exp.checkConstType()) {
+                switch (exp.checkConstType(symTab)) {
                     case VOID: return DataType.VOID;
                     case FLOAT: constType = DataType.FLOAT;
                 }
@@ -276,15 +315,15 @@ public class Ast {
         }
         
         @Override
-        public Integer getConstInt() {
-            Integer res = firstExp.getConstInt();
+        public Integer getConstInt(SymTab symTab) {
+            Integer res = firstExp.getConstInt(symTab);
             if (res == null) {
                 return null;
             }
             for (int i = 0; i < RestExps.size(); i++) {
                 Exp exp = RestExps.get(i);
                 Token op = ops.get(i);
-                Integer num = exp.getConstInt();
+                Integer num = exp.getConstInt(symTab);
                 if (num == null) {
                     return null;
                 }
@@ -301,15 +340,15 @@ public class Ast {
         }
         
         @Override
-        public Float getConstFloat() {
-            Float res = firstExp.getConstFloat();
+        public Float getConstFloat(SymTab symTab) {
+            Float res = firstExp.getConstFloat(symTab);
             if (res == null) {
                 return null;
             }
             for (int i = 0; i < RestExps.size(); i++) {
                 Exp exp = RestExps.get(i);
                 Token op = ops.get(i);
-                Float num = exp.getConstFloat();
+                Float num = exp.getConstFloat(symTab);
                 if (num == null) {
                     return null;
                 }
@@ -325,13 +364,13 @@ public class Ast {
             return res;
         }
     }
-
+    
     // UnaryExp -> {UnaryOp} PrimaryExp
     public static class UnaryExp implements Exp {
-
+        
         public ArrayList<Token> ops;
         public PrimaryExp primary;
-
+        
         public UnaryExp(ArrayList<Token> ops, PrimaryExp primary) {
             this.ops = ops;
             this.primary = primary;
@@ -346,14 +385,18 @@ public class Ast {
         }
         
         @Override
-        public DataType checkConstType() {
+        public DataType checkConstType(SymTab symTab) {
             if (primary instanceof Exp) {
-                return ((Exp) primary).checkConstType();
+                return ((Exp) primary).checkConstType(symTab);
             } else if (primary instanceof Call) {
                 return DataType.VOID;
             } else if (primary instanceof LVal) {
-                // todo : 这里应该判断这个左值是不是常量
-                return DataType.VOID;
+                Symbol symbol = symTab.getSym(((LVal) primary).getName());
+                if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
+                    return symbol.getType();
+                } else {
+                    return DataType.VOID;
+                }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
                     return DataType.INT;
@@ -368,7 +411,7 @@ public class Ast {
         }
         
         @Override
-        public Integer getConstInt() {
+        public Integer getConstInt(SymTab symTab) {
             int sign = 1;
             for (Token op : ops) {
                 if (op.getType() == TokenType.SUB) {
@@ -378,12 +421,21 @@ public class Ast {
                 }
             }
             if (primary instanceof Exp) {
-                return ((Exp) primary).getConstInt() * sign;
+                return ((Exp) primary).getConstInt(symTab) * sign;
             } else if (primary instanceof Call) {
                 return null;
             } else if (primary instanceof LVal) {
-                // todo : 这里应该判断这个左值是不是常量
-                return null;
+                Symbol symbol = symTab.getSym(((LVal) primary).getName());
+                if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
+                    Value initVal = symbol.getInitVal();
+                    if (initVal instanceof ConstInt) {
+                        return ((ConstValue) initVal).getValue().intValue() * sign;
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
                     return ((Number) primary).getIntConstValue() * sign;
@@ -398,7 +450,7 @@ public class Ast {
         }
         
         @Override
-        public Float getConstFloat() {
+        public Float getConstFloat(SymTab symTab) {
             int sign = 1;
             for (Token op : ops) {
                 if (op.getType() == TokenType.SUB) {
@@ -408,12 +460,21 @@ public class Ast {
                 }
             }
             if (primary instanceof Exp) {
-                return ((Exp) primary).getConstFloat() * sign;
+                return ((Exp) primary).getConstFloat(symTab) * sign;
             } else if (primary instanceof Call) {
                 return null;
             } else if (primary instanceof LVal) {
-                // todo : 这里应该判断这个左值是不是常量
-                return null;
+                Symbol symbol = symTab.getSym(((LVal) primary).getName());
+                if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
+                    Value initVal = symbol.getInitVal();
+                    if (initVal instanceof ConstValue) {
+                        return ((ConstValue) initVal).getValue().floatValue() * sign;
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
                     return (float) ((Number) primary).getIntConstValue() * sign;
@@ -427,38 +488,46 @@ public class Ast {
             }
         }
     }
-
+    
     // PrimaryExp -> Call | '(' Exp ')' | LVal | Number
     public interface PrimaryExp {
     }
-
+    
     // LVal -> Ident {'[' Exp ']'}
     public static class LVal implements PrimaryExp {
-
-        public Token ident;
-        public ArrayList<Exp> indexList;
-
+        
+        private Token ident;
+        private ArrayList<Exp> indexList;
+        
         public LVal(Token ident, ArrayList<Exp> indexList) {
             this.ident = ident;
             this.indexList = indexList;
             assert ident != null;
             assert indexList != null;
         }
+        
+        public String getName() {
+            return ident.getContent();
+        }
+        
+        public List<Exp> getIndexList() {
+            return indexList;
+        }
     }
-
+    
     // Number
     public static class Number implements PrimaryExp {
-
+        
         private Token number;
         private boolean isIntConst = false;
         private boolean isFloatConst = false;
         private int intConstValue = 0;
         private float floatConstValue = (float) 0.0;
-
+        
         public Number(Token number) {
             assert number != null;
             this.number = number;
-
+            
             if (number.isIntConst()) {
                 isIntConst = true;
                 // todo: 这里原本是高级 switch
@@ -501,14 +570,14 @@ public class Ast {
             return floatConstValue;
         }
     }
-
+    
     // Call -> Ident '(' [ Exp {',' Exp} ] ')'
     // FuncRParams -> Exp {',' Exp}, already inlined in Call
     public static class Call implements PrimaryExp {
-
+        
         public Token ident;
         public ArrayList<Exp> params;
-
+        
         public Call(Token ident, ArrayList<Exp> params) {
             assert ident != null;
             assert params != null;
@@ -516,7 +585,7 @@ public class Ast {
             this.params = params;
         }
     }
-
+    
     public Ast(ArrayList<CompUnit> nodes) {
         assert nodes != null;
         this.nodes = nodes;

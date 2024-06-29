@@ -7,15 +7,9 @@ import java.io.Writer;
 import java.util.ArrayList;
 
 public class BasicBlock {
-    private final int label;
     private final ArrayList<Instruction> instructions = new ArrayList<>();
     
-    public BasicBlock(int label) {
-        this.label = label;
-    }
-    
-    public int getLabel() {
-        return label;
+    public BasicBlock() {
     }
     
     public void addInstruction(Instruction instr) {

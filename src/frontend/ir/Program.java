@@ -1,10 +1,13 @@
 package frontend.ir;
 
+import frontend.ir.symbols.SymTab;
+import frontend.ir.symbols.Symbol;
 import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Program {
     private final SymTab globalSymTab = new SymTab();
@@ -23,7 +26,9 @@ public class Program {
                 if (globalSymTab.hasSym(funcName)) {
                     throw new RuntimeException("函数命名与全局变量名重复");
                 }
-                functions.put(funcName, new Function((Ast.FuncDef) compUnit));
+                functions.put(funcName, new Function((Ast.FuncDef) compUnit, globalSymTab));
+            } else if (compUnit instanceof Ast.Decl) {
+                globalSymTab.addSymbols((Ast.Decl) compUnit);
             } else {
                 throw new RuntimeException("未定义的编译单元");
             }
@@ -38,5 +43,12 @@ public class Program {
         for (Function function : functions.values()) {
             function.printIR(writer);
         }
+    }
+
+    public HashSet<Symbol> getGlobalVars() {
+        return globalSymTab.getSymbolSet();
+    }
+    public HashMap<String, Function> getFunctions(){
+        return functions;
     }
 }

@@ -45,6 +45,11 @@ public class ReturnInstr implements Instruction {
     }
     
     @Override
+    public int getResultIndex() {
+        return -1;
+    }
+    
+    @Override
     public String print() {
         StringBuilder stringBuilder = new StringBuilder("ret ");
         switch (this.returnType) {
