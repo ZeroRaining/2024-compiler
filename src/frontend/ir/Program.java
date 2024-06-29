@@ -26,7 +26,7 @@ public class Program {
                 }
                 functions.put(funcName, new Function((Ast.FuncDef) compUnit, globalSymTab));
             } else if (compUnit instanceof Ast.Decl) {
-                globalSymTab.addSymbols(true, (Ast.Decl) compUnit);
+                globalSymTab.addSymbols((Ast.Decl) compUnit);
             } else {
                 throw new RuntimeException("未定义的编译单元");
             }

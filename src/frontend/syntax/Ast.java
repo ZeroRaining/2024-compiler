@@ -4,9 +4,9 @@ package frontend.syntax;
 import frontend.ir.DataType;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
-import frontend.ir.symbols.initalvalue.FloatInitVal;
+import frontend.ir.symbols.initalvalue.ConstFloatInitVal;
 import frontend.ir.symbols.initalvalue.InitVal;
-import frontend.ir.symbols.initalvalue.IntInitVal;
+import frontend.ir.symbols.initalvalue.ConstIntInitVal;
 import frontend.lexer.Token;
 import frontend.lexer.TokenType;
 
@@ -421,8 +421,8 @@ public class Ast {
                 Symbol symbol = symTab.getSym(((LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     InitVal initVal = symbol.getInitVal();
-                    if (initVal instanceof IntInitVal) {
-                        return ((IntInitVal) initVal).getValue() * sign;
+                    if (initVal instanceof ConstIntInitVal) {
+                        return initVal.getValue().intValue() * sign;
                     } else {
                         return null;
                     }
@@ -460,10 +460,8 @@ public class Ast {
                 Symbol symbol = symTab.getSym(((LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     InitVal initVal = symbol.getInitVal();
-                    if (initVal instanceof IntInitVal) {
-                        return ((IntInitVal) initVal).getValue().floatValue() * sign;
-                    } else if (initVal instanceof FloatInitVal) {
-                        return ((FloatInitVal) initVal).getValue() * sign;
+                    if (initVal instanceof ConstIntInitVal || initVal instanceof ConstFloatInitVal) {
+                        return initVal.getValue().floatValue() * sign;
                     } else {
                         return null;
                     }

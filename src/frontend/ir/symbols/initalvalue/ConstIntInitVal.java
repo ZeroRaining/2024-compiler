@@ -1,11 +1,12 @@
 package frontend.ir.symbols.initalvalue;
 
-public class IntInitVal extends InitVal {
+public class ConstIntInitVal extends InitVal {
     private int value;
-    public IntInitVal(int init) {
+    public ConstIntInitVal(int init) {
         value = init;
     }
     
+    @Override
     public Integer getValue() {
         return value;
     }

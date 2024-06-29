@@ -13,12 +13,12 @@ public class Procedure {
     private final ArrayList<BasicBlock> basicBlocks = new ArrayList<>();
     private final SymTab symTab;
     
-    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab symTab) {
+    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab baseSymTab) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        this.symTab = symTab;
-        basicBlocks.add(new BasicBlock(fParams.size()));
+        this.symTab = baseSymTab;
+        basicBlocks.add(new BasicBlock());
         
         for (Ast.BlockItem item : block.getItems()) {
             if (item instanceof Ast.Stmt) {
@@ -45,6 +45,10 @@ public class Procedure {
                     }
                     
                 }
+            } else if (item instanceof Ast.Decl) {
+            
+            } else {
+                throw new RuntimeException("出现了奇怪的条目");
             }
         }
     }
@@ -54,8 +58,9 @@ public class Procedure {
             throw new NullPointerException();
         }
         // todo 首先应该挖个坑给参数埋起来（分配内存）
-        for (BasicBlock block : basicBlocks) {
-            writer.append(Integer.toString(block.getLabel())).append(":\n");
+        for (int i = 0; i < basicBlocks.size(); i++) {
+            BasicBlock block = basicBlocks.get(i);
+            writer.append("blk_").append(Integer.toString(i)).append(":\n");
             block.printIR(writer);
         }
     }

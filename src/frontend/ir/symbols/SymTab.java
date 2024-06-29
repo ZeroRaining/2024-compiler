@@ -45,7 +45,7 @@ public class SymTab {
         symbolMap.put(name, symbol);
     }
     
-    public void addSymbols(boolean isGlobal, Ast.Decl decl) {
+    public void addSymbols(Ast.Decl decl) {
         if (decl == null) {
             throw new NullPointerException();
         }
@@ -74,7 +74,7 @@ public class SymTab {
             } else {
                 initVal = null;
             }
-            addSym(new Symbol(name, dataType, limList, constant, isGlobal, initVal));
+            addSym(new Symbol(name, dataType, limList, constant, parent == null, initVal));
         }
     }
     

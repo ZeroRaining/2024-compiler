@@ -1,11 +1,12 @@
 package frontend.ir.symbols.initalvalue;
 
-public class FloatInitVal extends InitVal {
+public class ConstFloatInitVal extends InitVal {
     private float value;
-    public FloatInitVal(float init) {
+    public ConstFloatInitVal(float init) {
         value = init;
     }
     
+    @Override
     public Float getValue() {
         return value;
     }
