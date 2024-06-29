@@ -1,5 +1,6 @@
 package frontend.ir;
 
+import frontend.ir.symbols.SymTab;
 import frontend.syntax.Ast;
 
 import java.io.IOException;
@@ -24,6 +25,8 @@ public class Program {
                     throw new RuntimeException("函数命名与全局变量名重复");
                 }
                 functions.put(funcName, new Function((Ast.FuncDef) compUnit));
+            } else if (compUnit instanceof Ast.Decl) {
+                globalSymTab.addSymbols(true, (Ast.Decl) compUnit);
             } else {
                 throw new RuntimeException("未定义的编译单元");
             }

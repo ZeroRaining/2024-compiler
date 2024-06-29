@@ -1,5 +1,7 @@
 package frontend.ir.instr;
 
-public interface Instruction {
+import frontend.ir.Value;
+
+public interface Instruction extends Value {
     String print();
 }
