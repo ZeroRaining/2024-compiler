@@ -2,11 +2,13 @@
 package frontend.syntax;
 
 import frontend.ir.DataType;
+import frontend.ir.Value;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
-import frontend.ir.symbols.initalvalue.ConstFloatInitVal;
-import frontend.ir.symbols.initalvalue.InitVal;
-import frontend.ir.symbols.initalvalue.ConstIntInitVal;
+import frontend.ir.constvalue.ConstFloat;
+import frontend.ir.symbols.InitVal;
+import frontend.ir.constvalue.ConstInt;
 import frontend.lexer.Token;
 import frontend.lexer.TokenType;
 
@@ -272,9 +274,9 @@ public class Ast {
     // BinaryExp -> Exp { Op Exp }, calc from left to right
     public static class BinaryExp implements Exp {
         
-        public Exp firstExp;
-        public ArrayList<Token> ops;
-        public ArrayList<Exp> RestExps;
+        private Exp firstExp;
+        private ArrayList<Token> ops;
+        private ArrayList<Exp> RestExps;
         
         public BinaryExp(Exp firstExp, ArrayList<Token> ops, ArrayList<Exp> RestExps) {
             this.firstExp = firstExp;
@@ -288,7 +290,12 @@ public class Ast {
         public Exp getFirstExp() {
             return firstExp;
         }
-        public ArrayList<Exp> getRestExps() {
+        
+        public List<Token> getOps() {
+            return ops;
+        }
+        
+        public List<Exp> getRestExps() {
             return RestExps;
         }
         
@@ -420,9 +427,9 @@ public class Ast {
             } else if (primary instanceof LVal) {
                 Symbol symbol = symTab.getSym(((LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
-                    InitVal initVal = symbol.getInitVal();
-                    if (initVal instanceof ConstIntInitVal) {
-                        return initVal.getValue().intValue() * sign;
+                    Value initVal = symbol.getInitVal();
+                    if (initVal instanceof ConstInt) {
+                        return ((ConstValue) initVal).getValue().intValue() * sign;
                     } else {
                         return null;
                     }
@@ -459,9 +466,9 @@ public class Ast {
             } else if (primary instanceof LVal) {
                 Symbol symbol = symTab.getSym(((LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
-                    InitVal initVal = symbol.getInitVal();
-                    if (initVal instanceof ConstIntInitVal || initVal instanceof ConstFloatInitVal) {
-                        return initVal.getValue().floatValue() * sign;
+                    Value initVal = symbol.getInitVal();
+                    if (initVal instanceof ConstValue) {
+                        return ((ConstValue) initVal).getValue().floatValue() * sign;
                     } else {
                         return null;
                     }

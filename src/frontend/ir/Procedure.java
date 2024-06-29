@@ -2,6 +2,7 @@ package frontend.ir;
 
 import frontend.ir.instr.ReturnInstr;
 import frontend.ir.symbols.SymTab;
+import frontend.lexer.Token;
 import frontend.syntax.Ast;
 
 import java.io.IOException;
@@ -12,13 +13,15 @@ import java.util.List;
 public class Procedure {
     private final ArrayList<BasicBlock> basicBlocks = new ArrayList<>();
     private final SymTab symTab;
+    private int curRegIndex;
     
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab baseSymTab) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        this.symTab = baseSymTab;
         basicBlocks.add(new BasicBlock());
+        this.symTab = baseSymTab;
+        curRegIndex = 0;
         
         for (Ast.BlockItem item : block.getItems()) {
             if (item instanceof Ast.Stmt) {
@@ -51,6 +54,27 @@ public class Procedure {
                 throw new RuntimeException("出现了奇怪的条目");
             }
         }
+    }
+    
+    private Value calculateExpr(Ast.Exp exp) {
+        if (exp instanceof Ast.BinaryExp) {
+            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp());
+            List<Ast.Exp> rest = ((Ast.BinaryExp) exp).getRestExps();
+            for (int i = 0; i < rest.size(); i++) {
+                Ast.Exp expI = rest.get(i);
+                Token op = ((Ast.BinaryExp) exp).getOps().get(i);
+                Value valueI = calculateExpr(expI);
+                switch (op.getType()) {
+//                    case ADD: res += num; break;
+//                    case SUB: res -= num; break;
+//                    case MUL: res *= num; break;
+//                    case DIV: res /= num; break;
+//                    case MOD: res %= num; break;
+                    default: throw new RuntimeException("表达式计算过程中出现了未曾设想的运算符");
+                }
+            }
+        }
+        return null;
     }
     
     public void printIR(Writer writer) throws IOException {

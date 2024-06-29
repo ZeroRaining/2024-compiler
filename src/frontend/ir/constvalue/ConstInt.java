@@ -1,8 +1,8 @@
-package frontend.ir.symbols.initalvalue;
+package frontend.ir.constvalue;
 
-public class ConstIntInitVal extends InitVal {
+public class ConstInt implements ConstValue {
     private int value;
-    public ConstIntInitVal(int init) {
+    public ConstInt(int init) {
         value = init;
     }
     

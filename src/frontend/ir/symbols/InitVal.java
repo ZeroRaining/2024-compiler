@@ -1,12 +1,13 @@
-package frontend.ir.symbols.initalvalue;
+package frontend.ir.symbols;
 
 import frontend.ir.DataType;
-import frontend.ir.symbols.SymTab;
+import frontend.ir.Value;
+import frontend.ir.constvalue.ConstFloat;
+import frontend.ir.constvalue.ConstInt;
 import frontend.syntax.Ast;
 
 public abstract class InitVal {
-    public abstract Number getValue();
-    public static InitVal createInitVal(DataType type, Ast.Init init, SymTab symTab) {
+    public static Value createInitVal(DataType type, Ast.Init init, SymTab symTab) {
         if (init == null) {
             throw new RuntimeException("空定义");
         }
@@ -14,17 +15,17 @@ public abstract class InitVal {
             switch (((Ast.Exp) init).checkConstType(symTab)) {
                 case INT:
                     if (type == DataType.INT) {
-                        return new ConstIntInitVal(((Ast.Exp) init).getConstInt(symTab));
+                        return new ConstInt(((Ast.Exp) init).getConstInt(symTab));
                     } else if (type == DataType.FLOAT) {
-                        return new ConstFloatInitVal(((Ast.Exp) init).getConstInt(symTab).floatValue());
+                        return new ConstFloat(((Ast.Exp) init).getConstInt(symTab).floatValue());
                     } else {
                         throw new RuntimeException("你给我传了个什么鬼类型啊");
                     }
                 case FLOAT:
                     if (type == DataType.INT) {
-                        return new ConstIntInitVal(((Ast.Exp) init).getConstFloat(symTab).intValue());
+                        return new ConstInt(((Ast.Exp) init).getConstFloat(symTab).intValue());
                     } else if (type == DataType.FLOAT) {
-                        return new ConstFloatInitVal(((Ast.Exp) init).getConstFloat(symTab));
+                        return new ConstFloat(((Ast.Exp) init).getConstFloat(symTab));
                     } else {
                         throw new RuntimeException("你给我传了个什么鬼类型啊");
                     }

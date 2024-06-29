@@ -1,8 +1,8 @@
-package frontend.ir.symbols.initalvalue;
+package frontend.ir.constvalue;
 
-public class ConstFloatInitVal extends InitVal {
+public class ConstFloat implements ConstValue {
     private float value;
-    public ConstFloatInitVal(float init) {
+    public ConstFloat(float init) {
         value = init;
     }
     

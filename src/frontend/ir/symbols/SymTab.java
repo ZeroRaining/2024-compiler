@@ -1,7 +1,7 @@
 package frontend.ir.symbols;
 
 import frontend.ir.DataType;
-import frontend.ir.symbols.initalvalue.InitVal;
+import frontend.ir.Value;
 import frontend.syntax.Ast;
 
 import java.util.ArrayList;
@@ -67,7 +67,7 @@ public class SymTab {
                     throw new RuntimeException("数组各维长度必须是整数");
                 }
             }
-            InitVal initVal;
+            Value initVal;
             Ast.Init init = def.getInit();
             if (init != null) {
                 initVal = InitVal.createInitVal(dataType, init, this);
