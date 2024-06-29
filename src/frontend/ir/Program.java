@@ -1,5 +1,6 @@
 package frontend.ir;
 
+import frontend.ir.symbols.SymTab;
 import frontend.syntax.Ast;
 
 import java.io.IOException;

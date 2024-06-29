@@ -1,5 +1,7 @@
-package frontend.ir;
+package frontend.ir.symbols;
 
+import frontend.ir.DataType;
+import frontend.ir.symbols.initalvalue.InitVal;
 import frontend.syntax.Ast;
 
 import java.util.ArrayList;
@@ -65,7 +67,14 @@ public class SymTab {
                     throw new RuntimeException("数组各维长度必须是整数");
                 }
             }
-            addSym(new Symbol(name, dataType, limList, constant, isGlobal));
+            InitVal initVal;
+            Ast.Init init = def.getInit();
+            if (init != null) {
+                initVal = InitVal.createInitVal(dataType, init);
+            } else {
+                initVal = null;
+            }
+            addSym(new Symbol(name, dataType, limList, constant, isGlobal, initVal));
         }
     }
 }
