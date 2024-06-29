@@ -24,10 +24,10 @@ public class Compiler {
         //LexerTest();
 
         //语法分析测试
-        // ParserTest();
+        ParserTest();
         
         //IR生成测试
-        IRTest();
+        //IRTest();
     }
 
     public static void LexerTest() throws IOException {
