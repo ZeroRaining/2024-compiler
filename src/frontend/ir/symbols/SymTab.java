@@ -61,8 +61,8 @@ public class SymTab {
             String name = def.getIdent().getContent();
             List<Integer> limList = new ArrayList<>();
             for (Ast.Exp exp : def.getIndexList()) {
-                if (exp.checkConstType() == DataType.INT) {
-                    limList.add(exp.getConstInt());
+                if (exp.checkConstType(this) == DataType.INT) {
+                    limList.add(exp.getConstInt(this));
                 } else {
                     throw new RuntimeException("数组各维长度必须是整数");
                 }
@@ -70,11 +70,15 @@ public class SymTab {
             InitVal initVal;
             Ast.Init init = def.getInit();
             if (init != null) {
-                initVal = InitVal.createInitVal(dataType, init);
+                initVal = InitVal.createInitVal(dataType, init, this);
             } else {
                 initVal = null;
             }
             addSym(new Symbol(name, dataType, limList, constant, isGlobal, initVal));
         }
+    }
+    
+    public boolean isGlobal() {
+        return parent == null;
     }
 }

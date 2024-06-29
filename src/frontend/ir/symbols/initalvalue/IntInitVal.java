@@ -5,4 +5,8 @@ public class IntInitVal extends InitVal {
     public IntInitVal(int init) {
         value = init;
     }
+    
+    public Integer getValue() {
+        return value;
+    }
 }

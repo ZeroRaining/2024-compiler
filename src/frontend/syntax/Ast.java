@@ -2,6 +2,11 @@
 package frontend.syntax;
 
 import frontend.ir.DataType;
+import frontend.ir.symbols.SymTab;
+import frontend.ir.symbols.Symbol;
+import frontend.ir.symbols.initalvalue.FloatInitVal;
+import frontend.ir.symbols.initalvalue.InitVal;
+import frontend.ir.symbols.initalvalue.IntInitVal;
 import frontend.lexer.Token;
 import frontend.lexer.TokenType;
 
@@ -258,9 +263,9 @@ public class Ast {
     // Init -> Exp | InitArray
     // Exp -> BinaryExp | UnaryExp
     public interface Exp extends Init, PrimaryExp {
-        DataType checkConstType();  // 约定：如果表达式不是常量，返回 VOID；如果是常量，则返回对应的数据类型
-        Integer getConstInt();
-        Float getConstFloat();
+        DataType checkConstType(SymTab symTab);  // 约定：如果表达式不是常量，返回 VOID；如果是常量，则返回对应的数据类型
+        Integer getConstInt(SymTab symTab);
+        Float getConstFloat(SymTab symTab);
     }
     
     // BinaryExp: Arithmetic, Relation, Logical
@@ -288,13 +293,13 @@ public class Ast {
         }
         
         @Override
-        public DataType checkConstType() {
-            DataType constType = firstExp.checkConstType();
+        public DataType checkConstType(SymTab symTab) {
+            DataType constType = firstExp.checkConstType(symTab);
             if (constType == DataType.VOID) {
                 return DataType.VOID;
             }
             for (Exp exp : RestExps) {
-                switch (exp.checkConstType()) {
+                switch (exp.checkConstType(symTab)) {
                     case VOID: return DataType.VOID;
                     case FLOAT: constType = DataType.FLOAT;
                 }
@@ -303,15 +308,15 @@ public class Ast {
         }
         
         @Override
-        public Integer getConstInt() {
-            Integer res = firstExp.getConstInt();
+        public Integer getConstInt(SymTab symTab) {
+            Integer res = firstExp.getConstInt(symTab);
             if (res == null) {
                 return null;
             }
             for (int i = 0; i < RestExps.size(); i++) {
                 Exp exp = RestExps.get(i);
                 Token op = ops.get(i);
-                Integer num = exp.getConstInt();
+                Integer num = exp.getConstInt(symTab);
                 if (num == null) {
                     return null;
                 }
@@ -328,15 +333,15 @@ public class Ast {
         }
         
         @Override
-        public Float getConstFloat() {
-            Float res = firstExp.getConstFloat();
+        public Float getConstFloat(SymTab symTab) {
+            Float res = firstExp.getConstFloat(symTab);
             if (res == null) {
                 return null;
             }
             for (int i = 0; i < RestExps.size(); i++) {
                 Exp exp = RestExps.get(i);
                 Token op = ops.get(i);
-                Float num = exp.getConstFloat();
+                Float num = exp.getConstFloat(symTab);
                 if (num == null) {
                     return null;
                 }
@@ -373,14 +378,18 @@ public class Ast {
         }
         
         @Override
-        public DataType checkConstType() {
+        public DataType checkConstType(SymTab symTab) {
             if (primary instanceof Exp) {
-                return ((Exp) primary).checkConstType();
+                return ((Exp) primary).checkConstType(symTab);
             } else if (primary instanceof Call) {
                 return DataType.VOID;
             } else if (primary instanceof LVal) {
-                // todo : 这里应该判断这个左值是不是常量
-                return DataType.VOID;
+                Symbol symbol = symTab.getSym(((LVal) primary).getName());
+                if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
+                    return symbol.getType();
+                } else {
+                    return DataType.VOID;
+                }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
                     return DataType.INT;
@@ -395,7 +404,7 @@ public class Ast {
         }
         
         @Override
-        public Integer getConstInt() {
+        public Integer getConstInt(SymTab symTab) {
             int sign = 1;
             for (Token op : ops) {
                 if (op.getType() == TokenType.SUB) {
@@ -405,12 +414,21 @@ public class Ast {
                 }
             }
             if (primary instanceof Exp) {
-                return ((Exp) primary).getConstInt() * sign;
+                return ((Exp) primary).getConstInt(symTab) * sign;
             } else if (primary instanceof Call) {
                 return null;
             } else if (primary instanceof LVal) {
-                // todo : 这里应该判断这个左值是不是常量
-                return null;
+                Symbol symbol = symTab.getSym(((LVal) primary).getName());
+                if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
+                    InitVal initVal = symbol.getInitVal();
+                    if (initVal instanceof IntInitVal) {
+                        return ((IntInitVal) initVal).getValue() * sign;
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
                     return ((Number) primary).getIntConstValue() * sign;
@@ -425,7 +443,7 @@ public class Ast {
         }
         
         @Override
-        public Float getConstFloat() {
+        public Float getConstFloat(SymTab symTab) {
             int sign = 1;
             for (Token op : ops) {
                 if (op.getType() == TokenType.SUB) {
@@ -435,12 +453,23 @@ public class Ast {
                 }
             }
             if (primary instanceof Exp) {
-                return ((Exp) primary).getConstFloat() * sign;
+                return ((Exp) primary).getConstFloat(symTab) * sign;
             } else if (primary instanceof Call) {
                 return null;
             } else if (primary instanceof LVal) {
-                // todo : 这里应该判断这个左值是不是常量
-                return null;
+                Symbol symbol = symTab.getSym(((LVal) primary).getName());
+                if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
+                    InitVal initVal = symbol.getInitVal();
+                    if (initVal instanceof IntInitVal) {
+                        return ((IntInitVal) initVal).getValue().floatValue() * sign;
+                    } else if (initVal instanceof FloatInitVal) {
+                        return ((FloatInitVal) initVal).getValue() * sign;
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
                     return (float) ((Number) primary).getIntConstValue() * sign;
@@ -462,14 +491,22 @@ public class Ast {
     // LVal -> Ident {'[' Exp ']'}
     public static class LVal implements PrimaryExp {
         
-        public Token ident;
-        public ArrayList<Exp> indexList;
+        private Token ident;
+        private ArrayList<Exp> indexList;
         
         public LVal(Token ident, ArrayList<Exp> indexList) {
             this.ident = ident;
             this.indexList = indexList;
             assert ident != null;
             assert indexList != null;
+        }
+        
+        public String getName() {
+            return ident.getContent();
+        }
+        
+        public List<Exp> getIndexList() {
+            return indexList;
         }
     }
     

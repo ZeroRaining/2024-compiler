@@ -1,6 +1,7 @@
 package frontend.ir;
 
 import frontend.ir.instr.ReturnInstr;
+import frontend.ir.symbols.SymTab;
 import frontend.syntax.Ast;
 
 import java.io.IOException;
@@ -10,13 +11,13 @@ import java.util.List;
 
 public class Procedure {
     private final ArrayList<BasicBlock> basicBlocks = new ArrayList<>();
-    private int nextSymIdx = 0;
+    private final SymTab symTab;
     
-    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block) {
+    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab symTab) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        
+        this.symTab = symTab;
         basicBlocks.add(new BasicBlock(fParams.size()));
         
         for (Ast.BlockItem item : block.getItems()) {
@@ -26,14 +27,14 @@ public class Procedure {
                     if (returnValue == null) {
                         basicBlocks.get(basicBlocks.size() - 1).addInstruction(new ReturnInstr(returnType));
                     } else {
-                        switch (returnValue.checkConstType()) {
+                        switch (returnValue.checkConstType(symTab)) {
                             case INT:
-                                Integer retI = returnValue.getConstInt();
+                                Integer retI = returnValue.getConstInt(symTab);
                                 assert retI != null;
                                 basicBlocks.get(basicBlocks.size() - 1).addInstruction(new ReturnInstr(returnType, retI));
                                 break;
                             case FLOAT:
-                                Float retF = returnValue.getConstFloat();
+                                Float retF = returnValue.getConstFloat(symTab);
                                 assert retF != null;
                                 basicBlocks.get(basicBlocks.size() - 1).addInstruction(new ReturnInstr(returnType, retF));
                                 break;

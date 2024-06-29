@@ -24,7 +24,7 @@ public class Program {
                 if (globalSymTab.hasSym(funcName)) {
                     throw new RuntimeException("函数命名与全局变量名重复");
                 }
-                functions.put(funcName, new Function((Ast.FuncDef) compUnit));
+                functions.put(funcName, new Function((Ast.FuncDef) compUnit, globalSymTab));
             } else if (compUnit instanceof Ast.Decl) {
                 globalSymTab.addSymbols(true, (Ast.Decl) compUnit);
             } else {

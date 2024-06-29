@@ -5,4 +5,8 @@ public class FloatInitVal extends InitVal {
     public FloatInitVal(float init) {
         value = init;
     }
+    
+    public Float getValue() {
+        return value;
+    }
 }

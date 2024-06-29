@@ -38,4 +38,20 @@ public class Symbol {
     public String getName() {
         return name;
     }
+    
+    public boolean isGlobal() {
+        return global;
+    }
+    
+    public boolean isConstant() {
+        return constant;
+    }
+    
+    public DataType getType() {
+        return type;
+    }
+    
+    public InitVal getInitVal() {
+        return initVal;
+    }
 }
