@@ -19,7 +19,12 @@ public class StoreInstr extends MemoryOperation {
     
     @Override
     public String print() {
-        return "store " + symbol.getType() + " " + value.value2string() +
-                ", " + symbol.getType() + "* " + symbol.getAllocInstr().value2string();
+        String base = "store " + symbol.getType() + " " + value.value2string() +
+                ", " + symbol.getType() + "* ";
+        if (symbol.isGlobal()) {
+            return base + "@" + symbol.getName();
+        } else {
+            return base + symbol.getAllocInstr().value2string();
+        }
     }
 }

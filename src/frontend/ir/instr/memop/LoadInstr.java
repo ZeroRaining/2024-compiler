@@ -25,7 +25,7 @@ public class LoadInstr extends MemoryOperation {
         if (symbol.isGlobal()) {
             stringBuilder.append("@").append(symbol.getName());
         } else {
-            stringBuilder.append("%").append(symbol.getAllocInstr().getValue());
+            stringBuilder.append(symbol.getAllocInstr().value2string());
         }
         return stringBuilder.toString();
     }

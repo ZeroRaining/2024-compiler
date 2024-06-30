@@ -195,6 +195,14 @@ public class Ast {
             assert left != null;
             assert right != null;
         }
+        
+        public LVal getLVal() {
+            return left;
+        }
+        
+        public Exp getExp() {
+            return right;
+        }
     }
     
     // ExpStmt

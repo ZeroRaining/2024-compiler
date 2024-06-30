@@ -23,6 +23,7 @@ public class Symbol {
         this.constant = constant;
         this.global = global;
         this.initVal = initVal;
+        this.allocInstr = null;
     }
     
     public String getName() {
@@ -50,6 +51,9 @@ public class Symbol {
     }
     
     public Value getAllocInstr() {
+        if (allocInstr == null) {
+            throw new RuntimeException("还没有定义");
+        }
         return allocInstr;
     }
 }
