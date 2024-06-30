@@ -76,4 +76,8 @@ public class Symbol {
     public Number getValue(AsmType type) {
         return ((ConstValue) initVal).getValue();
     }
+
+    public Value getAllocInstr() {
+        return allocInstr;
+    }
 }

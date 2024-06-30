@@ -86,4 +86,8 @@ public class SymTab {
     public HashSet<Symbol> getSymbolSet() {
         return new HashSet<>(symbolMap.values());
     }
+
+    public List<Symbol> getAllSym() {
+        return new ArrayList<>(symbolMap.values());
+    }
 }
