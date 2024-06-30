@@ -4,7 +4,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 
-public class ReturnInstr implements Instruction {
+public class ReturnInstr extends Instruction {
     private final DataType returnType;
     private final Value returnValue;
     

@@ -2,13 +2,11 @@ package frontend.ir.instr;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
-import frontend.ir.constvalue.ConstValue;
-import sun.awt.windows.ThemeReader;
 
 /**
  * result = op1 + op2
  */
-public class AddInstr implements Instruction {
+public class AddInstr extends Instruction {
     private final int result; // 新分配一个寄存器用来存结果
     private final Value op1;
     private final Value op2;

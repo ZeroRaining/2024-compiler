@@ -3,7 +3,7 @@ package frontend.ir.instr;
 import frontend.ir.DataType;
 import frontend.ir.symbols.Symbol;
 
-public class LoadInstr implements Instruction {
+public class LoadInstr extends Instruction {
     private final int result;
     private final Symbol symbol;
     
