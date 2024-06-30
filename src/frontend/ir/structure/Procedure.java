@@ -50,8 +50,10 @@ public class Procedure {
                     parseCodeBlock((Ast.Block) item, returnType, curBlock, new SymTab(symTab));
                 } else if (item instanceof Ast.Assign) {
                     dealAssign((Ast.Assign) item, curBlock, symTab);
+                } else if (item instanceof Ast.ExpStmt) {
+                    calculateExpr(((Ast.ExpStmt) item).getExp(), curBlock, symTab);
                 } else {
-                    throw new RuntimeException("出现了尚未支持的语句类型");
+                    throw new RuntimeException("出现了尚未支持的语句类型" + item.getClass());
                 }
             } else if (item instanceof Ast.Decl) {
                 dealDecl(curBlock, symTab, (Ast.Decl) item);

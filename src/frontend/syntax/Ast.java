@@ -207,10 +207,14 @@ public class Ast {
     
     // ExpStmt
     public static class ExpStmt implements Stmt {
-        public Exp exp; // nullable, empty stmt if null
+        private final Exp exp; // nullable, empty stmt if null
         
         public ExpStmt(Exp exp) {
             this.exp = exp;
+        }
+        
+        public Exp getExp() {
+            return exp;
         }
     }
     
