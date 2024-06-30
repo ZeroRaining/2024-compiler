@@ -1,5 +1,6 @@
 package frontend.ir.instr.binop;
 
+import frontend.ir.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
@@ -12,7 +13,8 @@ public abstract class BinaryOperation extends Instruction {
     private final DataType type;
     private final String operationName;
     
-    public BinaryOperation(int result, Value op1, Value op2, String operationName, DataType type) {
+    public BinaryOperation(int result, Value op1, Value op2, String operationName, DataType type, BasicBlock parentBB) {
+        super(parentBB);
         this.result = result;
         this.op1 = op1;
         this.op2 = op2;

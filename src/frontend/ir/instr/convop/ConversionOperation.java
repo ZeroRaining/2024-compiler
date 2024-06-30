@@ -1,5 +1,6 @@
 package frontend.ir.instr.convop;
 
+import frontend.ir.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
@@ -13,7 +14,8 @@ public abstract class ConversionOperation extends Instruction {
     private final Value value;
     private final String opName;
     
-    public ConversionOperation(int result, DataType form, DataType to, Value value, String name) {
+    public ConversionOperation(int result, DataType form, DataType to, Value value, String name, BasicBlock parentBB) {
+        super(parentBB);
         this.result = result;
         this.form   = form;
         this.to     = to;
