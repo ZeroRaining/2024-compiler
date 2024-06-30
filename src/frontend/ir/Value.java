@@ -1,7 +1,9 @@
 package frontend.ir;
 
-public interface Value {
-    Number getValue();
-    DataType getDataType();
-    String value2string();
+import Utils.CustomList;
+
+public abstract class Value extends CustomList.Node {
+    public abstract Number getValue();
+    public abstract DataType getDataType();
+    public abstract String value2string();
 }

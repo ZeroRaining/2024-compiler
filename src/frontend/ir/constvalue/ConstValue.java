@@ -2,5 +2,5 @@ package frontend.ir.constvalue;
 
 import frontend.ir.Value;
 
-public interface ConstValue extends Value {
+public abstract class ConstValue extends Value {
 }

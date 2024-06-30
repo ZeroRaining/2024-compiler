@@ -4,7 +4,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.syntax.Ast;
 
-public class InitExpr implements Value {
+public class InitExpr extends Value {
     private final Ast.Exp exp;
     
     public InitExpr(Ast.Exp exp) {

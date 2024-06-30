@@ -2,7 +2,7 @@ package frontend.ir.constvalue;
 
 import frontend.ir.DataType;
 
-public class ConstFloat implements ConstValue {
+public class ConstFloat extends ConstValue {
     private final float value;
     public ConstFloat(float init) {
         value = init;

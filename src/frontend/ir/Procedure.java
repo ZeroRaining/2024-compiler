@@ -24,7 +24,7 @@ import java.io.Writer;
 import java.util.List;
 
 public class Procedure {
-    private final CustomList<BasicBlock> basicBlocks = new CustomList<>();
+    private final CustomList basicBlocks = new CustomList();
     private final SymTab symTab;
     private int curRegIndex = 0;
     
@@ -224,7 +224,7 @@ public class Procedure {
         }
         // todo 首先应该挖个坑给参数埋起来（分配内存）
         int i = 0;
-        for (CustomList.Node<BasicBlock> basicBlockNode : basicBlocks) {
+        for (CustomList.Node basicBlockNode : basicBlocks) {
             BasicBlock block = (BasicBlock) basicBlockNode;
             writer.append("blk_").append(String.valueOf(i++)).append(":\n");
             block.printIR(writer);
