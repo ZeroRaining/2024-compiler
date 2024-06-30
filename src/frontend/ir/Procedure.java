@@ -3,13 +3,13 @@ package frontend.ir;
 import Utils.CustomList;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
-import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.Fp2Si;
 import frontend.ir.instr.convop.Si2Fp;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
+import frontend.ir.instr.unaryop.FNegInstr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 import frontend.lexer.Token;
@@ -177,8 +177,17 @@ public class Procedure {
             }
             assert sign == 1 || sign == -1;
             if (sign == -1) {
-                // todo 加一条减法指令
-                // res = 上一条
+                switch (res.getDataType()) {
+                    case INT:
+                        res = new SubInstr(curRegIndex++, new ConstInt(0), res);
+                        break;
+                    case FLOAT:
+                        res = new FNegInstr(curRegIndex++, res);
+                        break;
+                    default:
+                        throw new RuntimeException("指令不能，至少不应该连返回值都没有吧");
+                }
+                curBlock.addInstruction((Instruction) res);
             }
             return res;
         } else {
