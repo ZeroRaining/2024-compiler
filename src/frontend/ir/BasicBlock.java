@@ -5,24 +5,24 @@ import frontend.ir.instr.Instruction;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 
 public class BasicBlock extends CustomList.Node<BasicBlock> {
-    private final ArrayList<Instruction> instructions = new ArrayList<>();
+    private final CustomList<Instruction> instructions = new CustomList<>();
     
     public BasicBlock() {
     }
     
     public void addInstruction(Instruction instr) {
-        instructions.add(instr);
+        instructions.addToTail(instr);
     }
     
     public void printIR(Writer writer) throws IOException {
         if (writer == null) {
             throw new NullPointerException();
         }
-        
-        for (Instruction instruction : instructions) {
+
+        for (CustomList.Node<Instruction> instructionNode : instructions) {
+            Instruction instruction = (Instruction) instructionNode;
             writer.append("\t").append(instruction.print()).append("\n");
         }
     }
