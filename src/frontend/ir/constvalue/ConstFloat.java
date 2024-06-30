@@ -17,4 +17,9 @@ public class ConstFloat implements ConstValue {
     public DataType getDataType() {
         return DataType.FLOAT;
     }
+    
+    @Override
+    public String value2string() {
+        return "0x" + Long.toHexString(Double.doubleToLongBits(value));
+    }
 }

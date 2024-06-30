@@ -1,13 +1,16 @@
-package frontend.ir.instr;
+package frontend.ir.instr.memop;
 
+import frontend.ir.BasicBlock;
 import frontend.ir.DataType;
+import frontend.ir.instr.Instruction;
 import frontend.ir.symbols.Symbol;
 
-public class LoadInstr implements Instruction {
+public class LoadInstr extends Instruction {
     private final int result;
     private final Symbol symbol;
     
-    public LoadInstr(int result, Symbol symbol) {
+    public LoadInstr(int result, Symbol symbol, BasicBlock parentBB) {
+        super(parentBB);
         this.result = result;
         this.symbol = symbol;
     }
