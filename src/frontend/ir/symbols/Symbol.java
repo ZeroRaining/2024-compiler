@@ -7,12 +7,12 @@ import frontend.syntax.Ast;
 import java.util.List;
 
 public class Symbol {
-    private String name;
-    private DataType type;
-    private List<Integer> limitList;
-    private boolean constant;
-    private boolean global;
-    private Value initVal;
+    private final String name;
+    private final DataType type;
+    private final List<Integer> limitList;
+    private final boolean constant;
+    private final boolean global;
+    private final Value initVal;
     private Value allocInstr;   // 用来获取 IR 中保存该变量地址的指针
     
     public Symbol(String name, DataType type, List<Integer> limitList,
@@ -23,15 +23,6 @@ public class Symbol {
         this.constant = constant;
         this.global = global;
         this.initVal = initVal;
-    }
-    
-    public Symbol(boolean isGlobal, Ast.Decl decl) {
-        if (decl == null) {
-            throw new RuntimeException("空定义");
-        }
-        global = isGlobal;
-        constant = decl.isConst();
-        
     }
     
     public String getName() {
@@ -52,6 +43,10 @@ public class Symbol {
     
     public Value getInitVal() {
         return initVal;
+    }
+    
+    public void setAllocInstr(Value allocInstr) {
+        this.allocInstr = allocInstr;
     }
     
     public Value getAllocInstr() {

@@ -11,6 +11,8 @@ import java.util.List;
 public class SymTab {
     private final HashMap<String, Symbol> symbolMap = new HashMap<>();
     private final SymTab parent;
+    private final ArrayList<Symbol> newSymList = new ArrayList<>();
+        // 每次新加一系列 symbol 的时候更新，用来记录最新一批，用于给临时变量申请空间
     
     public SymTab(SymTab p) {
         parent = p;
@@ -56,6 +58,7 @@ public class SymTab {
             case FLOAT: dataType = DataType.FLOAT;  break;
             default : throw new RuntimeException("出现了意料之外的声明类型");
         }
+        newSymList.clear();
         for (Ast.Def def : decl.getDefList()) {
             assert def.getType().equals(decl.getType().getType());
             String name = def.getIdent().getContent();
@@ -74,8 +77,14 @@ public class SymTab {
             } else {
                 initVal = null;
             }
-            addSym(new Symbol(name, dataType, limList, constant, parent == null, initVal));
+            Symbol symbol = new Symbol(name, dataType, limList, constant, parent == null, initVal);
+            newSymList.add(symbol);
+            addSym(symbol);
         }
+    }
+    
+    public List<Symbol> getNewSymList() {
+        return newSymList;
     }
     
     public boolean isGlobal() {

@@ -3,13 +3,17 @@ package frontend.ir;
 import Utils.CustomList;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.Fp2Si;
 import frontend.ir.instr.convop.Si2Fp;
+import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.memop.LoadInstr;
+import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.unaryop.FNegInstr;
+import frontend.ir.symbols.InitExpr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 import frontend.lexer.Token;
@@ -24,35 +28,50 @@ public class Procedure {
     private final SymTab symTab;
     private int curRegIndex = 0;
     
-    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab baseSymTab) {
+    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
         basicBlocks.addToTail(new BasicBlock());
-        symTab = baseSymTab;
-        
+        symTab = funcSymTab;
+        BasicBlock curBlock = ((BasicBlock)basicBlocks.getTail());
         for (Ast.BlockItem item : block.getItems()) {
             if (item instanceof Ast.Stmt) {
                 if (item instanceof Ast.Return) {
-                    dealReturn((Ast.Return) item, returnType);
+                    dealReturn((Ast.Return) item, returnType, curBlock);
                 }
             } else if (item instanceof Ast.Decl) {
                 symTab.addSymbols((Ast.Decl) item);
-                // todo
+                List<Symbol> newSymList = symTab.getNewSymList();
+                for (Symbol symbol : newSymList) {
+                    curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
+                    Value initVal = symbol.getInitVal();
+                    if (initVal != null) {
+                        Value init;
+                        if (initVal instanceof ConstValue) {
+                            init = initVal;
+                        } else if (initVal instanceof InitExpr) {
+                            init = calculateExpr(((InitExpr) initVal).getExp(), curBlock);
+                        } else {
+                            throw new RuntimeException("这里还没有支持常量和表达式之外的形式");
+                        }
+                        curBlock.addInstruction(new StoreInstr(init, symbol, curBlock));
+                    }
+                }
             } else {
                 throw new RuntimeException("出现了奇怪的条目");
             }
         }
     }
     
-    private void dealReturn(Ast.Return item, DataType returnType) {
+    public void dealReturn(Ast.Return item, DataType returnType, BasicBlock curBlock) {
         if (item == null ||  returnType == null) {
             throw new NullPointerException();
         }
         Ast.Exp returnValue = (item).getReturnValue();
-        BasicBlock curBasicBlock = ((BasicBlock)basicBlocks.getTail());
+        
         if (returnValue == null) {
-            curBasicBlock.addInstruction(new ReturnInstr(returnType, curBasicBlock));
+            curBlock.addInstruction(new ReturnInstr(returnType, curBlock));
         } else {
             Value value;
             switch (returnValue.checkConstType(symTab)) {
@@ -64,30 +83,29 @@ public class Procedure {
                     break;
                 default:
                     // 返回值非常量
-                    value = calculateExpr(returnValue);
+                    value = calculateExpr(returnValue, curBlock);
                     assert value instanceof Instruction;
             }
             assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
             if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
-                value = new Fp2Si(curRegIndex++, value, curBasicBlock);
-                curBasicBlock.addInstruction((Instruction) value);
+                value = new Fp2Si(curRegIndex++, value, curBlock);
+                curBlock.addInstruction((Instruction) value);
             } else if (returnType == DataType.FLOAT && value.getDataType() == DataType.INT) {
-                value = new Si2Fp(curRegIndex++, value, curBasicBlock);
-                curBasicBlock.addInstruction((Instruction) value);
+                value = new Si2Fp(curRegIndex++, value, curBlock);
+                curBlock.addInstruction((Instruction) value);
             }
-            curBasicBlock.addInstruction(new ReturnInstr(returnType, value, curBasicBlock));
+            curBlock.addInstruction(new ReturnInstr(returnType, value, curBlock));
         }
     }
     
-    private Value calculateExpr(Ast.Exp exp) {
-        BasicBlock curBlock = (BasicBlock) basicBlocks.getTail();
+    private Value calculateExpr(Ast.Exp exp, BasicBlock curBlock) {
         if (exp instanceof Ast.BinaryExp) {
-            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp());
+            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp(), curBlock);
             List<Ast.Exp> rest = ((Ast.BinaryExp) exp).getRestExps();
             for (int i = 0; i < rest.size(); i++) {
                 Ast.Exp expI = rest.get(i);
                 Token op = ((Ast.BinaryExp) exp).getOps().get(i);
-                Value valueI = calculateExpr(expI);
+                Value valueI = calculateExpr(expI, curBlock);
                 
                 DataType type1 = firstValue.getDataType();
                 DataType type2 = valueI.getDataType();
@@ -154,7 +172,7 @@ public class Procedure {
             Ast.PrimaryExp primary = ((Ast.UnaryExp) exp).getPrimaryExp();
             Value res;
             if (primary instanceof Ast.Exp) {
-                res = calculateExpr((Ast.Exp) primary);
+                res = calculateExpr((Ast.Exp) primary, curBlock);
             } else if (primary instanceof Ast.Call) {
                 // todo
                 throw new RuntimeException("还没写到");

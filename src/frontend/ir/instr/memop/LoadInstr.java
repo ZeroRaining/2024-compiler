@@ -5,24 +5,17 @@ import frontend.ir.DataType;
 import frontend.ir.instr.Instruction;
 import frontend.ir.symbols.Symbol;
 
-public class LoadInstr extends Instruction {
+public class LoadInstr extends MemoryOperation {
     private final int result;
-    private final Symbol symbol;
     
     public LoadInstr(int result, Symbol symbol, BasicBlock parentBB) {
-        super(parentBB);
+        super(symbol, parentBB);
         this.result = result;
-        this.symbol = symbol;
     }
     
     @Override
     public Number getValue() {
         return result;
-    }
-    
-    @Override
-    public DataType getDataType() {
-        return symbol.getType();
     }
     
     @Override
