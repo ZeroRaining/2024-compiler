@@ -1,5 +1,4 @@
-import arg.Arg;
-import frontend.ir.Program;
+import frontend.ir.structure.Program;
 import frontend.lexer.Token;
 import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;

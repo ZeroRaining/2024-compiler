@@ -1,9 +1,8 @@
 package frontend.ir.instr.binop;
 
-import frontend.ir.BasicBlock;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
-import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.instr.Instruction;
 
 public abstract class BinaryOperation extends Instruction {

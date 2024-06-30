@@ -1,6 +1,8 @@
-package frontend.ir;
+package frontend.ir.structure;
 
 import Utils.CustomList;
+import frontend.ir.DataType;
+import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.constvalue.ConstValue;
@@ -13,6 +15,7 @@ import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.unaryop.FNegInstr;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.symbols.InitExpr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;

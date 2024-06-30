@@ -1,9 +1,8 @@
 package frontend.ir.instr.terminator;
 
-import frontend.ir.BasicBlock;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
-import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 
 public class ReturnInstr extends Instruction {

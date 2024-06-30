@@ -1,6 +1,8 @@
-package frontend.ir;
+package frontend.ir.structure;
 
 import Utils.CustomList;
+import frontend.ir.DataType;
+import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 
 import java.io.IOException;

@@ -1,7 +1,6 @@
 package frontend.ir.instr;
 
-import Utils.CustomList;
-import frontend.ir.BasicBlock;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.Value;
 
 public abstract class Instruction extends Value {

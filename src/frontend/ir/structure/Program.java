@@ -1,5 +1,6 @@
-package frontend.ir;
+package frontend.ir.structure;
 
+import frontend.ir.structure.Function;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 import frontend.syntax.Ast;

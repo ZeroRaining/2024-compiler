@@ -1,6 +1,6 @@
 package frontend.ir.instr.memop;
 
-import frontend.ir.BasicBlock;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.instr.Instruction;
 import frontend.ir.symbols.Symbol;
