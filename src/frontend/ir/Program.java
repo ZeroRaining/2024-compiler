@@ -1,6 +1,7 @@
 package frontend.ir;
 
 import frontend.ir.symbols.SymTab;
+import frontend.ir.symbols.Symbol;
 import frontend.syntax.Ast;
 
 import java.io.IOException;
@@ -38,8 +39,21 @@ public class Program {
             throw new NullPointerException();
         }
         writer.write("");
+        writeGlobalDecl(writer);
+        writer.append("\n");
         for (Function function : functions.values()) {
             function.printIR(writer);
+        }
+    }
+    
+    private void writeGlobalDecl(Writer writer) throws IOException {
+        if (writer == null) {
+            throw new NullPointerException();
+        }
+        for (Symbol symbol : globalSymTab.getAllSym()) {
+            writer.append("@").append(symbol.getName()).append(" = global ");
+            writer.append(symbol.getType().toString()).append(" ");
+            writer.append(symbol.getInitVal().getValue().toString()).append("\n");
         }
     }
 }

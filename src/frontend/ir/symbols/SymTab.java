@@ -81,4 +81,8 @@ public class SymTab {
     public boolean isGlobal() {
         return parent == null;
     }
+    
+    public List<Symbol> getAllSym() {
+        return new ArrayList<>(symbolMap.values());
+    }
 }

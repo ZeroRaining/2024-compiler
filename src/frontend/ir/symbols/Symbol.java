@@ -53,4 +53,8 @@ public class Symbol {
     public Value getInitVal() {
         return initVal;
     }
+    
+    public Value getAllocInstr() {
+        return allocInstr;
+    }
 }
