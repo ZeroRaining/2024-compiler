@@ -40,6 +40,8 @@ public class Program {
             throw new NullPointerException();
         }
         writer.write("");
+        writeGlobalDecl(writer);
+        writer.append("\n");
         for (Function function : functions.values()) {
             function.printIR(writer);
         }
@@ -50,5 +52,16 @@ public class Program {
     }
     public HashMap<String, Function> getFunctions(){
         return functions;
+    }
+
+    private void writeGlobalDecl(Writer writer) throws IOException {
+        if (writer == null) {
+            throw new NullPointerException();
+        }
+        for (Symbol symbol : globalSymTab.getAllSym()) {
+            writer.append("@").append(symbol.getName()).append(" = global ");
+            writer.append(symbol.getType().toString()).append(" ");
+            writer.append(symbol.getInitVal().getValue().toString()).append("\n");
+        }
     }
 }

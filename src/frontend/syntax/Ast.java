@@ -368,8 +368,8 @@ public class Ast {
     // UnaryExp -> {UnaryOp} PrimaryExp
     public static class UnaryExp implements Exp {
         
-        public ArrayList<Token> ops;
-        public PrimaryExp primary;
+        private ArrayList<Token> ops;
+        private PrimaryExp primary;
         
         public UnaryExp(ArrayList<Token> ops, PrimaryExp primary) {
             this.ops = ops;
@@ -377,11 +377,23 @@ public class Ast {
             assert ops != null;
             assert primary != null;
         }
-        public ArrayList<Token> getUnaryOps() {
+        public List<Token> getUnaryOps() {
             return ops;
         }
         public PrimaryExp getPrimaryExp() {
             return primary;
+        }
+        
+        public int getSign() {
+            int sign = 1;
+            for (Token op : ops) {
+                if (op.getType() == TokenType.SUB) {
+                    sign *= -1;
+                } else if (op.getType() != TokenType.ADD) {
+                    throw new RuntimeException("出现了意料之外的符号");
+                }
+            }
+            return sign;
         }
         
         @Override
@@ -412,14 +424,7 @@ public class Ast {
         
         @Override
         public Integer getConstInt(SymTab symTab) {
-            int sign = 1;
-            for (Token op : ops) {
-                if (op.getType() == TokenType.SUB) {
-                    sign *= -1;
-                } else if (op.getType() != TokenType.ADD) {
-                    throw new RuntimeException("出现了意料之外的符号");
-                }
-            }
+            int sign = getSign();
             if (primary instanceof Exp) {
                 return ((Exp) primary).getConstInt(symTab) * sign;
             } else if (primary instanceof Call) {
@@ -429,7 +434,7 @@ public class Ast {
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     Value initVal = symbol.getInitVal();
                     if (initVal instanceof ConstInt) {
-                        return ((ConstValue) initVal).getValue().intValue() * sign;
+                        return initVal.getValue().intValue() * sign;
                     } else {
                         return null;
                     }
@@ -451,14 +456,7 @@ public class Ast {
         
         @Override
         public Float getConstFloat(SymTab symTab) {
-            int sign = 1;
-            for (Token op : ops) {
-                if (op.getType() == TokenType.SUB) {
-                    sign *= -1;
-                } else if (op.getType() != TokenType.ADD) {
-                    throw new RuntimeException("出现了意料之外的符号");
-                }
-            }
+            int sign = getSign();
             if (primary instanceof Exp) {
                 return ((Exp) primary).getConstFloat(symTab) * sign;
             } else if (primary instanceof Call) {
@@ -468,7 +466,7 @@ public class Ast {
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     Value initVal = symbol.getInitVal();
                     if (initVal instanceof ConstValue) {
-                        return ((ConstValue) initVal).getValue().floatValue() * sign;
+                        return initVal.getValue().floatValue() * sign;
                     } else {
                         return null;
                     }

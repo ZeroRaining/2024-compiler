@@ -3,6 +3,7 @@ package backend;
 import backend.itemStructure.*;
 import frontend.ir.BasicBlock;
 import frontend.ir.Program;
+import frontend.ir.instr.Instruction;
 import frontend.ir.symbols.Symbol;
 import frontend.ir.Function;
 
@@ -63,6 +64,36 @@ public class IrParser {
 
     private void parseFunctions() {
         createMaps();
+        for (Function f : program.getFunctions().values()) {
+            if (!f.isLib()) {
+                parseFunction(f);
+            }
+        }
+    }
+
+    private void parseFunction(Function f) {
+        AsmFunction asmFunction = funcMap.get(f);
+        int pushArgSize = 0;
+        for (BasicBlock bb : f.getBasicBlocks()) {
+            for (Instruction instr : bb.getInstructions()) {
+                if (instr.isCall()) {
+                    //TODO：处理栈预留空间，有尾递归处理
+                }
+            }
+        }
+        //+8是ra的大小
+        asmFunction.addStackSize(pushArgSize + 8);
+
+        for (BasicBlock bb : f.getBasicBlocks()) {
+            parseBlock(bb, f);
+        }
+
+        //TODO:需要函数退出块。为什么需要？好像是寄存器分配部分要。
+        asmFunction.setExit(blockMap.get(f.getExit()));
+        asmFunction.setIsTail(f.isTail());
+
+        //TODO:fargnum与iargnum有什么用？不知道，先省略了。
+
     }
 
     private void createMaps() {
@@ -77,7 +108,7 @@ public class IrParser {
                 asmFunction.addBlock(asmBlock);
                 blockMap.put(bb, asmBlock);
             }
-
+            //TODO:基于双向链表
         }
     }
 
