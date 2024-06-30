@@ -1,5 +1,6 @@
 package frontend.ir;
 
+import Utils.CustomList;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.AddInstr;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Procedure {
-    private final ArrayList<BasicBlock> basicBlocks = new ArrayList<>();
+    private final CustomList<BasicBlock> basicBlocks = new CustomList<>();
     private final SymTab symTab;
     private int curRegIndex = 0;
     
@@ -25,15 +26,16 @@ public class Procedure {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        basicBlocks.add(new BasicBlock());
+        basicBlocks.addToTail(new BasicBlock());
         this.symTab = baseSymTab;
         
         for (Ast.BlockItem item : block.getItems()) {
             if (item instanceof Ast.Stmt) {
                 if (item instanceof Ast.Return) {
                     Ast.Exp returnValue = ((Ast.Return) item).getReturnValue();
+                    BasicBlock bb = ((BasicBlock)basicBlocks.getTail());
                     if (returnValue == null) {
-                        basicBlocks.get(basicBlocks.size() - 1).addInstruction(new ReturnInstr(returnType));
+                        bb.addInstruction(new ReturnInstr(returnType));
                     } else {
                         Value value;
                         switch (returnValue.checkConstType(symTab)) {
@@ -49,7 +51,7 @@ public class Procedure {
                                 assert value instanceof Instruction;
                         }
                         Instruction ret = new ReturnInstr(returnType, value);
-                        basicBlocks.get(basicBlocks.size() - 1).addInstruction(ret);
+                        bb.addInstruction(ret);
                     }
                     
                 }
@@ -62,7 +64,7 @@ public class Procedure {
     }
     
     private Value calculateExpr(Ast.Exp exp) {
-        BasicBlock curBlock = basicBlocks.get(basicBlocks.size() - 1);
+        BasicBlock curBlock = (BasicBlock) basicBlocks.getTail();
         if (exp instanceof Ast.BinaryExp) {
             Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp());
             List<Ast.Exp> rest = ((Ast.BinaryExp) exp).getRestExps();
@@ -131,9 +133,10 @@ public class Procedure {
             throw new NullPointerException();
         }
         // todo 首先应该挖个坑给参数埋起来（分配内存）
-        for (int i = 0; i < basicBlocks.size(); i++) {
-            BasicBlock block = basicBlocks.get(i);
-            writer.append("blk_").append(Integer.toString(i)).append(":\n");
+        int i = 0;
+        for (CustomList.Node<BasicBlock> basicBlockNode : basicBlocks) {
+            BasicBlock block = (BasicBlock) basicBlockNode;
+            writer.append("blk_").append(String.valueOf(i++)).append(":\n");
             block.printIR(writer);
         }
     }
