@@ -52,7 +52,7 @@ public class CustomList<N, L> implements Iterable<CustomList.Node<N, L>> {
         this.size--;
     }
 
-    public void add(Node<N, L> node) {
+    public void addToTail(Node<N, L> node) {
         if (this.tail == null) {
             this.head = this.tail = node;
         } else {
@@ -132,7 +132,7 @@ public class CustomList<N, L> implements Iterable<CustomList.Node<N, L>> {
         private Node<N, L> next;
         private CustomList<N, L> parent;
 
-        public Node(N value) {
+        public Node(N value,L type) {
             this.value = value;
         }
 
