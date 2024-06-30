@@ -127,13 +127,13 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
     }
 
     public static class Node<E> {
-//        private N value;
+        private final E element;
         private Node<E> prev;
         private Node<E> next;
         private CustomList<E> parent;
 
-        public Node() {
-//            this.value = value;
+        public Node(E element) {
+            this.element = element;
         }
 
         public void insertAfter(Node<E> node) {
@@ -187,9 +187,9 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
             this.parent = null;
         }
 
-//        public N getValue() {
-//            return value;
-//        }
+        public E getElement() {
+            return element;
+        }
 
 //        public void setValue(N value) {
 //            this.value = value;
