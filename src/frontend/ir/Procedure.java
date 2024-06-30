@@ -3,10 +3,13 @@ package frontend.ir;
 import Utils.CustomList;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
-import frontend.ir.instr.AddInstr;
+import frontend.ir.constvalue.ConstValue;
+import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
-import frontend.ir.instr.LoadInstr;
-import frontend.ir.instr.ReturnInstr;
+import frontend.ir.instr.convop.Fp2Si;
+import frontend.ir.instr.convop.Si2Fp;
+import frontend.ir.instr.memop.LoadInstr;
+import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 import frontend.lexer.Token;
@@ -14,7 +17,6 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Procedure {
@@ -50,8 +52,17 @@ public class Procedure {
                                 value = calculateExpr(returnValue);
                                 assert value instanceof Instruction;
                         }
-                        Instruction ret = new ReturnInstr(returnType, value);
-                        bb.addInstruction(ret);
+
+                        assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
+                        if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
+                            value = new Fp2Si(curRegIndex++, value);
+                            bb.addInstruction((Instruction) value);
+                        } else if (returnType == DataType.FLOAT && value.getDataType() == DataType.INT) {
+                            value = new Si2Fp(curRegIndex++, value);
+                            bb.addInstruction((Instruction) value);
+                        }
+                        bb.addInstruction(new ReturnInstr(returnType, value));
+                        
                     }
                     
                 }
@@ -72,14 +83,61 @@ public class Procedure {
                 Ast.Exp expI = rest.get(i);
                 Token op = ((Ast.BinaryExp) exp).getOps().get(i);
                 Value valueI = calculateExpr(expI);
+                
+                DataType type1 = firstValue.getDataType();
+                DataType type2 = valueI.getDataType();
+                assert type1 != DataType.VOID && type2 != DataType.VOID;
+                DataType dataType = (type1 == DataType.INT && type2 == DataType.INT) ? DataType.INT : DataType.FLOAT;
+                if (dataType == DataType.FLOAT) {
+                    if (type1 == DataType.INT) {
+                        Instruction instruction = new Si2Fp(curRegIndex++, firstValue);
+                        curBlock.addInstruction(instruction);
+                        firstValue = instruction;
+                    }
+                    if (type2 == DataType.INT) {
+                        Instruction instruction = new Si2Fp(curRegIndex++, valueI);
+                        curBlock.addInstruction(instruction);
+                        valueI = instruction;
+                    }
+                }
+                
                 Instruction instruction;
                 switch (op.getType()) {
-                    // todo 常量和变量（用 instr 存统一到 value 下面
-                    case ADD: instruction = new AddInstr(curRegIndex++, firstValue, valueI); break;
-//                    case SUB: res -= num; break;
-//                    case MUL: res *= num; break;
-//                    case DIV: res /= num; break;
-//                    case MOD: res %= num; break;
+                    case ADD:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FAddInstr(curRegIndex++, firstValue, valueI);
+                        } else {
+                            instruction = new AddInstr(curRegIndex++, firstValue, valueI);
+                        }
+                        break;
+                    case SUB:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FSubInstr(curRegIndex++, firstValue, valueI);
+                        } else {
+                            instruction = new SubInstr(curRegIndex++, firstValue, valueI);
+                        }
+                        break;
+                    case MUL:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FMulInstr(curRegIndex++, firstValue, valueI);
+                        } else {
+                            instruction = new MulInstr(curRegIndex++, firstValue, valueI);
+                        }
+                        break;
+                    case DIV:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FDivInstr(curRegIndex++, firstValue, valueI);
+                        } else {
+                            instruction = new SDivInstr(curRegIndex++, firstValue, valueI);
+                        }
+                        break;
+                    case MOD:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FRemInstr(curRegIndex++, firstValue, valueI);
+                        } else {
+                            instruction = new SRemInstr(curRegIndex++, firstValue, valueI);
+                        }
+                        break;
                     default: throw new RuntimeException("表达式计算过程中出现了未曾设想的运算符");
                 }
                 curBlock.addInstruction(instruction);
@@ -94,7 +152,7 @@ public class Procedure {
                 res = calculateExpr((Ast.Exp) primary);
             } else if (primary instanceof Ast.Call) {
                 // todo
-                return null;
+                throw new RuntimeException("还没写到");
             } else if (primary instanceof Ast.LVal) {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {

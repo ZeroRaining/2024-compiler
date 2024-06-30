@@ -1,8 +1,9 @@
-package frontend.ir.instr;
+package frontend.ir.instr.terminator;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
+import frontend.ir.instr.Instruction;
 
 public class ReturnInstr extends Instruction {
     private final DataType returnType;
@@ -16,6 +17,9 @@ public class ReturnInstr extends Instruction {
         returnValue = null;
     }
     
+    /**
+     * 保证了传入的 Value 的数据类型与要求的返回值类型一致
+     */
     public ReturnInstr(DataType returnType, Value returnValue) {
         if (returnType == DataType.VOID) {
             throw new RuntimeException("在不该返回值的函数中返回值了");
@@ -38,30 +42,12 @@ public class ReturnInstr extends Instruction {
     public String print() {
         StringBuilder stringBuilder = new StringBuilder("ret ");
         stringBuilder.append(returnType).append(" ");
-        switch (this.returnType) {
-            case INT:
-                if (returnValue instanceof ConstValue) {
-                    stringBuilder.append(returnValue.getValue().intValue());
-                } else if (returnValue instanceof Instruction) {
-                    stringBuilder.append("%").append(returnValue.getValue().intValue());
-                } else {
-                    throw new RuntimeException("未曾设想的返回值");
-                }
-                break;
-            case FLOAT:
-                if (returnValue instanceof ConstValue) {
-                    stringBuilder.append(returnValue.getValue().floatValue());
-                } else if (returnValue instanceof Instruction) {
-                    stringBuilder.append("%").append(returnValue.getValue().intValue());
-                } else {
-                    throw new RuntimeException("未曾设想的返回值");
-                }
-                break;
-            case VOID:
-                break;
-            default:
-                throw new RuntimeException("返回指令中出现了不存在的类型");
+        if (returnType == DataType.VOID) {
+            return stringBuilder.toString();
         }
+        assert returnValue != null;
+        stringBuilder.append(returnValue.value2string());
+        
         return stringBuilder.toString();
     }
 }

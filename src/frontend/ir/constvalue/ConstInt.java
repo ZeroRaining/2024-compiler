@@ -17,4 +17,9 @@ public class ConstInt implements ConstValue {
     public DataType getDataType() {
         return DataType.INT;
     }
+    
+    @Override
+    public String value2string() {
+        return Integer.toString(this.value);
+    }
 }

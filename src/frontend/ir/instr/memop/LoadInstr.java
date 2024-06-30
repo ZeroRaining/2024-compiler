@@ -1,6 +1,7 @@
-package frontend.ir.instr;
+package frontend.ir.instr.memop;
 
 import frontend.ir.DataType;
+import frontend.ir.instr.Instruction;
 import frontend.ir.symbols.Symbol;
 
 public class LoadInstr extends Instruction {
