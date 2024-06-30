@@ -1,12 +1,13 @@
 package frontend.ir;
 
+import Utils.CustomList;
 import frontend.ir.instr.Instruction;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 
-public class BasicBlock {
+public class BasicBlock extends CustomList.Node<BasicBlock> {
     private final ArrayList<Instruction> instructions = new ArrayList<>();
     
     public BasicBlock() {

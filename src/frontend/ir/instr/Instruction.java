@@ -1,7 +1,8 @@
 package frontend.ir.instr;
 
+import Utils.CustomList;
 import frontend.ir.Value;
 
-public interface Instruction extends Value {
-    String print();
+public abstract class Instruction extends CustomList.Node<Instruction> implements Value {
+    public abstract String print();
 }
