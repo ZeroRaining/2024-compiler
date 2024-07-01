@@ -13,8 +13,10 @@ import frontend.ir.instr.convop.Si2Fp;
 import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
+import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.unaryop.FNegInstr;
+import frontend.ir.lib.Lib;
 import frontend.ir.symbols.InitExpr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
@@ -23,6 +25,7 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Procedure {
@@ -72,19 +75,7 @@ public class Procedure {
         if (returnValue == null) {
             curBlock.addInstruction(new ReturnInstr(returnType, curBlock));
         } else {
-            Value value;
-            switch (returnValue.checkConstType(symTab)) {
-                case INT:
-                    value = new ConstInt(returnValue.getConstInt(symTab));
-                    break;
-                case FLOAT:
-                    value = new ConstFloat(returnValue.getConstFloat(symTab));
-                    break;
-                default:
-                    // 返回值非常量
-                    value = calculateExpr(returnValue, curBlock, symTab);
-                    assert value instanceof Instruction;
-            }
+            Value value = calculateExpr(returnValue, curBlock, symTab);
             assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
             if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
                 value = new Fp2Si(curRegIndex++, value, curBlock);
@@ -104,6 +95,14 @@ public class Procedure {
         Ast.LVal lVal = item.getLVal();
         Symbol left = symTab.getSym(lVal.getName());
         Value right = calculateExpr(item.getExp(), curBlock, symTab);
+        if (left.getType() == DataType.FLOAT && right.getDataType() == DataType.INT) {
+            right = new Si2Fp(curRegIndex++, right, curBlock);
+            curBlock.addInstruction((Instruction) right);
+        }
+        if (left.getType() == DataType.INT && right.getDataType() == DataType.FLOAT) {
+            right = new Fp2Si(curRegIndex++, right, curBlock);
+            curBlock.addInstruction((Instruction) right);
+        }
         curBlock.addInstruction(new StoreInstr(right, left, curBlock));
     }
     
@@ -131,6 +130,13 @@ public class Procedure {
     }
     
     private Value calculateExpr(Ast.Exp exp, BasicBlock curBlock, SymTab symTab) {
+        if (exp == null) {
+            throw new NullPointerException();
+        }
+        switch (exp.checkConstType(symTab)) {
+            case INT:   return new ConstInt(exp.getConstInt(symTab));
+            case FLOAT: return new ConstFloat(exp.getConstFloat(symTab));
+        }
         if (exp instanceof Ast.BinaryExp) {
             Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp(), curBlock, symTab);
             List<Ast.Exp> rest = ((Ast.BinaryExp) exp).getRestExps();
@@ -206,8 +212,7 @@ public class Procedure {
             if (primary instanceof Ast.Exp) {
                 res = calculateExpr((Ast.Exp) primary, curBlock, symTab);
             } else if (primary instanceof Ast.Call) {
-                // todo
-                throw new RuntimeException("还没写到");
+                res = dealCall((Ast.Call) primary, curBlock, symTab);
             } else if (primary instanceof Ast.LVal) {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
@@ -247,6 +252,26 @@ public class Procedure {
             return res;
         } else {
             throw new RuntimeException("奇怪的表达式");
+        }
+    }
+    
+    Value dealCall(Ast.Call call, BasicBlock curBlock, SymTab symTab) {
+        if (call == null) {
+            throw new NullPointerException();
+        }
+        ArrayList<Value> rParams = new ArrayList<>();
+        for (Ast.Exp exp : call.getParams()) {
+            rParams.add(calculateExpr(exp, curBlock, symTab));
+        }
+        CallInstr instr = Lib.getInstance().makeCall(curRegIndex++, call.getName(), rParams, curBlock);
+        if (instr != null) {
+            if (instr.getDataType() == DataType.VOID) {
+                curRegIndex--;
+            }
+            curBlock.addInstruction(instr);
+            return instr;
+        } else {
+            throw new RuntimeException("自定义函数调用尚未支持");
         }
     }
     

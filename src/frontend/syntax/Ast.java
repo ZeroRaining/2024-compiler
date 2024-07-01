@@ -585,14 +585,22 @@ public class Ast {
     // FuncRParams -> Exp {',' Exp}, already inlined in Call
     public static class Call implements PrimaryExp {
         
-        public Token ident;
-        public ArrayList<Exp> params;
+        private final Token ident;
+        private final ArrayList<Exp> params;
         
         public Call(Token ident, ArrayList<Exp> params) {
             assert ident != null;
             assert params != null;
             this.ident = ident;
             this.params = params;
+        }
+        
+        public String getName() {
+            return ident.getContent();
+        }
+        
+        public List<Exp> getParams() {
+            return params;
         }
     }
     

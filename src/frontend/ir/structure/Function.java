@@ -1,6 +1,7 @@
 package frontend.ir.structure;
 
 import frontend.ir.DataType;
+import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.symbols.SymTab;
 import frontend.syntax.Ast;
@@ -8,7 +9,7 @@ import frontend.syntax.Ast;
 import java.io.IOException;
 import java.io.Writer;
 
-public class Function extends Value {
+public class Function extends Value implements FuncDef {
     private final String name;
     private final DataType returnType;
     private final Procedure procedure;
@@ -69,5 +70,10 @@ public class Function extends Value {
     @Override
     public String value2string() {
         throw new RuntimeException("函数暂时没有值");
+    }
+    
+    @Override
+    public String getName() {
+        return name;
     }
 }

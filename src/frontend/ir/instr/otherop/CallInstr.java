@@ -1,18 +1,23 @@
 package frontend.ir.instr.otherop;
 
 import frontend.ir.DataType;
+import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
 
 import java.util.List;
 
+/**
+ * 对于返回类型为 void 的函数，其 result 应为 null
+ */
 public class CallInstr extends Instruction {
     private final Integer result;
     private final DataType returnType;
     private final List<Value> rParams;
+    private final FuncDef funcDef;
     
-    public CallInstr(Integer result, DataType returnType, List<Value> rParams ,BasicBlock parentBB) {
+    public CallInstr(Integer result, DataType returnType, FuncDef funcDef, List<Value> rParams ,BasicBlock parentBB) {
         super(parentBB);
         assert (returnType == DataType.VOID && result == null) || (returnType != DataType.VOID && result != null);
         if (rParams == null) {
@@ -21,6 +26,7 @@ public class CallInstr extends Instruction {
         this.result = result;
         this.returnType = returnType;
         this.rParams = rParams;
+        this.funcDef = funcDef;
         for (Value value : rParams) {
             setUse(value);
         }
@@ -40,7 +46,16 @@ public class CallInstr extends Instruction {
     
     @Override
     public String print() {
-        // todo
-        throw new RuntimeException("...");
+        StringBuilder stringBuilder = new StringBuilder();
+        if (result != null) {
+            stringBuilder.append("%").append(result).append(" = ");
+        }
+        stringBuilder.append("call ").append(returnType);
+        stringBuilder.append(" @").append(funcDef.getName()).append("(");
+        for (Value value : rParams) {
+            stringBuilder.append(value.getDataType()).append(" ").append(value.value2string());
+        }
+        stringBuilder.append(")");
+        return stringBuilder.toString();
     }
 }
