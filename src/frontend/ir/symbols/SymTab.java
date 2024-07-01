@@ -2,6 +2,8 @@ package frontend.ir.symbols;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstFloat;
+import frontend.ir.constvalue.ConstInt;
 import frontend.syntax.Ast;
 
 import java.util.ArrayList;
@@ -74,6 +76,9 @@ public class SymTab {
             Ast.Init init = def.getInit();
             if (init != null) {
                 initVal = InitVal.createInitVal(dataType, init, this);
+            } else if (isGlobal()) {
+                initVal = dataType == DataType.FLOAT ? new ConstFloat(0.0f) :
+                                                       new ConstInt(0);
             } else {
                 initVal = null;
             }

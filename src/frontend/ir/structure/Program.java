@@ -54,7 +54,7 @@ public class Program {
         for (Symbol symbol : globalSymTab.getAllSym()) {
             writer.append("@").append(symbol.getName()).append(" = global ");
             writer.append(symbol.getType().toString()).append(" ");
-            writer.append(symbol.getInitVal().getValue().toString()).append("\n");
+            writer.append(symbol.getInitVal().value2string()).append("\n");
         }
     }
 }
