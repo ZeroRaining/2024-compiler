@@ -10,6 +10,7 @@ public class StoreInstr extends MemoryOperation {
     public StoreInstr(Value value, Symbol symbol, BasicBlock parentBB) {
         super(symbol, parentBB);
         this.value = value;
+        setUse(value);
     }
     
     @Override

@@ -8,6 +8,7 @@ public class InitExpr extends Value {
     private final Ast.Exp exp;
     
     public InitExpr(Ast.Exp exp) {
+        super();
         this.exp = exp;
     }
     

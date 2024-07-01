@@ -19,6 +19,8 @@ public abstract class BinaryOperation extends Instruction {
         this.op2 = op2;
         this.type = type;
         this.operationName = operationName;
+        setUse(op1);
+        setUse(op2);
     }
     
     @Override

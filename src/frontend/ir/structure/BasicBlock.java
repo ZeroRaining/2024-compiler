@@ -12,6 +12,7 @@ public class BasicBlock extends Value {
     private final CustomList instructions = new CustomList();
     
     public BasicBlock() {
+        super();
     }
     
     public void addInstruction(Instruction instr) {

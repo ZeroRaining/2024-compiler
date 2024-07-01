@@ -19,6 +19,7 @@ public abstract class ConversionOperation extends Instruction {
         this.to     = to;
         this.value  = value;
         this.opName = name;
+        setUse(value);
     }
     
     @Override

@@ -13,6 +13,7 @@ public class FNegInstr extends Instruction {
         super(parentBB);
         this.result = result;
         this.value = value;
+        setUse(value);
     }
     
     @Override
