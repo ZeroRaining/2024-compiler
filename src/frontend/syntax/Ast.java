@@ -345,6 +345,14 @@ public class Ast {
                     case MUL: res *= num; break;
                     case DIV: res /= num; break;
                     case MOD: res %= num; break;
+                    case LAND:  res = (res != 0 && num != 0) ? 1 : 0; break;
+                    case LOR:   res = (res != 0 || num != 0) ? 1 : 0; break;
+                    case LE:    res = (res <= num)           ? 1 : 0; break;
+                    case LT:    res = (res <  num)           ? 1 : 0; break;
+                    case GE:    res = (res >= num)           ? 1 : 0; break;
+                    case GT:    res = (res >  num)           ? 1 : 0; break;
+                    case EQ:    res = (res.equals(num))      ? 1 : 0; break;
+                    case NE:    res = (!res.equals(num))     ? 1 : 0; break;
                     default: throw new RuntimeException("整数常量表达式中出现了未曾设想的运算符");
                 }
             }
@@ -370,6 +378,14 @@ public class Ast {
                     case MUL: res *= num; break;
                     case DIV: res /= num; break;
                     case MOD: res %= num; break;
+                    case LAND:  res = (res != 0 && num != 0) ? 1f : 0f; break;
+                    case LOR:   res = (res != 0 || num != 0) ? 1f : 0f; break;
+                    case LE:    res = (res <= num)           ? 1f : 0f; break;
+                    case LT:    res = (res <  num)           ? 1f : 0f; break;
+                    case GE:    res = (res >= num)           ? 1f : 0f; break;
+                    case GT:    res = (res >  num)           ? 1f : 0f; break;
+                    case EQ:    res = (res.equals(num))      ? 1f : 0f; break;
+                    case NE:    res = (!res.equals(num))     ? 1f : 0f; break;
                     default: throw new RuntimeException("浮点数常量表达式中出现了未曾设想的运算符");
                 }
             }
@@ -401,11 +417,19 @@ public class Ast {
             for (Token op : ops) {
                 if (op.getType() == TokenType.SUB) {
                     sign *= -1;
-                } else if (op.getType() != TokenType.ADD) {
-                    throw new RuntimeException("出现了意料之外的符号");
                 }
             }
             return sign;
+        }
+        
+        public boolean checkNot() {
+            boolean not = false;
+            for (Token op : ops) {
+                if (op.getType() == TokenType.NOT) {
+                    not = !not;
+                }
+            }
+            return not;
         }
         
         @Override
@@ -437,8 +461,9 @@ public class Ast {
         @Override
         public Integer getConstInt(SymTab symTab) {
             int sign = getSign();
+            int ret;
             if (primary instanceof Exp) {
-                return ((Exp) primary).getConstInt(symTab) * sign;
+                ret = ((Exp) primary).getConstInt(symTab) * sign;
             } else if (primary instanceof Call) {
                 return null;
             } else if (primary instanceof LVal) {
@@ -446,7 +471,7 @@ public class Ast {
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     Value initVal = symbol.getInitVal();
                     if (initVal instanceof ConstInt) {
-                        return initVal.getValue().intValue() * sign;
+                        ret = initVal.getValue().intValue() * sign;
                     } else {
                         return null;
                     }
@@ -455,7 +480,7 @@ public class Ast {
                 }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
-                    return ((Number) primary).getIntConstValue() * sign;
+                    ret = ((Number) primary).getIntConstValue() * sign;
                 } else if (((Number) primary).isFloatConst) {
                     return null;
                 } else {
@@ -464,13 +489,18 @@ public class Ast {
             } else {
                 throw new RuntimeException("出现了未定义的基本表达式");
             }
+            if (checkNot()) {
+                ret = ret != 0 ? 0 : 1;
+            }
+            return ret;
         }
         
         @Override
         public Float getConstFloat(SymTab symTab) {
             int sign = getSign();
+            float ret;
             if (primary instanceof Exp) {
-                return ((Exp) primary).getConstFloat(symTab) * sign;
+                ret = ((Exp) primary).getConstFloat(symTab) * sign;
             } else if (primary instanceof Call) {
                 return null;
             } else if (primary instanceof LVal) {
@@ -478,7 +508,7 @@ public class Ast {
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     Value initVal = symbol.getInitVal();
                     if (initVal instanceof ConstValue) {
-                        return initVal.getValue().floatValue() * sign;
+                        ret = initVal.getValue().floatValue() * sign;
                     } else {
                         return null;
                     }
@@ -487,15 +517,19 @@ public class Ast {
                 }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
-                    return (float) ((Number) primary).getIntConstValue() * sign;
+                    ret = (float) ((Number) primary).getIntConstValue() * sign;
                 } else if (((Number) primary).isFloatConst) {
-                    return ((Number) primary).getFloatConstValue() * sign;
+                    ret = ((Number) primary).getFloatConstValue() * sign;
                 } else {
                     throw new RuntimeException("出现了未定义的数值常量类型");
                 }
             } else {
                 throw new RuntimeException("出现了未定义的基本表达式");
             }
+            if (checkNot()) {
+                ret = ret != 0 ? 0 : 1;
+            }
+            return ret;
         }
     }
     

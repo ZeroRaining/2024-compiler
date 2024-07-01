@@ -10,10 +10,14 @@ import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.Fp2Si;
 import frontend.ir.instr.convop.Si2Fp;
+import frontend.ir.instr.convop.Zext;
 import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
+import frontend.ir.instr.otherop.cmp.CmpCond;
+import frontend.ir.instr.otherop.cmp.FCmpInstr;
+import frontend.ir.instr.otherop.cmp.ICmpInstr;
 import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
@@ -94,15 +98,12 @@ public class Procedure {
             dealStmt(ifStmt.thenStmt, DataType.VOID, new SymTab(symTab));
             elseBlock.addInstruction(new JumpInstr(endBlock, elseBlock));
             /* TODO：要能够切换当前的语句添加的块BB
-             * TODO：要在thenblk最后加上JUMP
+             * TODO：要在then_blk最后加上JUMP
              * TODO：暂时没了
              */
         }
         curBlock = endBlock;
     }
-
-//    private Value calculateCond(Ast.Exp exp, BasicBlock curblock, SymTab symTab) {
-//    }
 
     public void dealReturn(Ast.Return item, DataType returnType, SymTab symTab) {
         if (item == null ||  returnType == null) {
@@ -185,7 +186,31 @@ public class Procedure {
                 
                 DataType type1 = firstValue.getDataType();
                 DataType type2 = valueI.getDataType();
-                assert type1 != DataType.VOID && type2 != DataType.VOID;
+                
+                if (type1 == DataType.VOID || type2 == DataType.VOID) {
+                    throw new RuntimeException("二元表达式不能处理 void");
+                }
+                
+                /*
+                    todo
+                        暂时不支持 && 和 ||，可能借助短路求值直接就干掉了
+                        哈哈哈哈哈与或非本为一体，与或都不支持，非也之后再说吧
+                        其实我觉得与或非应该都可以通过类似短路求值的方法实现，除非给我整出来一些 ((!(1 > 3)) < 2)
+                 */
+                
+                // i1 -> i32
+                if (type1 == DataType.BOOL) {
+                    Instruction instruction = new Zext(curRegIndex++, firstValue, curBlock);
+                    curBlock.addInstruction(instruction);
+                    firstValue = instruction;
+                }
+                if (type2 == DataType.BOOL) {
+                    Instruction instruction = new Zext(curRegIndex++, valueI, curBlock);
+                    curBlock.addInstruction(instruction);
+                    valueI = instruction;
+                }
+                
+                // 统一数据类型
                 DataType dataType = (type1 == DataType.INT && type2 == DataType.INT) ? DataType.INT : DataType.FLOAT;
                 if (dataType == DataType.FLOAT) {
                     if (type1 == DataType.INT) {
@@ -235,6 +260,48 @@ public class Procedure {
                             instruction = new FRemInstr(curRegIndex++, firstValue, valueI, curBlock);
                         } else {
                             instruction = new SRemInstr(curRegIndex++, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case EQ:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.EQ, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.EQ, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case NE:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.NE, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.NE, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case LT:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.LT, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.LT, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case LE:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.LE, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.LE, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case GT:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.GT, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.GT, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case GE:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.GE, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.GE, firstValue, valueI, curBlock);
                         }
                         break;
                     default: throw new RuntimeException("表达式计算过程中出现了未曾设想的运算符");

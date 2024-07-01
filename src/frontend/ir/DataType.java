@@ -1,17 +1,20 @@
 package frontend.ir;
 
 public enum DataType {
-    INT,
-    FLOAT,
-    VOID;
+    INT("i32"),
+    FLOAT("float"),
+    VOID("void"),
+    BOOL("i1");   // 1 位整数
+    
+    private final String name;
+    
+    DataType(String name) {
+        this.name = name;
+    }
     
     @Override
     public String toString() {
-        switch (this) {
-            case INT:   return "i32";
-            case FLOAT: return "float";
-            default:    return "void";
-        }
+        return this.name;
     }
 }
 
