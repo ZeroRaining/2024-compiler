@@ -14,6 +14,8 @@ import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
+import frontend.ir.instr.terminator.BranchInstr;
+import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.unaryop.FNegInstr;
 import frontend.ir.lib.Lib;
@@ -31,42 +33,78 @@ import java.util.List;
 public class Procedure {
     private final CustomList basicBlocks = new CustomList();
     private int curRegIndex = 0;
+    private int curBlkIndex = 0;
+    private BasicBlock curBlock;
     
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        BasicBlock firstBasicBlock = new BasicBlock();
+        BasicBlock firstBasicBlock = new BasicBlock(curBlkIndex++);
         basicBlocks.addToTail(firstBasicBlock);
-        parseCodeBlock(block, returnType, firstBasicBlock, funcSymTab);
+        curBlock = firstBasicBlock;
+        parseCodeBlock(block, returnType, funcSymTab);
     }
     
-    public void parseCodeBlock(Ast.Block block, DataType returnType, BasicBlock curBlock, SymTab symTab) {
+    public void parseCodeBlock(Ast.Block block, DataType returnType, SymTab symTab) {
         if (block == null || returnType == null || curBlock == null || symTab == null) {
             throw new NullPointerException();
         }
         for (Ast.BlockItem item : block.getItems()) {
             if (item instanceof Ast.Stmt) {
-                if (item instanceof Ast.Return) {
-                    dealReturn((Ast.Return) item, returnType, curBlock, symTab);
-                } else if (item instanceof Ast.Block) {
-                    parseCodeBlock((Ast.Block) item, returnType, curBlock, new SymTab(symTab));
-                } else if (item instanceof Ast.Assign) {
-                    dealAssign((Ast.Assign) item, curBlock, symTab);
-                } else if (item instanceof Ast.ExpStmt) {
-                    calculateExpr(((Ast.ExpStmt) item).getExp(), curBlock, symTab);
-                } else {
-                    throw new RuntimeException("出现了尚未支持的语句类型" + item.getClass());
-                }
+                dealStmt((Ast.Stmt) item, returnType, symTab);
             } else if (item instanceof Ast.Decl) {
-                dealDecl(curBlock, symTab, (Ast.Decl) item);
+                dealDecl(symTab, (Ast.Decl) item);
             } else {
                 throw new RuntimeException("出现了奇怪的条目");
             }
         }
     }
-    
-    public void dealReturn(Ast.Return item, DataType returnType, BasicBlock curBlock, SymTab symTab) {
+
+    public void dealStmt(Ast.Stmt item, DataType returnType, SymTab symTab) {
+        if (item instanceof Ast.IfStmt) {
+            dealIf((Ast.IfStmt) item, symTab);
+        } else if (item instanceof Ast.Return) {
+            dealReturn((Ast.Return) item, returnType, symTab);
+        } else if (item instanceof Ast.Block) {
+            parseCodeBlock((Ast.Block) item, returnType, new SymTab(symTab));
+        } else if (item instanceof Ast.Assign) {
+            dealAssign((Ast.Assign) item, symTab);
+        } else if (item instanceof Ast.ExpStmt) {
+            calculateExpr(((Ast.ExpStmt) item).getExp(), symTab);
+        } else {
+            throw new RuntimeException("出现了尚未支持的语句类型" + item.getClass());
+        }
+    }
+
+    private void dealIf(Ast.IfStmt ifStmt, SymTab symTab) {
+        BasicBlock bb = ((BasicBlock)basicBlocks.getTail());
+        boolean hasElseBlock = ifStmt.elseStmt != null;
+        BasicBlock thenBlock = new BasicBlock(curBlkIndex++);
+        BasicBlock elseBlock = hasElseBlock? new BasicBlock(curBlkIndex++) : null;
+        BasicBlock endBlock = new BasicBlock(curBlkIndex++);
+        //TODO:确保正确计算且类型为i1
+        Value cond = calculateExpr(ifStmt.condition, symTab);
+        bb.addInstruction(new BranchInstr(cond,thenBlock,elseBlock,bb));
+        curBlock = thenBlock;
+        dealStmt(ifStmt.thenStmt, DataType.VOID, new SymTab(symTab));
+        thenBlock.addInstruction(new JumpInstr(endBlock, thenBlock));
+        if (hasElseBlock) {
+            curBlock = elseBlock;
+            dealStmt(ifStmt.thenStmt, DataType.VOID, new SymTab(symTab));
+            elseBlock.addInstruction(new JumpInstr(endBlock, elseBlock));
+            /* TODO：要能够切换当前的语句添加的块BB
+             * TODO：要在thenblk最后加上JUMP
+             * TODO：暂时没了
+             */
+        }
+        curBlock = endBlock;
+    }
+
+//    private Value calculateCond(Ast.Exp exp, BasicBlock curblock, SymTab symTab) {
+//    }
+
+    public void dealReturn(Ast.Return item, DataType returnType, SymTab symTab) {
         if (item == null ||  returnType == null) {
             throw new NullPointerException();
         }
@@ -75,7 +113,7 @@ public class Procedure {
         if (returnValue == null) {
             curBlock.addInstruction(new ReturnInstr(returnType, curBlock));
         } else {
-            Value value = calculateExpr(returnValue, curBlock, symTab);
+            Value value = calculateExpr(returnValue, symTab);
             assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
             if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
                 value = new Fp2Si(curRegIndex++, value, curBlock);
@@ -88,13 +126,13 @@ public class Procedure {
         }
     }
     
-    private void dealAssign(Ast.Assign item, BasicBlock curBlock, SymTab symTab) {
+    private void dealAssign(Ast.Assign item, SymTab symTab) {
         if (item == null || curBlock == null || symTab == null) {
             throw new NullPointerException();
         }
         Ast.LVal lVal = item.getLVal();
         Symbol left = symTab.getSym(lVal.getName());
-        Value right = calculateExpr(item.getExp(), curBlock, symTab);
+        Value right = calculateExpr(item.getExp(), symTab);
         if (left.getType() == DataType.FLOAT && right.getDataType() == DataType.INT) {
             right = new Si2Fp(curRegIndex++, right, curBlock);
             curBlock.addInstruction((Instruction) right);
@@ -106,7 +144,7 @@ public class Procedure {
         curBlock.addInstruction(new StoreInstr(right, left, curBlock));
     }
     
-    private void dealDecl(BasicBlock curBlock, SymTab symTab, Ast.Decl item) {
+    private void dealDecl(SymTab symTab, Ast.Decl item) {
         if (curBlock == null || symTab == null || item == null) {
             throw new NullPointerException();
         }
@@ -120,7 +158,7 @@ public class Procedure {
                 if (initVal instanceof ConstValue) {
                     init = initVal;
                 } else if (initVal instanceof InitExpr) {
-                    init = calculateExpr(((InitExpr) initVal).getExp(), curBlock, symTab);
+                    init = calculateExpr(((InitExpr) initVal).getExp(), symTab);
                 } else {
                     throw new RuntimeException("这里还没有支持常量和表达式之外的形式");
                 }
@@ -129,7 +167,7 @@ public class Procedure {
         }
     }
     
-    private Value calculateExpr(Ast.Exp exp, BasicBlock curBlock, SymTab symTab) {
+    private Value calculateExpr(Ast.Exp exp, SymTab symTab) {
         if (exp == null) {
             throw new NullPointerException();
         }
@@ -138,12 +176,12 @@ public class Procedure {
             case FLOAT: return new ConstFloat(exp.getConstFloat(symTab));
         }
         if (exp instanceof Ast.BinaryExp) {
-            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp(), curBlock, symTab);
+            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp(), symTab);
             List<Ast.Exp> rest = ((Ast.BinaryExp) exp).getRestExps();
             for (int i = 0; i < rest.size(); i++) {
                 Ast.Exp expI = rest.get(i);
                 Token op = ((Ast.BinaryExp) exp).getOps().get(i);
-                Value valueI = calculateExpr(expI, curBlock, symTab);
+                Value valueI = calculateExpr(expI, symTab);
                 
                 DataType type1 = firstValue.getDataType();
                 DataType type2 = valueI.getDataType();
@@ -210,9 +248,9 @@ public class Procedure {
             Ast.PrimaryExp primary = ((Ast.UnaryExp) exp).getPrimaryExp();
             Value res;
             if (primary instanceof Ast.Exp) {
-                res = calculateExpr((Ast.Exp) primary, curBlock, symTab);
+                res = calculateExpr((Ast.Exp) primary, symTab);
             } else if (primary instanceof Ast.Call) {
-                res = dealCall((Ast.Call) primary, curBlock, symTab);
+                res = dealCall((Ast.Call) primary, symTab);
             } else if (primary instanceof Ast.LVal) {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
@@ -255,13 +293,13 @@ public class Procedure {
         }
     }
     
-    Value dealCall(Ast.Call call, BasicBlock curBlock, SymTab symTab) {
+    Value dealCall(Ast.Call call, SymTab symTab) {
         if (call == null) {
             throw new NullPointerException();
         }
         ArrayList<Value> rParams = new ArrayList<>();
         for (Ast.Exp exp : call.getParams()) {
-            rParams.add(calculateExpr(exp, curBlock, symTab));
+            rParams.add(calculateExpr(exp, symTab));
         }
         CallInstr instr = Lib.getInstance().makeCall(curRegIndex++, call.getName(), rParams, curBlock);
         if (instr != null) {
