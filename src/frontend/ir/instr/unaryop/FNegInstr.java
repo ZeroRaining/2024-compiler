@@ -1,6 +1,6 @@
 package frontend.ir.instr.unaryop;
 
-import frontend.ir.BasicBlock;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
@@ -13,6 +13,7 @@ public class FNegInstr extends Instruction {
         super(parentBB);
         this.result = result;
         this.value = value;
+        setUse(value);
     }
     
     @Override

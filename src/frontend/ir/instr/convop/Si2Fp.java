@@ -1,6 +1,6 @@
 package frontend.ir.instr.convop;
 
-import frontend.ir.BasicBlock;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 

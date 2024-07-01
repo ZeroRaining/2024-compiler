@@ -1,15 +1,28 @@
 package frontend.ir.instr;
 
-import Utils.CustomList;
-import frontend.ir.BasicBlock;
+import frontend.ir.Use;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.Value;
 
-public abstract class Instruction extends CustomList.Node<Instruction> implements Value {
+import java.util.ArrayList;
+
+public abstract class Instruction extends Value {
     private final BasicBlock parentBB;
-    
+    protected ArrayList<Use> useList;
+    protected ArrayList<Value> useValueList;
     public Instruction(BasicBlock parentBB) {
+        super();
         this.parentBB = parentBB;
+        this.useList = new ArrayList<>();
+        this.useValueList = new ArrayList<>();
     }
+    public void setUse(Value value) {
+        Use use = new Use(this,value);
+        value.insertAtTail(use);
+        useList.add(use);
+        useValueList.add(value);
+    }
+
     
     public abstract String print();
     

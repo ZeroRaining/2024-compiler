@@ -3,9 +3,9 @@ package Utils;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class CustomList<E> implements Iterable<CustomList.Node<E>> {
-    private Node<E> head;
-    private Node<E> tail;
+public class CustomList implements Iterable<CustomList.Node> {
+    private Node head;
+    private Node tail;
 //    private L value;
     private int size;
 
@@ -16,19 +16,19 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
         this.size = 0;
     }
 
-    public Node<E> getHead() {
+    public Node getHead() {
         return head;
     }
 
-    private void setHead(Node<E> head) {
+    private void setHead(Node head) {
         this.head = head;
     }
 
-    public Node<E> getTail() {
+    public Node getTail() {
         return tail;
     }
 
-    private void setTail(Node<E> tail) {
+    private void setTail(Node tail) {
         this.tail = tail;
     }
 
@@ -52,7 +52,7 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
         this.size--;
     }
 
-    public void addToTail(Node<E> node) {
+    public void addToTail(Node node) {
         if (this.tail == null) {
             this.head = this.tail = node;
         } else {
@@ -64,7 +64,7 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
         incrementSize();
     }
 
-    public void addToHead(Node<E> node) {
+    public void addToHead(Node node) {
         if (this.head == null) {
             this.head = this.tail = node;
         } else {
@@ -89,14 +89,14 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
     }
 
     @Override
-    public Iterator<Node<E>> iterator() {
+    public Iterator<Node> iterator() {
         return new CustomIterator(this.head);
     }
 
-    class CustomIterator implements Iterator<Node<E>> {
-        private Node<E> current;
+    class CustomIterator implements Iterator<Node> {
+        private Node current;
 
-        CustomIterator(Node<E> head) {
+        CustomIterator(Node head) {
             this.current = head;
         }
 
@@ -106,11 +106,11 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
         }
 
         @Override
-        public Node<E> next() {
+        public Node next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            Node<E> temp = current;
+            Node temp = current;
             current = current.next;
             return temp;
         }
@@ -120,18 +120,18 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
             if (current == null || current.parent == null) {
                 throw new IllegalStateException();
             }
-            Node<E> temp = current;
+            Node temp = current;
             current = current.next;
             temp.removeFromList();
         }
     }
 
-    public static class Node<E> {
-        private Node<E> prev;
-        private Node<E> next;
-        private CustomList<E> parent;
+    public static class Node {
+        private Node prev;
+        private Node next;
+        private CustomList parent;
 
-        public void insertAfter(Node<E> node) {
+        public void insertAfter(Node node) {
             if (node == null) {
                 throw new IllegalArgumentException("The given node cannot be null.");
             }
@@ -147,7 +147,7 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
             this.parent.incrementSize();
         }
 
-        public void insertBefore(Node<E> node) {
+        public void insertBefore(Node node) {
             if (node == null) {
                 throw new IllegalArgumentException("The given node cannot be null.");
             }
@@ -186,23 +186,23 @@ public class CustomList<E> implements Iterable<CustomList.Node<E>> {
 //            this.value = value;
 //        }
 
-        public Node<E> getPrev() {
+        public Node getPrev() {
             return prev;
         }
 
-        public void setPrev(Node<E> prev) {
+        public void setPrev(Node prev) {
             this.prev = prev;
         }
 
-        public Node<E> getNext() {
+        public Node getNext() {
             return next;
         }
 
-        public void setNext(Node<E> next) {
+        public void setNext(Node next) {
             this.next = next;
         }
 
-        public CustomList<E> getParent() {
+        public CustomList getParent() {
             return parent;
         }
     }

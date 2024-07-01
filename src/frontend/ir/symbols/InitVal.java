@@ -29,7 +29,11 @@ public abstract class InitVal {
                     } else {
                         throw new RuntimeException("你给我传了个什么鬼类型啊");
                     }
-                default: throw new RuntimeException("初始值似乎不是常量");
+                default:
+                    if (symTab.isGlobal()) {
+                        throw new RuntimeException("全局变量初始值似乎不是确定值");
+                    }
+                    return new InitExpr((Ast.Exp) init);
             }
         } else if (init instanceof Ast.InitArray) {
             // todo

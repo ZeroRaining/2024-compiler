@@ -195,14 +195,26 @@ public class Ast {
             assert left != null;
             assert right != null;
         }
+        
+        public LVal getLVal() {
+            return left;
+        }
+        
+        public Exp getExp() {
+            return right;
+        }
     }
     
     // ExpStmt
     public static class ExpStmt implements Stmt {
-        public Exp exp; // nullable, empty stmt if null
+        private final Exp exp; // nullable, empty stmt if null
         
         public ExpStmt(Exp exp) {
             this.exp = exp;
+        }
+        
+        public Exp getExp() {
+            return exp;
         }
     }
     

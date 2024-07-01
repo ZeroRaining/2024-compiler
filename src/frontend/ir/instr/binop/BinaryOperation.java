@@ -1,9 +1,8 @@
 package frontend.ir.instr.binop;
 
-import frontend.ir.BasicBlock;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
-import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.instr.Instruction;
 
 public abstract class BinaryOperation extends Instruction {
@@ -20,6 +19,8 @@ public abstract class BinaryOperation extends Instruction {
         this.op2 = op2;
         this.type = type;
         this.operationName = operationName;
+        setUse(op1);
+        setUse(op2);
     }
     
     @Override
