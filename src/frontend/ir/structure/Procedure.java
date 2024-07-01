@@ -1,15 +1,21 @@
-package frontend.ir;
+package frontend.ir.structure;
 
 import Utils.CustomList;
+import frontend.ir.DataType;
+import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.Fp2Si;
 import frontend.ir.instr.convop.Si2Fp;
+import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.memop.LoadInstr;
+import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.unaryop.FNegInstr;
+import frontend.ir.symbols.InitExpr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 import frontend.lexer.Token;
@@ -20,39 +26,51 @@ import java.io.Writer;
 import java.util.List;
 
 public class Procedure {
-    private final CustomList<BasicBlock> basicBlocks = new CustomList<>();
-    private final SymTab symTab;
+    private final CustomList basicBlocks = new CustomList();
     private int curRegIndex = 0;
     
-    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab baseSymTab) {
+    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        basicBlocks.addToTail(new BasicBlock());
-        symTab = baseSymTab;
-        
+        BasicBlock firstBasicBlock = new BasicBlock();
+        basicBlocks.addToTail(firstBasicBlock);
+        parseCodeBlock(block, returnType, firstBasicBlock, funcSymTab);
+    }
+    
+    public void parseCodeBlock(Ast.Block block, DataType returnType, BasicBlock curBlock, SymTab symTab) {
+        if (block == null || returnType == null || curBlock == null || symTab == null) {
+            throw new NullPointerException();
+        }
         for (Ast.BlockItem item : block.getItems()) {
             if (item instanceof Ast.Stmt) {
                 if (item instanceof Ast.Return) {
-                    dealReturn((Ast.Return) item, returnType);
+                    dealReturn((Ast.Return) item, returnType, curBlock, symTab);
+                } else if (item instanceof Ast.Block) {
+                    parseCodeBlock((Ast.Block) item, returnType, curBlock, new SymTab(symTab));
+                } else if (item instanceof Ast.Assign) {
+                    dealAssign((Ast.Assign) item, curBlock, symTab);
+                } else if (item instanceof Ast.ExpStmt) {
+                    calculateExpr(((Ast.ExpStmt) item).getExp(), curBlock, symTab);
+                } else {
+                    throw new RuntimeException("出现了尚未支持的语句类型" + item.getClass());
                 }
             } else if (item instanceof Ast.Decl) {
-                symTab.addSymbols((Ast.Decl) item);
-                // todo
+                dealDecl(curBlock, symTab, (Ast.Decl) item);
             } else {
                 throw new RuntimeException("出现了奇怪的条目");
             }
         }
     }
     
-    private void dealReturn(Ast.Return item, DataType returnType) {
+    public void dealReturn(Ast.Return item, DataType returnType, BasicBlock curBlock, SymTab symTab) {
         if (item == null ||  returnType == null) {
             throw new NullPointerException();
         }
         Ast.Exp returnValue = (item).getReturnValue();
-        BasicBlock curBasicBlock = ((BasicBlock)basicBlocks.getTail());
+        
         if (returnValue == null) {
-            curBasicBlock.addInstruction(new ReturnInstr(returnType, curBasicBlock));
+            curBlock.addInstruction(new ReturnInstr(returnType, curBlock));
         } else {
             Value value;
             switch (returnValue.checkConstType(symTab)) {
@@ -64,30 +82,62 @@ public class Procedure {
                     break;
                 default:
                     // 返回值非常量
-                    value = calculateExpr(returnValue);
+                    value = calculateExpr(returnValue, curBlock, symTab);
                     assert value instanceof Instruction;
             }
             assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
             if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
-                value = new Fp2Si(curRegIndex++, value, curBasicBlock);
-                curBasicBlock.addInstruction((Instruction) value);
+                value = new Fp2Si(curRegIndex++, value, curBlock);
+                curBlock.addInstruction((Instruction) value);
             } else if (returnType == DataType.FLOAT && value.getDataType() == DataType.INT) {
-                value = new Si2Fp(curRegIndex++, value, curBasicBlock);
-                curBasicBlock.addInstruction((Instruction) value);
+                value = new Si2Fp(curRegIndex++, value, curBlock);
+                curBlock.addInstruction((Instruction) value);
             }
-            curBasicBlock.addInstruction(new ReturnInstr(returnType, value, curBasicBlock));
+            curBlock.addInstruction(new ReturnInstr(returnType, value, curBlock));
         }
     }
     
-    private Value calculateExpr(Ast.Exp exp) {
-        BasicBlock curBlock = (BasicBlock) basicBlocks.getTail();
+    private void dealAssign(Ast.Assign item, BasicBlock curBlock, SymTab symTab) {
+        if (item == null || curBlock == null || symTab == null) {
+            throw new NullPointerException();
+        }
+        Ast.LVal lVal = item.getLVal();
+        Symbol left = symTab.getSym(lVal.getName());
+        Value right = calculateExpr(item.getExp(), curBlock, symTab);
+        curBlock.addInstruction(new StoreInstr(right, left, curBlock));
+    }
+    
+    private void dealDecl(BasicBlock curBlock, SymTab symTab, Ast.Decl item) {
+        if (curBlock == null || symTab == null || item == null) {
+            throw new NullPointerException();
+        }
+        symTab.addSymbols(item);
+        List<Symbol> newSymList = symTab.getNewSymList();
+        for (Symbol symbol : newSymList) {
+            curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
+            Value initVal = symbol.getInitVal();
+            if (initVal != null) {
+                Value init;
+                if (initVal instanceof ConstValue) {
+                    init = initVal;
+                } else if (initVal instanceof InitExpr) {
+                    init = calculateExpr(((InitExpr) initVal).getExp(), curBlock, symTab);
+                } else {
+                    throw new RuntimeException("这里还没有支持常量和表达式之外的形式");
+                }
+                curBlock.addInstruction(new StoreInstr(init, symbol, curBlock));
+            }
+        }
+    }
+    
+    private Value calculateExpr(Ast.Exp exp, BasicBlock curBlock, SymTab symTab) {
         if (exp instanceof Ast.BinaryExp) {
-            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp());
+            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp(), curBlock, symTab);
             List<Ast.Exp> rest = ((Ast.BinaryExp) exp).getRestExps();
             for (int i = 0; i < rest.size(); i++) {
                 Ast.Exp expI = rest.get(i);
                 Token op = ((Ast.BinaryExp) exp).getOps().get(i);
-                Value valueI = calculateExpr(expI);
+                Value valueI = calculateExpr(expI, curBlock, symTab);
                 
                 DataType type1 = firstValue.getDataType();
                 DataType type2 = valueI.getDataType();
@@ -154,7 +204,7 @@ public class Procedure {
             Ast.PrimaryExp primary = ((Ast.UnaryExp) exp).getPrimaryExp();
             Value res;
             if (primary instanceof Ast.Exp) {
-                res = calculateExpr((Ast.Exp) primary);
+                res = calculateExpr((Ast.Exp) primary, curBlock, symTab);
             } else if (primary instanceof Ast.Call) {
                 // todo
                 throw new RuntimeException("还没写到");
@@ -206,7 +256,7 @@ public class Procedure {
         }
         // todo 首先应该挖个坑给参数埋起来（分配内存）
         int i = 0;
-        for (CustomList.Node<BasicBlock> basicBlockNode : basicBlocks) {
+        for (CustomList.Node basicBlockNode : basicBlocks) {
             BasicBlock block = (BasicBlock) basicBlockNode;
             writer.append("blk_").append(String.valueOf(i++)).append(":\n");
             block.printIR(writer);

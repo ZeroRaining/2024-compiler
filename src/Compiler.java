@@ -1,3 +1,4 @@
+import frontend.ir.structure.Program;
 import arg.Arg;
 import backend.IrParser;
 import backend.itemStructure.AsmModule;
@@ -13,20 +14,14 @@ import java.io.*;
 public class Compiler {
     public static void main(String[] args) throws IOException {
         //解析命令行
-        Arg arg = Arg.parse(args);
-        BufferedInputStream source = new BufferedInputStream(arg.srcStream);
+        //Arg arg = Arg.parse(args);
+        //BufferedInputStream source = new BufferedInputStream(arg.srcStream);
 
         //词法分析，得到TokenList
-        TokenList tokenList = Lexer.getInstance().lex(source);
+        //TokenList tokenList = Lexer.getInstance().lex(source);
 
         //语法分析，得到AST
-        Ast ast = new Parser(tokenList).parseAst();
-
-        //IR生成
-        Program program = new Program(ast);
-
-        //RISC-V汇编生成
-        //AsmModule asmModule = new IrParser().parse(program);
+        //Ast ast = new Parser(tokenList).parseAst();
 
         //词法分析测试
         //LexerTest();
@@ -36,7 +31,7 @@ public class Compiler {
         // ParserTest();
 
         //IR生成测试
-        //IRTest();
+        IRTest();
     }
 
     public static void LexerTest() throws IOException {

@@ -1,28 +1,19 @@
 package frontend.ir.instr.memop;
 
-import frontend.ir.BasicBlock;
-import frontend.ir.DataType;
-import frontend.ir.instr.Instruction;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.symbols.Symbol;
 
-public class LoadInstr extends Instruction {
+public class LoadInstr extends MemoryOperation {
     private final int result;
-    private final Symbol symbol;
     
     public LoadInstr(int result, Symbol symbol, BasicBlock parentBB) {
-        super(parentBB);
+        super(symbol, parentBB);
         this.result = result;
-        this.symbol = symbol;
     }
     
     @Override
     public Number getValue() {
         return result;
-    }
-    
-    @Override
-    public DataType getDataType() {
-        return symbol.getType();
     }
     
     @Override
@@ -34,7 +25,7 @@ public class LoadInstr extends Instruction {
         if (symbol.isGlobal()) {
             stringBuilder.append("@").append(symbol.getName());
         } else {
-            stringBuilder.append("%").append(symbol.getAllocInstr().getValue());
+            stringBuilder.append(symbol.getAllocInstr().value2string());
         }
         return stringBuilder.toString();
     }

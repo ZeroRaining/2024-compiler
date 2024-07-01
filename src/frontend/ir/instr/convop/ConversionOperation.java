@@ -1,11 +1,9 @@
 package frontend.ir.instr.convop;
 
-import frontend.ir.BasicBlock;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
-
-import javax.naming.Name;
 
 public abstract class ConversionOperation extends Instruction {
     private final int result;
@@ -21,6 +19,7 @@ public abstract class ConversionOperation extends Instruction {
         this.to     = to;
         this.value  = value;
         this.opName = name;
+        setUse(value);
     }
     
     @Override
