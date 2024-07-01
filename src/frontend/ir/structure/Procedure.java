@@ -240,7 +240,7 @@ public class Procedure {
                         res = new FNegInstr(curRegIndex++, res, curBlock);
                         break;
                     default:
-                        throw new RuntimeException("指令不能，至少不应该连返回值都没有吧");
+                        throw new RuntimeException("带符号的指令不能，至少不应该连返回值都没有吧");
                 }
                 curBlock.addInstruction((Instruction) res);
             }
