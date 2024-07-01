@@ -1,7 +1,6 @@
 package frontend.ir;
 
 import Utils.CustomList;
-import com.sun.xml.internal.bind.v2.model.core.ID;
 
 public abstract class Value extends CustomList.Node {
     private static int value_num = 0;
@@ -15,7 +14,7 @@ public abstract class Value extends CustomList.Node {
         beginUse.setNext(endUse);
         endUse.setPrev(beginUse);
     }
-    public void inserAtTail(Use use) {
+    public void insertAtTail(Use use) {
         endUse.insertBefore(use);
     }
     public abstract Number getValue();

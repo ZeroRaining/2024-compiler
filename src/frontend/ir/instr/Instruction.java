@@ -18,7 +18,7 @@ public abstract class Instruction extends Value {
     }
     public void setUse(Value value) {
         Use use = new Use(this,value);
-        value.inserAtTail(use);
+        value.insertAtTail(use);
         useList.add(use);
         useValueList.add(value);
     }
