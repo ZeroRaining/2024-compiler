@@ -1,8 +1,12 @@
 package backend;
 
+import backend.asmInstr.AsmMove;
 import backend.itemStructure.*;
+import backend.regs.AsmVirReg;
 import frontend.ir.BasicBlock;
 import frontend.ir.Program;
+import frontend.ir.Value;
+import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.symbols.Symbol;
 import frontend.ir.Function;
@@ -11,12 +15,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import static backend.regs.RegGeter.ZERO;
+
 public class IrParser {
     private Program program;
     private AsmModule asmModule;
     private HashMap<Symbol, AsmGlobalVar> gvMap;
     private HashMap<Function, AsmFunction> funcMap;
     private HashMap<BasicBlock, AsmBlock> blockMap;
+    private HashMap<Value, AsmOperand> operandMap;
 
 
     public IrParser(Program program) {
@@ -111,6 +118,60 @@ public class IrParser {
             //TODO:基于双向链表
         }
     }
+
+    private AsmOperand parseOperand(Value irValue, int maxImm, Function irFunction, BasicBlock bb) {
+        if (operandMap.containsKey(irValue)) {
+            AsmOperand asmOperand = operandMap.get(irValue);
+            if (((asmOperand instanceof AsmImm32) && maxImm < 32) ||
+                    ((asmOperand instanceof AsmImm12) && maxImm < 12)) {
+                if ((asmOperand instanceof AsmImm32) && (((AsmImm32) asmOperand).getImm() == 0)) {
+                    return ZERO;
+                }
+                if ((asmOperand instanceof AsmImm12) && (((AsmImm12) asmOperand).getImm() == 0)) {
+                    return ZERO;
+                }
+                //TODO:生成临时寄存器
+                AsmOperand tmpReg = genTmpReg(irFunction);
+                AsmMove asmMove = new AsmMove(tmpReg, asmOperand);
+                blockMap.get(bb).addInst(asmMove);
+                return tmpReg;
+            }
+            return asmOperand;
+        }
+
+        //TODO:关于move指令的到时候再写吧
+        if(irValue instanceof ConstInt){
+            return parseConstIntOperand(((ConstInt) irValue).getValue(),maxImm,irFunction,bb);
+        }
+
+
+
+
+    }
+
+    private AsmOperand parseConstIntOperand(int value, int maxImm, Function irFunction, BasicBlock bb) {
+        AsmImm32 asmImm32 = new AsmImm32(value);
+        AsmImm12 asmImm12 = new AsmImm12(value);
+        if(maxImm==32){
+            return asmImm32;
+        }
+        if(maxImm==12&&(value>=-2048&&value<=2047)){
+            return asmImm12;
+        }
+        AsmBlock asmBlock = blockMap.get(bb);
+        AsmVirReg tmpReg = genTmpReg(irFunction);
+        AsmMove asmMove = new AsmMove(tmpReg,asmImm32);
+        asmBlock.addInstrTail(asmMove);
+        return tmpReg;
+    }
+
+    private AsmVirReg genTmpReg(Function irFunction) {
+        AsmFunction asmFunction = funcMap.get(irFunction);
+        AsmVirReg tmpReg = new AsmVirReg();
+        asmFunction.addUsedVirReg(tmpReg);
+        return tmpReg;
+    }
+
 
     private void setLibFunctions() {
         //TODO:设置库函数

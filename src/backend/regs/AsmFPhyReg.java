@@ -1,6 +1,8 @@
 package backend.regs;
 
-public class AsmFPhyReg {
+import backend.itemStructure.AsmOperand;
+
+public class AsmFPhyReg extends AsmReg {
     private final int index;
     private final String name;
     public AsmFPhyReg(String name) {

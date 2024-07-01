@@ -1,20 +1,18 @@
 package backend.itemStructure;
 
 import Utils.CustomList;
+import backend.regs.AsmReg;
+
+import java.util.HashSet;
 
 public class AsmFunction {
-    private CustomList<AsmBlock, AsmFunction> blocks;
-    int size;
-    boolean isTail;
-
-    public AsmFunction() {
-        blocks = new CustomList<>(this);
-        size = 0;
-        isTail = false;
-    }
+    private CustomList<AsmBlock> blocks=new CustomList<>();
+    private HashSet<AsmReg> usedVirRegs=new HashSet<>();
+    int size=0;
+    boolean isTail=false;
 
     public void addBlock(AsmBlock block) {
-        blocks.addToTail(new CustomList.Node<>(block, this));
+        blocks.addToTail(new CustomList.Node<>(block));
     }
 
     public void addStackSize(int size) {
@@ -24,5 +22,8 @@ public class AsmFunction {
 
     public void setIsTail(boolean isTail) {
         this.isTail = isTail;
+    }
+    public void addUsedVirReg(AsmReg reg) {
+        usedVirRegs.add(reg);
     }
 }
