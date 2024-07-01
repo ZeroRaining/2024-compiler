@@ -17,11 +17,6 @@ public class BranchInstr extends Instruction {
         this.elseTarget = elseTarget;
     }
 
-    @Override
-    public String toString() {
-        return "br " + getCond().getDataType() +" "+condition.value2string()+ ", label %" + getThenTarget().getLabelCnt() + ", label %" + getElseTarget().getLabelCnt();
-    }
-
     public Value getCond() {
         return condition;
     }
@@ -36,17 +31,17 @@ public class BranchInstr extends Instruction {
 
     @Override
     public Number getValue() {
-        return null;
+        return -1;
     }
 
     @Override
     public DataType getDataType() {
-        return null;
+        throw new RuntimeException("no data type");
     }
 
     @Override
     public String print() {
-        return null;
+        return "br " + getCond().getDataType() +" "+condition.value2string()+ ", label %" + getThenTarget().getLabelCnt() + ", label %" + getElseTarget().getLabelCnt();
     }
 }
 

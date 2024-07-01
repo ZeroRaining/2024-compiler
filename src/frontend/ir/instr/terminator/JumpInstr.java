@@ -4,6 +4,7 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.symbols.SymTab;
 
 public class JumpInstr extends Instruction {
     private BasicBlock Target;
@@ -14,13 +15,13 @@ public class JumpInstr extends Instruction {
     }
 
     @Override
-    public Number getValue() {
-        return null;
+    public Integer getValue() {
+        return -1;
     }
 
     @Override
     public DataType getDataType() {
-        return null;
+        throw new RuntimeException("no data type");
     }
 
     @Override
