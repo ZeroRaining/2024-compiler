@@ -26,6 +26,6 @@ public class JumpInstr extends Instruction {
 
     @Override
     public String print() {
-        return "br label %" + Target.getLabelCnt();
+        return "br label %blk_" + Target.getLabelCnt();
     }
 }

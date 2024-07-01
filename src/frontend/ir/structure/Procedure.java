@@ -67,7 +67,7 @@ public class Procedure {
 
     public void dealStmt(Ast.Stmt item, DataType returnType, SymTab symTab) {
         if (item instanceof Ast.IfStmt) {
-            dealIf((Ast.IfStmt) item, symTab);
+            dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
             dealReturn((Ast.Return) item, returnType, symTab);
         } else if (item instanceof Ast.Block) {
@@ -81,21 +81,27 @@ public class Procedure {
         }
     }
 
-    private void dealIf(Ast.IfStmt ifStmt, SymTab symTab) {
+    private void dealIf(Ast.IfStmt ifStmt, DataType returnType, SymTab symTab) {
         BasicBlock bb = ((BasicBlock)basicBlocks.getTail());
         boolean hasElseBlock = ifStmt.elseStmt != null;
         BasicBlock thenBlock = new BasicBlock(curBlkIndex++);
-        BasicBlock elseBlock = hasElseBlock? new BasicBlock(curBlkIndex++) : null;
-        BasicBlock endBlock = new BasicBlock(curBlkIndex++);
+        basicBlocks.addToTail(thenBlock);
+        BasicBlock elseBlock = new BasicBlock(curBlkIndex++);
+        basicBlocks.addToTail(elseBlock);
+        
+        BasicBlock endBlock = hasElseBlock ? new BasicBlock(curBlkIndex++) : elseBlock;
+        if (hasElseBlock) {
+            basicBlocks.addToTail(endBlock);
+        }
         //TODO:确保正确计算且类型为i1
         Value cond = calculateExpr(ifStmt.condition, symTab);
         bb.addInstruction(new BranchInstr(cond,thenBlock,elseBlock,bb));
         curBlock = thenBlock;
-        dealStmt(ifStmt.thenStmt, DataType.VOID, new SymTab(symTab));
+        dealStmt(ifStmt.thenStmt, returnType, new SymTab(symTab));
         thenBlock.addInstruction(new JumpInstr(endBlock, thenBlock));
         if (hasElseBlock) {
             curBlock = elseBlock;
-            dealStmt(ifStmt.thenStmt, DataType.VOID, new SymTab(symTab));
+            dealStmt(ifStmt.elseStmt, returnType, new SymTab(symTab));
             elseBlock.addInstruction(new JumpInstr(endBlock, elseBlock));
             /* TODO：要能够切换当前的语句添加的块BB
              * TODO：要在then_blk最后加上JUMP

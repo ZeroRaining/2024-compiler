@@ -18,12 +18,13 @@ public class FCmpInstr extends Cmp {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("%").append(result).append(" = fcmp ");
         switch (cond) {
-            case EQ: stringBuilder.append("oeq");
-            case NE: stringBuilder.append("one");
-            case GT: stringBuilder.append("ogt");
-            case GE: stringBuilder.append("oge");
-            case LT: stringBuilder.append("olt");
-            case LE: stringBuilder.append("ole");
+            case EQ: stringBuilder.append("oeq"); break;
+            case NE: stringBuilder.append("one"); break;
+            case GT: stringBuilder.append("ogt"); break;
+            case GE: stringBuilder.append("oge"); break;
+            case LT: stringBuilder.append("olt"); break;
+            case LE: stringBuilder.append("ole"); break;
+            default: throw new RuntimeException("还有高手？");
         }
         stringBuilder.append(" float ").append(op1.value2string()).append(", ").append(op2.value2string());
         return stringBuilder.toString();

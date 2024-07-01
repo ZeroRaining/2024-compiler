@@ -17,12 +17,13 @@ public class ICmpInstr extends Cmp {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("%").append(result).append(" = icmp ");
         switch (cond) {
-            case EQ: stringBuilder.append("eq");
-            case NE: stringBuilder.append("ne");
-            case GT: stringBuilder.append("sgt");
-            case GE: stringBuilder.append("sge");
-            case LT: stringBuilder.append("slt");
-            case LE: stringBuilder.append("sle");
+            case EQ: stringBuilder.append("eq"); break;
+            case NE: stringBuilder.append("ne"); break;
+            case GT: stringBuilder.append("sgt"); break;
+            case GE: stringBuilder.append("sge"); break;
+            case LT: stringBuilder.append("slt"); break;
+            case LE: stringBuilder.append("sle"); break;
+            default: throw new RuntimeException("还有高手？");
         }
         stringBuilder.append(" i32 ").append(op1.value2string()).append(", ").append(op2.value2string());
         return stringBuilder.toString();
