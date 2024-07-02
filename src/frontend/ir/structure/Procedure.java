@@ -47,7 +47,8 @@ public class Procedure {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        BasicBlock firstBasicBlock = new BasicBlock(curBlkIndex++);
+        BasicBlock firstBasicBlock = new BasicBlock();
+        firstBasicBlock.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(firstBasicBlock);
         curBlock = firstBasicBlock;
         whileBegins = new Stack<>();
@@ -97,30 +98,38 @@ public class Procedure {
             throw new RuntimeException("continue in wrong position");
         }
         curBlock.addInstruction(new JumpInstr(whileBegins.peek(),curBlock));
+        curBlock = new BasicBlock();
+        curBlock.setLabelCnt(curBlkIndex++);
+        basicBlocks.addToTail(curBlock);
     }
 
     private void dealBreak() {
         if (whileEnds.empty()) {
-            throw new RuntimeException("continue in wrong position");
+            throw new RuntimeException("break in wrong position");
         }
         curBlock.addInstruction(new JumpInstr(whileEnds.peek(),curBlock));
+        curBlock = new BasicBlock();
+        curBlock.setLabelCnt(curBlkIndex++);
+        basicBlocks.addToTail(curBlock);
     }
 
 
     private void dealWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
-        BasicBlock condBlk = new BasicBlock(curBlkIndex++);
-        BasicBlock bodyBlk = new BasicBlock(curBlkIndex++);
-        BasicBlock endBlk = new BasicBlock(curBlkIndex++);
+        BasicBlock condBlk = new BasicBlock();
+        BasicBlock bodyBlk = new BasicBlock();
+        BasicBlock endBlk = new BasicBlock();
+
+        curBlock.addInstruction(new JumpInstr(condBlk,curBlock));//要为condBlk新建一个块吗
+
+        condBlk.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(condBlk);
-        basicBlocks.addToTail(bodyBlk);
-        basicBlocks.addToTail(endBlk);
-
-        curBlock.addInstruction(new JumpInstr(condBlk,curBlock));
-
         curBlock = condBlk;
         Value cond = calculateExpr(item.cond, symTab);
         condBlk.addInstruction(new BranchInstr(cond, bodyBlk, endBlk, condBlk));
+
         //fixme：if和while同时创建一个新end块，会导致没有语句
+        bodyBlk.setLabelCnt(curBlkIndex++);
+        basicBlocks.addToTail(bodyBlk);
         curBlock = bodyBlk;
         whileBegins.push(condBlk);
         whileEnds.push(endBlk);
@@ -128,41 +137,40 @@ public class Procedure {
         whileBegins.pop();
         whileEnds.pop();
 
+        endBlk.setLabelCnt(curBlkIndex++);
+        basicBlocks.addToTail(endBlk);
         curBlock.addInstruction(new JumpInstr(condBlk, curBlock));
-//        if (curBlock.isEmpty()) {
-//            curBlock.addInstruction(new JumpInstr(endBlk,curBlock));
-//        }
         curBlock = endBlk;
     }
 
     private void dealIf(Ast.IfStmt ifStmt, DataType returnType, SymTab symTab) {
-        BasicBlock bb = curBlock;
-        boolean hasElseBlock = ifStmt.elseStmt != null;
-        BasicBlock thenBlock = new BasicBlock(curBlkIndex++);
-        basicBlocks.addToTail(thenBlock);
-        BasicBlock elseBlock = new BasicBlock(curBlkIndex++);
-        basicBlocks.addToTail(elseBlock);
-        
-        BasicBlock endBlock = hasElseBlock ? new BasicBlock(curBlkIndex++) : elseBlock;
-        if (hasElseBlock) {
-            basicBlocks.addToTail(endBlock);
-        }
+        boolean hasElseBlk = ifStmt.elseStmt != null;
+        BasicBlock thenBlk = new BasicBlock();
+        BasicBlock elseBlk = new BasicBlock();
+        BasicBlock endBlk = new BasicBlock();
         //TODO:确保正确计算且类型为i1
         Value cond = calculateExpr(ifStmt.condition, symTab);
-        bb.addInstruction(new BranchInstr(cond,thenBlock,elseBlock,bb));
-        curBlock = thenBlock;
+        curBlock.addInstruction(new BranchInstr(cond, thenBlk, elseBlk, curBlock));
+
+        thenBlk.setLabelCnt(curBlkIndex++);
+        basicBlocks.addToTail(thenBlk);
+        curBlock = thenBlk;
         dealStmt(ifStmt.thenStmt, returnType, new SymTab(symTab));
-        curBlock.addInstruction(new JumpInstr(endBlock, curBlock));
-        if (hasElseBlock) {
-            curBlock = elseBlock;
+        BasicBlock thenTmpBlk = curBlock;//curBlk可能会改变，但是为了正常插入语句，需要保存
+        if (hasElseBlk) {
+            elseBlk.setLabelCnt(curBlkIndex++);
+            basicBlocks.addToTail(elseBlk);
+            curBlock = elseBlk;
             dealStmt(ifStmt.elseStmt, returnType, new SymTab(symTab));
-            curBlock.addInstruction(new JumpInstr(endBlock, curBlock));
-            /* 要能够切换当前的语句添加的块BB
-             * 要在then_blk最后加上JUMP
-             * 暂时没了
-             */
+            endBlk.setLabelCnt(curBlkIndex++);
+            curBlock.addInstruction(new JumpInstr(endBlk, curBlock));
+        } else {
+            endBlk.setLabelCnt(curBlkIndex++);
         }
-        curBlock = endBlock;
+
+        thenTmpBlk.addInstruction(new JumpInstr(endBlk, thenTmpBlk));
+        basicBlocks.addToTail(endBlk);
+        curBlock = endBlk;
     }
 
     public void dealReturn(Ast.Return item, DataType returnType, SymTab symTab) {

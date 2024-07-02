@@ -10,10 +10,13 @@ import java.io.Writer;
 
 public class BasicBlock extends Value {
     private final CustomList instructions = new CustomList();
-    private final int labelCnt;
+    private int labelCnt;
     
-    public BasicBlock(int labelCnt) {
+    public BasicBlock() {
         super();
+    }
+
+    public void setLabelCnt(int labelCnt) {
         this.labelCnt = labelCnt;
     }
 
