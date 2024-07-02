@@ -99,4 +99,5 @@ public class SymTab {
     public List<Symbol> getAllSym() {
         return new ArrayList<>(symbolMap.values());
     }
+
 }

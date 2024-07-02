@@ -52,4 +52,8 @@ public class ReturnInstr extends Instruction {
         
         return stringBuilder.toString();
     }
+
+    public Value getReturnValue() {
+        return returnValue;
+    }
 }

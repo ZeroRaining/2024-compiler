@@ -5,4 +5,7 @@ public class AsmImm32 extends AsmOperand{
     public AsmImm32(int value) {
         this.value = value;
     }
+    public int getValue() {
+        return value;
+    }
 }

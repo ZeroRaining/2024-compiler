@@ -1,8 +1,4 @@
 import frontend.ir.structure.Program;
-import arg.Arg;
-import backend.IrParser;
-import backend.itemStructure.AsmModule;
-import frontend.ir.Program;
 import frontend.lexer.Token;
 import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;
@@ -23,15 +19,17 @@ public class Compiler {
         //语法分析，得到AST
         //Ast ast = new Parser(tokenList).parseAst();
 
+        //IR生成
+        //Program program = new Program(ast);
+
         //词法分析测试
         //LexerTest();
 
         //语法分析测试
-
-        // ParserTest();
+        //ParserTest();
 
         //IR生成测试
-        IRTest();
+        //IRTest();
     }
 
     public static void LexerTest() throws IOException {

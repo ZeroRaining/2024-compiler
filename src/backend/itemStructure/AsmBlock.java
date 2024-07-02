@@ -1,22 +1,23 @@
 package backend.itemStructure;
 
 import Utils.CustomList;
+import Utils.CustomList.Node;
 import backend.asmInstr.AsmInstr;
+import frontend.ir.instr.binop.AddInstr;
 
-public class AsmBlock {
+public class AsmBlock extends Node{
     private int index = 0;
-    private CustomList.Node<AsmBlock> node = new CustomList.Node<>();
-    private CustomList<AsmInstr> instrs=new CustomList<>();
+    private CustomList instrs=new CustomList();
 
     public AsmBlock(int index) {
         this.index = index;
     }
     public void addInstrHead(AsmInstr instr) {
-        instrs.addToHead(new CustomList.Node<>(instr));
+        instrs.addToHead(instr);
     }
 
     public void addInstrTail(AsmInstr instr) {
-        instrs.addToTail(new CustomList.Node<>(instr));
+        instrs.addToTail(instr);
     }
 
 }

@@ -5,4 +5,7 @@ public class AsmImm12 extends AsmOperand{
     public AsmImm12(int value) {
         this.value = value;
     }
+    public int getValue() {
+        return value;
+    }
 }

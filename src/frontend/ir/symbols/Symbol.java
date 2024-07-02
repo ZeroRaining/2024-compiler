@@ -66,12 +66,12 @@ public class Symbol {
         } else if (type == DataType.FLOAT) {
             return AsmType.FLOAT;
         } else {
-            throw new RuntimeException("全局变量出现VOID类型");
+            throw new RuntimeException("变量出现void类型");
         }
     }
 
-    public Number getValue(AsmType type) {
-        return ((ConstValue) initVal).getValue();
+    public Number getValue() {
+        return initVal.getValue();
     }
 
     public Value getAllocInstr() {

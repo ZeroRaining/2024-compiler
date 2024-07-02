@@ -29,4 +29,7 @@ public class LoadInstr extends MemoryOperation {
         }
         return stringBuilder.toString();
     }
+    public Symbol getSymbol() {
+        return symbol;
+    }
 }

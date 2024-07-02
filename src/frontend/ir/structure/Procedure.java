@@ -263,7 +263,7 @@ public class Procedure {
         }
     }
 
-    public ArrayList<BasicBlock> getBasicBlocks() {
+    public CustomList getBasicBlocks() {
         return basicBlocks;
     }
 }
