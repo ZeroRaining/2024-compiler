@@ -2,6 +2,8 @@ package frontend.ir.structure;
 
 import Utils.CustomList;
 import frontend.ir.DataType;
+import frontend.ir.FuncDef;
+import frontend.ir.Value;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 import frontend.syntax.Ast;
@@ -11,7 +13,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class Function {
+public class Function extends Value implements FuncDef {
     private final String name;
     private final DataType returnType;
     private final Procedure procedure;
@@ -71,6 +73,23 @@ public class Function {
         return returnType;
     }
 
+    
+    @Override
+    public Number getValue() {
+        throw new RuntimeException("函数暂时没有值");
+    }
+    
+    @Override
+    public DataType getDataType() {
+        return returnType;
+    }
+    
+    @Override
+    public String value2string() {
+        throw new RuntimeException("函数暂时没有值");
+    }
+    
+    @Override
     public String getName() {
         return name;
     }

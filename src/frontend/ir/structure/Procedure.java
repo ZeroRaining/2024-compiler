@@ -10,11 +10,19 @@ import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.Fp2Si;
 import frontend.ir.instr.convop.Si2Fp;
+import frontend.ir.instr.convop.Zext;
 import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
+import frontend.ir.instr.otherop.CallInstr;
+import frontend.ir.instr.otherop.cmp.CmpCond;
+import frontend.ir.instr.otherop.cmp.FCmpInstr;
+import frontend.ir.instr.otherop.cmp.ICmpInstr;
+import frontend.ir.instr.terminator.BranchInstr;
+import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.unaryop.FNegInstr;
+import frontend.ir.lib.Lib;
 import frontend.ir.symbols.InitExpr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
@@ -23,47 +31,141 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class Procedure {
     private final CustomList basicBlocks = new CustomList();
     private int curRegIndex = 0;
-    
+    private int curBlkIndex = 0;
+    private BasicBlock curBlock;
+    private Stack<BasicBlock> whileBegins;
+    private Stack<BasicBlock> whileEnds;
+
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        BasicBlock firstBasicBlock = new BasicBlock();
+        BasicBlock firstBasicBlock = new BasicBlock(curBlkIndex++);
         basicBlocks.addToTail(firstBasicBlock);
-        parseCodeBlock(block, returnType, firstBasicBlock, funcSymTab);
+        curBlock = firstBasicBlock;
+        whileBegins = new Stack<>();
+        whileEnds = new Stack<>();
+        parseCodeBlock(block, returnType, funcSymTab);
     }
     
-    public void parseCodeBlock(Ast.Block block, DataType returnType, BasicBlock curBlock, SymTab symTab) {
+    public void parseCodeBlock(Ast.Block block, DataType returnType, SymTab symTab) {
         if (block == null || returnType == null || curBlock == null || symTab == null) {
             throw new NullPointerException();
         }
         for (Ast.BlockItem item : block.getItems()) {
             if (item instanceof Ast.Stmt) {
-                if (item instanceof Ast.Return) {
-                    dealReturn((Ast.Return) item, returnType, curBlock, symTab);
-                } else if (item instanceof Ast.Block) {
-                    parseCodeBlock((Ast.Block) item, returnType, curBlock, new SymTab(symTab));
-                } else if (item instanceof Ast.Assign) {
-                    dealAssign((Ast.Assign) item, curBlock, symTab);
-                } else if (item instanceof Ast.ExpStmt) {
-                    calculateExpr(((Ast.ExpStmt) item).getExp(), curBlock, symTab);
-                } else {
-                    throw new RuntimeException("出现了尚未支持的语句类型" + item.getClass());
-                }
+                dealStmt((Ast.Stmt) item, returnType, symTab);
             } else if (item instanceof Ast.Decl) {
-                dealDecl(curBlock, symTab, (Ast.Decl) item);
+                dealDecl(symTab, (Ast.Decl) item);
             } else {
                 throw new RuntimeException("出现了奇怪的条目");
             }
         }
     }
-    
-    public void dealReturn(Ast.Return item, DataType returnType, BasicBlock curBlock, SymTab symTab) {
+
+    public void dealStmt(Ast.Stmt item, DataType returnType, SymTab symTab) {
+        if (item instanceof Ast.Continue) {
+            dealContinue();
+        } else if (item instanceof Ast.Break) {
+            dealBreak();
+        } else if (item instanceof Ast.WhileStmt) {
+            dealWhile((Ast.WhileStmt)item, returnType, symTab);
+        } else if (item instanceof Ast.IfStmt) {
+            dealIf((Ast.IfStmt) item, returnType, symTab);
+        } else if (item instanceof Ast.Return) {
+            dealReturn((Ast.Return) item, returnType, symTab);
+        } else if (item instanceof Ast.Block) {
+            parseCodeBlock((Ast.Block) item, returnType, new SymTab(symTab));
+        } else if (item instanceof Ast.Assign) {
+            dealAssign((Ast.Assign) item, symTab);
+        } else if (item instanceof Ast.ExpStmt) {
+            calculateExpr(((Ast.ExpStmt) item).getExp(), symTab);
+        } else {
+            throw new RuntimeException("出现了尚未支持的语句类型" + item.getClass());
+        }
+    }
+
+    private void dealContinue() {
+        if (whileBegins.empty()) {
+            throw new RuntimeException("continue in wrong position");
+        }
+        curBlock.addInstruction(new JumpInstr(whileBegins.peek(),curBlock));
+    }
+
+    private void dealBreak() {
+        if (whileEnds.empty()) {
+            throw new RuntimeException("continue in wrong position");
+        }
+        curBlock.addInstruction(new JumpInstr(whileEnds.peek(),curBlock));
+    }
+
+
+    private void dealWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
+        BasicBlock condBlk = new BasicBlock(curBlkIndex++);
+        BasicBlock bodyBlk = new BasicBlock(curBlkIndex++);
+        BasicBlock endBlk = new BasicBlock(curBlkIndex++);
+        basicBlocks.addToTail(condBlk);
+        basicBlocks.addToTail(bodyBlk);
+        basicBlocks.addToTail(endBlk);
+
+        curBlock.addInstruction(new JumpInstr(condBlk,curBlock));
+
+        curBlock = condBlk;
+        Value cond = calculateExpr(item.cond, symTab);
+        condBlk.addInstruction(new BranchInstr(cond, bodyBlk, endBlk, condBlk));
+        //fixme：if和while同时创建一个新end块，会导致没有语句
+        curBlock = bodyBlk;
+        whileBegins.push(condBlk);
+        whileEnds.push(endBlk);
+        dealStmt(item.body, returnType, new SymTab(symTab));
+        whileBegins.pop();
+        whileEnds.pop();
+
+        curBlock.addInstruction(new JumpInstr(condBlk, curBlock));
+//        if (curBlock.isEmpty()) {
+//            curBlock.addInstruction(new JumpInstr(endBlk,curBlock));
+//        }
+        curBlock = endBlk;
+    }
+
+    private void dealIf(Ast.IfStmt ifStmt, DataType returnType, SymTab symTab) {
+        BasicBlock bb = curBlock;
+        boolean hasElseBlock = ifStmt.elseStmt != null;
+        BasicBlock thenBlock = new BasicBlock(curBlkIndex++);
+        basicBlocks.addToTail(thenBlock);
+        BasicBlock elseBlock = new BasicBlock(curBlkIndex++);
+        basicBlocks.addToTail(elseBlock);
+        
+        BasicBlock endBlock = hasElseBlock ? new BasicBlock(curBlkIndex++) : elseBlock;
+        if (hasElseBlock) {
+            basicBlocks.addToTail(endBlock);
+        }
+        //TODO:确保正确计算且类型为i1
+        Value cond = calculateExpr(ifStmt.condition, symTab);
+        bb.addInstruction(new BranchInstr(cond,thenBlock,elseBlock,bb));
+        curBlock = thenBlock;
+        dealStmt(ifStmt.thenStmt, returnType, new SymTab(symTab));
+        curBlock.addInstruction(new JumpInstr(endBlock, curBlock));
+        if (hasElseBlock) {
+            curBlock = elseBlock;
+            dealStmt(ifStmt.elseStmt, returnType, new SymTab(symTab));
+            curBlock.addInstruction(new JumpInstr(endBlock, curBlock));
+            /* 要能够切换当前的语句添加的块BB
+             * 要在then_blk最后加上JUMP
+             * 暂时没了
+             */
+        }
+        curBlock = endBlock;
+    }
+
+    public void dealReturn(Ast.Return item, DataType returnType, SymTab symTab) {
         if (item == null ||  returnType == null) {
             throw new NullPointerException();
         }
@@ -72,19 +174,7 @@ public class Procedure {
         if (returnValue == null) {
             curBlock.addInstruction(new ReturnInstr(returnType, curBlock));
         } else {
-            Value value;
-            switch (returnValue.checkConstType(symTab)) {
-                case INT:
-                    value = new ConstInt(returnValue.getConstInt(symTab));
-                    break;
-                case FLOAT:
-                    value = new ConstFloat(returnValue.getConstFloat(symTab));
-                    break;
-                default:
-                    // 返回值非常量
-                    value = calculateExpr(returnValue, curBlock, symTab);
-                    assert value instanceof Instruction;
-            }
+            Value value = calculateExpr(returnValue, symTab);
             assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
             if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
                 value = new Fp2Si(curRegIndex++, value, curBlock);
@@ -97,17 +187,25 @@ public class Procedure {
         }
     }
     
-    private void dealAssign(Ast.Assign item, BasicBlock curBlock, SymTab symTab) {
+    private void dealAssign(Ast.Assign item, SymTab symTab) {
         if (item == null || curBlock == null || symTab == null) {
             throw new NullPointerException();
         }
         Ast.LVal lVal = item.getLVal();
         Symbol left = symTab.getSym(lVal.getName());
-        Value right = calculateExpr(item.getExp(), curBlock, symTab);
+        Value right = calculateExpr(item.getExp(), symTab);
+        if (left.getType() == DataType.FLOAT && right.getDataType() == DataType.INT) {
+            right = new Si2Fp(curRegIndex++, right, curBlock);
+            curBlock.addInstruction((Instruction) right);
+        }
+        if (left.getType() == DataType.INT && right.getDataType() == DataType.FLOAT) {
+            right = new Fp2Si(curRegIndex++, right, curBlock);
+            curBlock.addInstruction((Instruction) right);
+        }
         curBlock.addInstruction(new StoreInstr(right, left, curBlock));
     }
     
-    private void dealDecl(BasicBlock curBlock, SymTab symTab, Ast.Decl item) {
+    private void dealDecl(SymTab symTab, Ast.Decl item) {
         if (curBlock == null || symTab == null || item == null) {
             throw new NullPointerException();
         }
@@ -121,7 +219,7 @@ public class Procedure {
                 if (initVal instanceof ConstValue) {
                     init = initVal;
                 } else if (initVal instanceof InitExpr) {
-                    init = calculateExpr(((InitExpr) initVal).getExp(), curBlock, symTab);
+                    init = calculateExpr(((InitExpr) initVal).getExp(), symTab);
                 } else {
                     throw new RuntimeException("这里还没有支持常量和表达式之外的形式");
                 }
@@ -130,18 +228,49 @@ public class Procedure {
         }
     }
     
-    private Value calculateExpr(Ast.Exp exp, BasicBlock curBlock, SymTab symTab) {
+    private Value calculateExpr(Ast.Exp exp, SymTab symTab) {
+        if (exp == null) {
+            throw new NullPointerException();
+        }
+        switch (exp.checkConstType(symTab)) {
+            case INT:   return new ConstInt(exp.getConstInt(symTab));
+            case FLOAT: return new ConstFloat(exp.getConstFloat(symTab));
+        }
         if (exp instanceof Ast.BinaryExp) {
-            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp(), curBlock, symTab);
+            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp(), symTab);
             List<Ast.Exp> rest = ((Ast.BinaryExp) exp).getRestExps();
             for (int i = 0; i < rest.size(); i++) {
                 Ast.Exp expI = rest.get(i);
                 Token op = ((Ast.BinaryExp) exp).getOps().get(i);
-                Value valueI = calculateExpr(expI, curBlock, symTab);
+                Value valueI = calculateExpr(expI, symTab);
                 
                 DataType type1 = firstValue.getDataType();
                 DataType type2 = valueI.getDataType();
-                assert type1 != DataType.VOID && type2 != DataType.VOID;
+                
+                if (type1 == DataType.VOID || type2 == DataType.VOID) {
+                    throw new RuntimeException("二元表达式不能处理 void");
+                }
+                
+                /*
+                    todo
+                        暂时不支持 && 和 ||，可能借助短路求值直接就干掉了
+                        哈哈哈哈哈与或非本为一体，与或都不支持，非也之后再说吧
+                        其实我觉得与或非应该都可以通过类似短路求值的方法实现，除非给我整出来一些 ((!(1 > 3)) < 2)
+                 */
+                
+                // i1 -> i32
+                if (type1 == DataType.BOOL) {
+                    Instruction instruction = new Zext(curRegIndex++, firstValue, curBlock);
+                    curBlock.addInstruction(instruction);
+                    firstValue = instruction;
+                }
+                if (type2 == DataType.BOOL) {
+                    Instruction instruction = new Zext(curRegIndex++, valueI, curBlock);
+                    curBlock.addInstruction(instruction);
+                    valueI = instruction;
+                }
+                
+                // 统一数据类型
                 DataType dataType = (type1 == DataType.INT && type2 == DataType.INT) ? DataType.INT : DataType.FLOAT;
                 if (dataType == DataType.FLOAT) {
                     if (type1 == DataType.INT) {
@@ -193,6 +322,48 @@ public class Procedure {
                             instruction = new SRemInstr(curRegIndex++, firstValue, valueI, curBlock);
                         }
                         break;
+                    case EQ:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.EQ, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.EQ, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case NE:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.NE, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.NE, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case LT:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.LT, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.LT, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case LE:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.LE, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.LE, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case GT:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.GT, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.GT, firstValue, valueI, curBlock);
+                        }
+                        break;
+                    case GE:
+                        if(dataType == DataType.FLOAT) {
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.GE, firstValue, valueI, curBlock);
+                        } else {
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.GE, firstValue, valueI, curBlock);
+                        }
+                        break;
                     default: throw new RuntimeException("表达式计算过程中出现了未曾设想的运算符");
                 }
                 curBlock.addInstruction(instruction);
@@ -204,10 +375,9 @@ public class Procedure {
             Ast.PrimaryExp primary = ((Ast.UnaryExp) exp).getPrimaryExp();
             Value res;
             if (primary instanceof Ast.Exp) {
-                res = calculateExpr((Ast.Exp) primary, curBlock, symTab);
+                res = calculateExpr((Ast.Exp) primary, symTab);
             } else if (primary instanceof Ast.Call) {
-                // todo
-                throw new RuntimeException("还没写到");
+                res = dealCall((Ast.Call) primary, symTab);
             } else if (primary instanceof Ast.LVal) {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
@@ -240,13 +410,33 @@ public class Procedure {
                         res = new FNegInstr(curRegIndex++, res, curBlock);
                         break;
                     default:
-                        throw new RuntimeException("指令不能，至少不应该连返回值都没有吧");
+                        throw new RuntimeException("带符号的指令不能，至少不应该连返回值都没有吧");
                 }
                 curBlock.addInstruction((Instruction) res);
             }
             return res;
         } else {
             throw new RuntimeException("奇怪的表达式");
+        }
+    }
+    
+    Value dealCall(Ast.Call call, SymTab symTab) {
+        if (call == null) {
+            throw new NullPointerException();
+        }
+        ArrayList<Value> rParams = new ArrayList<>();
+        for (Ast.Exp exp : call.getParams()) {
+            rParams.add(calculateExpr(exp, symTab));
+        }
+        CallInstr instr = Lib.getInstance().makeCall(curRegIndex++, call.getName(), rParams, curBlock);
+        if (instr != null) {
+            if (instr.getDataType() == DataType.VOID) {
+                curRegIndex--;
+            }
+            curBlock.addInstruction(instr);
+            return instr;
+        } else {
+            throw new RuntimeException("自定义函数调用尚未支持");
         }
     }
     

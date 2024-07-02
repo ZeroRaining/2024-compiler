@@ -1,6 +1,6 @@
 package frontend.ir.structure;
 
-import frontend.ir.structure.Function;
+import frontend.ir.lib.Lib;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 import frontend.syntax.Ast;
@@ -42,7 +42,7 @@ public class Program {
         }
         writer.write("");
         writeGlobalDecl(writer);
-        writer.append("\n");
+        Lib.getInstance().declareUsedFunc(writer);
         for (Function function : functions.values()) {
             function.printIR(writer);
         }
@@ -59,10 +59,14 @@ public class Program {
         if (writer == null) {
             throw new NullPointerException();
         }
+        if (globalSymTab.getAllSym().isEmpty()) {
+            return;
+        }
         for (Symbol symbol : globalSymTab.getAllSym()) {
             writer.append("@").append(symbol.getName()).append(" = global ");
             writer.append(symbol.getType().toString()).append(" ");
-            writer.append(symbol.getInitVal().getValue().toString()).append("\n");
+            writer.append(symbol.getInitVal().value2string()).append("\n");
         }
+        writer.append("\n");
     }
 }
