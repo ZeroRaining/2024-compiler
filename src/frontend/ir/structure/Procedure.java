@@ -33,13 +33,16 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class Procedure {
     private final CustomList basicBlocks = new CustomList();
     private int curRegIndex = 0;
     private int curBlkIndex = 0;
     private BasicBlock curBlock;
-    
+    private Stack<BasicBlock> whileBegins;
+    private Stack<BasicBlock> whileEnds;
+
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
@@ -47,6 +50,8 @@ public class Procedure {
         BasicBlock firstBasicBlock = new BasicBlock(curBlkIndex++);
         basicBlocks.addToTail(firstBasicBlock);
         curBlock = firstBasicBlock;
+        whileBegins = new Stack<>();
+        whileEnds = new Stack<>();
         parseCodeBlock(block, returnType, funcSymTab);
     }
     
@@ -66,7 +71,13 @@ public class Procedure {
     }
 
     public void dealStmt(Ast.Stmt item, DataType returnType, SymTab symTab) {
-        if (item instanceof Ast.IfStmt) {
+        if (item instanceof Ast.Continue) {
+            dealContinue();
+        } else if (item instanceof Ast.Break) {
+            dealBreak();
+        } else if (item instanceof Ast.WhileStmt) {
+            dealWhile((Ast.WhileStmt)item, returnType, symTab);
+        } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
             dealReturn((Ast.Return) item, returnType, symTab);
@@ -81,8 +92,51 @@ public class Procedure {
         }
     }
 
+    private void dealContinue() {
+        if (whileBegins.empty()) {
+            throw new RuntimeException("continue in wrong position");
+        }
+        curBlock.addInstruction(new JumpInstr(whileBegins.peek(),curBlock));
+    }
+
+    private void dealBreak() {
+        if (whileEnds.empty()) {
+            throw new RuntimeException("continue in wrong position");
+        }
+        curBlock.addInstruction(new JumpInstr(whileEnds.peek(),curBlock));
+    }
+
+
+    private void dealWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
+        BasicBlock condBlk = new BasicBlock(curBlkIndex++);
+        BasicBlock bodyBlk = new BasicBlock(curBlkIndex++);
+        BasicBlock endBlk = new BasicBlock(curBlkIndex++);
+        basicBlocks.addToTail(condBlk);
+        basicBlocks.addToTail(bodyBlk);
+        basicBlocks.addToTail(endBlk);
+
+        curBlock.addInstruction(new JumpInstr(condBlk,curBlock));
+
+        curBlock = condBlk;
+        Value cond = calculateExpr(item.cond, symTab);
+        condBlk.addInstruction(new BranchInstr(cond, bodyBlk, endBlk, condBlk));
+        //fixme：if和while同时创建一个新end块，会导致没有语句
+        curBlock = bodyBlk;
+        whileBegins.push(condBlk);
+        whileEnds.push(endBlk);
+        dealStmt(item.body, returnType, new SymTab(symTab));
+        whileBegins.pop();
+        whileEnds.pop();
+
+        curBlock.addInstruction(new JumpInstr(condBlk, curBlock));
+//        if (curBlock.isEmpty()) {
+//            curBlock.addInstruction(new JumpInstr(endBlk,curBlock));
+//        }
+        curBlock = endBlk;
+    }
+
     private void dealIf(Ast.IfStmt ifStmt, DataType returnType, SymTab symTab) {
-        BasicBlock bb = ((BasicBlock)basicBlocks.getTail());
+        BasicBlock bb = curBlock;
         boolean hasElseBlock = ifStmt.elseStmt != null;
         BasicBlock thenBlock = new BasicBlock(curBlkIndex++);
         basicBlocks.addToTail(thenBlock);
@@ -98,14 +152,14 @@ public class Procedure {
         bb.addInstruction(new BranchInstr(cond,thenBlock,elseBlock,bb));
         curBlock = thenBlock;
         dealStmt(ifStmt.thenStmt, returnType, new SymTab(symTab));
-        thenBlock.addInstruction(new JumpInstr(endBlock, thenBlock));
+        curBlock.addInstruction(new JumpInstr(endBlock, curBlock));
         if (hasElseBlock) {
             curBlock = elseBlock;
             dealStmt(ifStmt.elseStmt, returnType, new SymTab(symTab));
-            elseBlock.addInstruction(new JumpInstr(endBlock, elseBlock));
-            /* TODO：要能够切换当前的语句添加的块BB
-             * TODO：要在then_blk最后加上JUMP
-             * TODO：暂时没了
+            curBlock.addInstruction(new JumpInstr(endBlock, curBlock));
+            /* 要能够切换当前的语句添加的块BB
+             * 要在then_blk最后加上JUMP
+             * 暂时没了
              */
         }
         curBlock = endBlock;
