@@ -281,11 +281,11 @@ public class Procedure {
             curBlock = nextBlk;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
-            System.out.println("nextBlk: blk_" + nextBlk.getLabelCnt());
-            if (i == bin.getOps().size() - 1) {
-                nextBlk = PBlk;
-            }
-            condValue = transform2i1(calculateLAnd(nextExp, nextBlk, symTab));
+//            System.out.println("nextBlk: blk_" + nextBlk.getLabelCnt());
+//            if (i == bin.getOps().size() - 1) {
+//                nextBlk = PBlk;
+//            }
+            condValue = transform2i1(calculateLAnd(nextExp, PBlk, symTab));
         }
 
         return condValue;
