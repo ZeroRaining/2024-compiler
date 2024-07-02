@@ -149,7 +149,7 @@ public class Procedure {
         boolean hasElseBlk = ifStmt.elseStmt != null;
         BasicBlock thenBlk = new BasicBlock();
         BasicBlock elseBlk = new BasicBlock();
-        BasicBlock endBlk = new BasicBlock();
+        BasicBlock endBlk = hasElseBlk ? new BasicBlock() : elseBlk;
         //TODO:确保正确计算且类型为i1
         Value cond = calculateLOr(ifStmt.condition, thenBlk, elseBlk, symTab);
         /*
@@ -157,11 +157,6 @@ public class Procedure {
          * 1.里面只有一个条件，此时curBlk是if(a)所在的块，
          * 2.里面有多个条件，此时
          */
-        if (hasElseBlk) {
-            elseBlk = new BasicBlock();
-        } else {
-            elseBlk = endBlk;
-        }
         curBlock.addInstruction(new BranchInstr(cond, thenBlk, elseBlk, curBlock));
 
         thenBlk.setLabelCnt(curBlkIndex++);
@@ -271,6 +266,7 @@ public class Procedure {
         if (!(exp instanceof Ast.BinaryExp)) {
             return transform2i1(calculateExpr(exp, symTab));
         }
+        BasicBlock PBlk = falseBlk;
         Ast.BinaryExp bin = (Ast.BinaryExp) exp;
         BasicBlock nextBlk = falseBlk;
         Value condValue = transform2i1(calculateLAnd(bin.getFirstExp(), nextBlk, symTab));
@@ -285,7 +281,11 @@ public class Procedure {
             curBlock = nextBlk;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
-            condValue = calculateLAnd(nextExp, nextBlk, symTab);
+            System.out.println("nextBlk: blk_" + nextBlk.getLabelCnt());
+            if (i == bin.getOps().size() - 1) {
+                nextBlk = PBlk;
+            }
+            condValue = transform2i1(calculateLAnd(nextExp, nextBlk, symTab));
         }
 
         return condValue;
@@ -296,9 +296,21 @@ public class Procedure {
             return transform2i1(calculateExpr(exp, symTab));
         }
         Ast.BinaryExp bin = (Ast.BinaryExp) exp;
-        Value value = transform2i1(calculateExpr(bin.getFirstExp(),symTab));
-//        for ()
-        return value;
+        BasicBlock nextBlk;
+        Value condValue = transform2i1(calculateExpr(bin.getFirstExp(), symTab));
+
+        for (int i = 0; i < bin.getOps().size(); i++) {
+            nextBlk = new BasicBlock();
+            Token op = bin.getOps().get(i);
+            Ast.Exp nextExp = bin.getRestExps().get(i);
+            assert op.getType() == TokenType.LAND;
+            curBlock.addInstruction(new BranchInstr(condValue, nextBlk, falseBlk, curBlock));
+            curBlock = nextBlk;
+            curBlock.setLabelCnt(curBlkIndex++);
+            basicBlocks.addToTail(curBlock);
+            condValue = calculateExpr(nextExp, symTab);
+        }
+        return condValue;
     }
     private Value calculateExpr(Ast.Exp exp, SymTab symTab) {
         if (exp == null) {
