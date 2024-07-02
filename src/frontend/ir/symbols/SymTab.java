@@ -8,6 +8,7 @@ import frontend.syntax.Ast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class SymTab {
@@ -95,8 +96,13 @@ public class SymTab {
     public boolean isGlobal() {
         return parent == null;
     }
-    
+
+    public HashSet<Symbol> getSymbolSet() {
+        return new HashSet<>(symbolMap.values());
+    }
+
     public List<Symbol> getAllSym() {
         return new ArrayList<>(symbolMap.values());
     }
+
 }

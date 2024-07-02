@@ -491,4 +491,8 @@ public class Procedure {
             block.printIR(writer);
         }
     }
+
+    public CustomList getBasicBlocks() {
+        return basicBlocks;
+    }
 }

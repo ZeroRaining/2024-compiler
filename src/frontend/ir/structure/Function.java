@@ -1,13 +1,17 @@
 package frontend.ir.structure;
 
+import Utils.CustomList;
 import frontend.ir.DataType;
 import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.symbols.SymTab;
+import frontend.ir.symbols.Symbol;
 import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 public class Function extends Value implements FuncDef {
     private final String name;
@@ -56,6 +60,19 @@ public class Function extends Value implements FuncDef {
         this.procedure.printIR(writer);
         writer.append("}\n");
     }
+
+    public CustomList getBasicBlocks() {
+        return procedure.getBasicBlocks();
+    }
+
+    public HashSet<Symbol> getArgs(){
+        return symTab.getSymbolSet();
+    }
+
+    public DataType getReturnType() {
+        return returnType;
+    }
+
     
     @Override
     public Number getValue() {

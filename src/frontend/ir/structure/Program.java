@@ -8,6 +8,7 @@ import frontend.syntax.Ast;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Program {
     private final SymTab globalSymTab = new SymTab();
@@ -46,7 +47,14 @@ public class Program {
             function.printIR(writer);
         }
     }
-    
+
+    public HashSet<Symbol> getGlobalVars() {
+        return globalSymTab.getSymbolSet();
+    }
+    public HashMap<String, Function> getFunctions(){
+        return functions;
+    }
+
     private void writeGlobalDecl(Writer writer) throws IOException {
         if (writer == null) {
             throw new NullPointerException();

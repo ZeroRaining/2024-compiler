@@ -62,4 +62,8 @@ public class BasicBlock extends Value {
     public String value2string() {
         throw new RuntimeException("基本块暂时没有值");
     }
+
+    public CustomList getInstructions() {
+        return instructions;
+    }
 }
