@@ -40,8 +40,8 @@ public class Procedure {
     private int curRegIndex = 0;
     private int curBlkIndex = 0;
     private BasicBlock curBlock;
-    private Stack<BasicBlock> whileBegins;
-    private Stack<BasicBlock> whileEnds;
+    private final Stack<BasicBlock> whileBegins;
+    private final Stack<BasicBlock> whileEnds;
 
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
         if (fParams == null || block == null) {
@@ -235,7 +235,38 @@ public class Procedure {
             }
         }
     }
-    
+
+    private Value transform2i1(Value value) {
+        DataType type = value.getDataType();
+
+        if (type == DataType.BOOL) {
+            return value;
+        } else if (type == DataType.INT) {
+            Instruction instr = new ICmpInstr(curRegIndex++, CmpCond.NE, value, new ConstInt(0),curBlock);
+            curBlock.addInstruction(instr);
+            return instr;
+        } else if (type == DataType.FLOAT) {
+            Instruction instr = new FCmpInstr(curRegIndex++, CmpCond.NE, value, new ConstFloat(0),curBlock);
+            curBlock.addInstruction(instr);
+            return instr;
+        } else {
+            throw new RuntimeException("wrong in input class");
+        }
+    }
+
+    private Value calculateLOr() {
+        return null;
+    }
+
+    private Value calculateLAnd(Ast.Exp exp, BasicBlock falseBlk, SymTab symTab) {
+        if (!(exp instanceof Ast.BinaryExp)) {
+            return transform2i1(calculateExpr(exp, symTab));
+        }
+        Ast.BinaryExp bin = (Ast.BinaryExp) exp;
+        Value value = transform2i1(calculateExpr(bin.getFirstExp(),symTab));
+//        for ()
+        return null;
+    }
     private Value calculateExpr(Ast.Exp exp, SymTab symTab) {
         if (exp == null) {
             throw new NullPointerException();

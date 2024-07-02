@@ -4,6 +4,7 @@ import Utils.CustomList;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.terminator.ReturnInstr;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -11,9 +12,11 @@ import java.io.Writer;
 public class BasicBlock extends Value {
     private final CustomList instructions = new CustomList();
     private int labelCnt;
+    private boolean isRet;
     
     public BasicBlock() {
         super();
+        isRet = false;
     }
 
     public void setLabelCnt(int labelCnt) {
@@ -25,6 +28,12 @@ public class BasicBlock extends Value {
     }
 
     public void addInstruction(Instruction instr) {
+        if (isRet) {
+            return;
+        }
+        if (instr instanceof ReturnInstr) {
+            isRet = true;
+        }
         instructions.addToTail(instr);
     }
     
