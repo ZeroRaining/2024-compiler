@@ -335,23 +335,18 @@ public class Procedure {
                     throw new RuntimeException("二元表达式不能处理 void");
                 }
                 
-                /*
-                    todo
-                        暂时不支持 && 和 ||，可能借助短路求值直接就干掉了
-                        哈哈哈哈哈与或非本为一体，与或都不支持，非也之后再说吧
-                        其实我觉得与或非应该都可以通过类似短路求值的方法实现，除非给我整出来一些 ((!(1 > 3)) < 2)
-                 */
-                
                 // i1 -> i32
                 if (type1 == DataType.BOOL) {
                     Instruction instruction = new Zext(curRegIndex++, firstValue, curBlock);
                     curBlock.addInstruction(instruction);
                     firstValue = instruction;
+                    type1 = DataType.INT;
                 }
                 if (type2 == DataType.BOOL) {
                     Instruction instruction = new Zext(curRegIndex++, valueI, curBlock);
                     curBlock.addInstruction(instruction);
                     valueI = instruction;
+                    type2 = DataType.INT;
                 }
                 
                 // 统一数据类型
@@ -495,6 +490,17 @@ public class Procedure {
                         break;
                     default:
                         throw new RuntimeException("带符号的指令不能，至少不应该连返回值都没有吧");
+                }
+                curBlock.addInstruction((Instruction) res);
+            }
+            if (((Ast.UnaryExp) exp).checkNot()) {
+                DataType dataType = res.getDataType();
+                if (dataType == DataType.INT) {
+                    res = new ICmpInstr(curRegIndex++, CmpCond.EQ, new ConstInt(0), res, curBlock);
+                } else if (dataType == DataType.FLOAT) {
+                    res = new FCmpInstr(curRegIndex++, CmpCond.EQ, new ConstFloat(0), res, curBlock);
+                } else {
+                    throw new RuntimeException("!后面返回的应该只能是整数或者浮点数");
                 }
                 curBlock.addInstruction((Instruction) res);
             }
