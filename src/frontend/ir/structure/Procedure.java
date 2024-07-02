@@ -27,11 +27,13 @@ import frontend.ir.symbols.InitExpr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 import frontend.lexer.Token;
+import frontend.lexer.TokenType;
 import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
@@ -149,7 +151,17 @@ public class Procedure {
         BasicBlock elseBlk = new BasicBlock();
         BasicBlock endBlk = new BasicBlock();
         //TODO:确保正确计算且类型为i1
-        Value cond = calculateExpr(ifStmt.condition, symTab);
+        Value cond = calculateLOr(ifStmt.condition, thenBlk, elseBlk, symTab);
+        /*
+         * 结束后的curBlk有两种情况
+         * 1.里面只有一个条件，此时curBlk是if(a)所在的块，
+         * 2.里面有多个条件，此时
+         */
+        if (hasElseBlk) {
+            elseBlk = new BasicBlock();
+        } else {
+            elseBlk = endBlk;
+        }
         curBlock.addInstruction(new BranchInstr(cond, thenBlk, elseBlk, curBlock));
 
         thenBlk.setLabelCnt(curBlkIndex++);
@@ -254,8 +266,29 @@ public class Procedure {
         }
     }
 
-    private Value calculateLOr() {
-        return null;
+    //if ( A || (B && C) || D)
+    private Value calculateLOr(Ast.Exp exp, BasicBlock trueBlk, BasicBlock falseBlk, SymTab symTab) {
+        if (!(exp instanceof Ast.BinaryExp)) {
+            return transform2i1(calculateExpr(exp, symTab));
+        }
+        Ast.BinaryExp bin = (Ast.BinaryExp) exp;
+        BasicBlock nextBlk = falseBlk;
+        Value condValue = transform2i1(calculateLAnd(bin.getFirstExp(), nextBlk, symTab));
+
+
+        for (int i = 0; i < bin.getOps().size(); i++) {
+            nextBlk = new BasicBlock();
+            Token op = bin.getOps().get(i);
+            Ast.Exp nextExp = bin.getRestExps().get(i);
+            assert op.getType() == TokenType.LOR;
+            curBlock.addInstruction(new BranchInstr(condValue, trueBlk, nextBlk, curBlock));
+            curBlock = nextBlk;
+            curBlock.setLabelCnt(curBlkIndex++);
+            basicBlocks.addToTail(curBlock);
+            condValue = calculateLAnd(nextExp, nextBlk, symTab);
+        }
+
+        return condValue;
     }
 
     private Value calculateLAnd(Ast.Exp exp, BasicBlock falseBlk, SymTab symTab) {
@@ -265,7 +298,7 @@ public class Procedure {
         Ast.BinaryExp bin = (Ast.BinaryExp) exp;
         Value value = transform2i1(calculateExpr(bin.getFirstExp(),symTab));
 //        for ()
-        return null;
+        return value;
     }
     private Value calculateExpr(Ast.Exp exp, SymTab symTab) {
         if (exp == null) {

@@ -29,7 +29,7 @@ public class Compiler {
         //ParserTest();
 
         //IR生成测试
-        //IRTest();
+        IRTest();
     }
 
     public static void LexerTest() throws IOException {
