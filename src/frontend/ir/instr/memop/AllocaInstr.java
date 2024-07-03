@@ -9,7 +9,7 @@ public class AllocaInstr extends MemoryOperation {
     public AllocaInstr(int result, Symbol symbol, BasicBlock parentBB) {
         super(symbol, parentBB);
         this.result = result;
-        symbol.setAllocInstr(this);
+        symbol.setAllocValue(this);
     }
     
     @Override

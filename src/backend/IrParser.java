@@ -198,7 +198,7 @@ public class IrParser {
         if (retValue != null) {
             //返回值装a0?感觉可以优化
             //TODO:依赖于move指令的实现
-            if (f.getReturnType() == INT) {
+            if (f.getDataType() == INT) {
                 AsmOperand asmOperand = parseOperand(retValue, 32, f, bb);
                 AsmMove asmMove = new AsmMove(RegGeter.AregsInt.get(0), asmOperand);
                 asmBlock.addInstrTail(asmMove);

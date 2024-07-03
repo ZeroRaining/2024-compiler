@@ -25,7 +25,7 @@ public class StoreInstr extends MemoryOperation {
         if (symbol.isGlobal()) {
             return base + "@" + symbol.getName();
         } else {
-            return base + symbol.getAllocInstr().value2string();
+            return base + symbol.getAllocValue().value2string();
         }
     }
 }

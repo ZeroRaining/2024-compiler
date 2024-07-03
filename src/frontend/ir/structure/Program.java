@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 public class Program {
     private final SymTab globalSymTab = new SymTab();
@@ -29,7 +30,10 @@ public class Program {
                 }
                 functions.put(funcName, new Function((Ast.FuncDef) compUnit, globalSymTab));
             } else if (compUnit instanceof Ast.Decl) {
-                globalSymTab.addSymbols((Ast.Decl) compUnit);
+                List<Symbol> newSymList = globalSymTab.parseNewSymbols((Ast.Decl) compUnit);
+                for (Symbol symbol : newSymList) {
+                    globalSymTab.addSym(symbol);
+                }
             } else {
                 throw new RuntimeException("未定义的编译单元");
             }
