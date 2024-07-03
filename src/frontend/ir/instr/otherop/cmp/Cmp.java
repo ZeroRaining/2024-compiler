@@ -11,12 +11,14 @@ public abstract class Cmp extends Instruction {
     protected final Value op1;
     protected final Value op2;
     
-    public Cmp(int result,CmpCond cond, Value op1, Value op2, BasicBlock parentBB) {
+    public Cmp(int result, CmpCond cond, Value op1, Value op2, BasicBlock parentBB) {
         super(parentBB);
         this.result = result;
         this.cond = cond;
         this.op1 = op1;
         this.op2 = op2;
+        setUse(op1);
+        setUse(op2);
     }
     
     @Override

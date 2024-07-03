@@ -9,6 +9,7 @@ public class LoadInstr extends MemoryOperation {
     public LoadInstr(int result, Symbol symbol, BasicBlock parentBB) {
         super(symbol, parentBB);
         this.result = result;
+        setUse(symbol.getAllocInstr());
     }
     
     @Override
