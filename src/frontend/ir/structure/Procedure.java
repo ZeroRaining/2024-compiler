@@ -294,7 +294,6 @@ public class Procedure {
         if (!(exp instanceof Ast.BinaryExp)) {
             return transform2i1(calculateExpr(exp, symTab));
         }
-        BasicBlock PBlk = falseBlk;
         Ast.BinaryExp bin = (Ast.BinaryExp) exp;
         BasicBlock nextBlk = falseBlk;
         Value condValue = transform2i1(calculateLAnd(bin.getFirstExp(), nextBlk, symTab));
@@ -309,11 +308,7 @@ public class Procedure {
             curBlock = nextBlk;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
-//            System.out.println("nextBlk: blk_" + nextBlk.getLabelCnt());
-//            if (i == bin.getOps().size() - 1) {
-//                nextBlk = PBlk;
-//            }
-            condValue = transform2i1(calculateLAnd(nextExp, PBlk, symTab));
+            condValue = transform2i1(calculateLAnd(nextExp, falseBlk, symTab));
         }
 
         return condValue;
