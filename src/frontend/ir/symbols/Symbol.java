@@ -58,7 +58,7 @@ public class Symbol {
     }
 
     public AsmType getAsmType() {
-        if (!(limitList == null || limitList.size() == 0)) {
+        if (!(limitList == null || limitList.isEmpty())) {
             return AsmType.ARRAY;
         }
         if (type == DataType.INT) {

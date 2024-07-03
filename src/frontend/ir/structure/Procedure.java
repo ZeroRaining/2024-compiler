@@ -32,10 +32,7 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class Procedure {
     private final CustomList basicBlocks = new CustomList();
@@ -55,7 +52,38 @@ public class Procedure {
         curBlock = firstBasicBlock;
         whileBegins = new Stack<>();
         whileEnds = new Stack<>();
+        storeParams(fParams, funcSymTab);
         parseCodeBlock(block, returnType, funcSymTab);
+    }
+    
+    private void storeParams(List<Ast.FuncFParam> fParams, SymTab symTab) {
+        if (fParams == null || symTab == null) {
+            throw new NullPointerException();
+        }
+        HashMap<Symbol, FParam> symbol2FParam = new HashMap<>();
+        String name;
+        DataType dataType;
+        for (Ast.FuncFParam param : fParams) {
+            name = param.getName();
+            switch (param.getType().getType()) {
+                case INT:   dataType = DataType.INT;   break;
+                case FLOAT: dataType = DataType.FLOAT; break;
+                default: throw new RuntimeException("出现了未曾设想的类型");
+            }
+            List<Integer> limList = new ArrayList<>();
+            if (param.isArray()) {
+                // todo
+                throw new RuntimeException("暂时无法处理数组");
+            }
+            Symbol symbol = new Symbol(name, dataType, limList, false, false, null);
+            symTab.addSym(symbol);
+            symbol2FParam.put(symbol, new FParam(curRegIndex++, dataType));
+        }
+        
+        for (Symbol symbol : symbol2FParam.keySet()) {
+            curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
+            curBlock.addInstruction(new StoreInstr(symbol2FParam.get(symbol), symbol, curBlock));
+        }
     }
     
     public void parseCodeBlock(Ast.Block block, DataType returnType, SymTab symTab) {

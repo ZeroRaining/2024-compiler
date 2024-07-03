@@ -133,7 +133,7 @@ public class Ast {
             return type;
         }
         
-        public ArrayList<FuncFParam> getFParams() {
+        public List<FuncFParam> getFParams() {
             return params;
         }
         
@@ -145,10 +145,10 @@ public class Ast {
     // FuncFParam -> BType Ident ['[' ']' { '[' Exp ']' }]
     public static class FuncFParam {
         
-        public Token type;
-        public Token ident;
-        public boolean array; // whether it is an array
-        public ArrayList<Exp> arrayItemList; // array sizes of each dim
+        private final Token type;
+        private final Token ident;
+        private final boolean array; // whether it is an array
+        private final ArrayList<Exp> arrayItemList; // array sizes of each dim
         
         public FuncFParam(Token type, Token ident, boolean array, ArrayList<Exp> arrayItemList) {
             this.type = type;
@@ -158,6 +158,23 @@ public class Ast {
             assert type != null;
             assert ident != null;
             assert arrayItemList != null;
+        }
+        
+        
+        public Token getType() {
+            return type;
+        }
+        
+        public String getName() {
+            return ident.getContent();
+        }
+        
+        public boolean isArray() {
+            return array;
+        }
+        
+        public List<Exp> getArrayItemList() {
+            return arrayItemList;
         }
     }
     

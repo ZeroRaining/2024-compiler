@@ -10,14 +10,15 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 public class Function extends Value implements FuncDef {
     private final String name;
     private final DataType returnType;
     private final Procedure procedure;
     private final SymTab symTab;
+    private final List<Ast.FuncFParam> fParams;
     
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
         if (funcDef == null) {
@@ -38,7 +39,8 @@ public class Function extends Value implements FuncDef {
             default:
                 throw new RuntimeException("未定义的返回值类型");
         }
-        procedure = new Procedure(returnType, funcDef.getFParams(), funcDef.getBody(), symTab);
+        fParams = funcDef.getFParams();
+        procedure = new Procedure(returnType, fParams, funcDef.getBody(), symTab);
     }
     
     public void printIR(Writer writer) throws IOException {
@@ -54,11 +56,34 @@ public class Function extends Value implements FuncDef {
         }
         writer.append("@").append(this.name);
         writer.append("(");
-        // todo 这里该输出参数表了
+        printFParams(writer);
         writer.append(") ");
         writer.append("{\n");
         this.procedure.printIR(writer);
         writer.append("}\n");
+    }
+    
+    private void printFParams(Writer writer) throws IOException {
+        if (writer == null) {
+            throw new NullPointerException();
+        }
+        for (int i = 0; i < fParams.size(); i++) {
+            Ast.FuncFParam param = fParams.get(i);
+            if (param.isArray()) {
+                // todo
+                throw new RuntimeException("暂时不能处理数组");
+            } else {
+                switch (param.getType().getType()) {
+                    case INT:   writer.append("i32");   break;
+                    case FLOAT: writer.append("float"); break;
+                    default: throw new RuntimeException("出现了奇怪的形参类型");
+                }
+                writer.append(" %").append(Integer.toString(i));
+            }
+            if (i < fParams.size() - 1) {
+                writer.append(", ");
+            }
+        }
     }
 
     public CustomList getBasicBlocks() {

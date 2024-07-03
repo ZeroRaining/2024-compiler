@@ -43,8 +43,12 @@ public class Program {
         writer.write("");
         writeGlobalDecl(writer);
         Lib.getInstance().declareUsedFunc(writer);
+        int i = 0;
         for (Function function : functions.values()) {
             function.printIR(writer);
+            if (++i < functions.size()) {
+                writer.append("\n");
+            }
         }
     }
 
