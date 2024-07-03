@@ -19,6 +19,7 @@ public class BasicBlock extends Value {
     private HashSet<BasicBlock> sucs;
     private HashSet<BasicBlock> doms;
     private HashSet<BasicBlock> iDoms;
+    private HashSet<BasicBlock> DF;
     public BasicBlock(int depth) {
         super();
         isRet = false;
@@ -37,6 +38,14 @@ public class BasicBlock extends Value {
         return (Instruction) instructions.getTail();
     }
 
+    public void setDF(HashSet<BasicBlock> DF) {
+        this.DF = DF;
+    }
+
+    public void setIDoms(HashSet<BasicBlock> iDoms) {
+        this.iDoms = iDoms;
+    }
+
     public void setPres(HashSet<BasicBlock> pres) {
         this.pres = pres;
     }
@@ -51,6 +60,11 @@ public class BasicBlock extends Value {
     public HashSet<BasicBlock> getIDoms() {
         return iDoms;
     }
+
+    public HashSet<BasicBlock> getDF() {
+        return DF;
+    }
+
     public HashSet<BasicBlock> getPres() {
         return pres;
     }
