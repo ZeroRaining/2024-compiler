@@ -38,6 +38,7 @@ public class Procedure {
     private final CustomList basicBlocks = new CustomList();
     private int curRegIndex = 0;
     private int curBlkIndex = 0;
+    private int curDepth = 0;
     private BasicBlock curBlock;
     private final Stack<BasicBlock> whileBegins;
     private final Stack<BasicBlock> whileEnds;
@@ -46,7 +47,7 @@ public class Procedure {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        BasicBlock firstBasicBlock = new BasicBlock();
+        BasicBlock firstBasicBlock = new BasicBlock(curDepth);
         firstBasicBlock.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(firstBasicBlock);
         curBlock = firstBasicBlock;
@@ -128,7 +129,7 @@ public class Procedure {
             throw new RuntimeException("continue in wrong position");
         }
         curBlock.addInstruction(new JumpInstr(whileBegins.peek(),curBlock));
-        curBlock = new BasicBlock();
+        curBlock = new BasicBlock(curDepth);
         curBlock.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(curBlock);
     }
@@ -138,16 +139,16 @@ public class Procedure {
             throw new RuntimeException("break in wrong position");
         }
         curBlock.addInstruction(new JumpInstr(whileEnds.peek(),curBlock));
-        curBlock = new BasicBlock();
+        curBlock = new BasicBlock(curDepth);
         curBlock.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(curBlock);
     }
 
 
     private void dealWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
-        BasicBlock condBlk = new BasicBlock();
-        BasicBlock bodyBlk = new BasicBlock();
-        BasicBlock endBlk = new BasicBlock();
+        BasicBlock condBlk = new BasicBlock(curDepth);
+        BasicBlock bodyBlk = new BasicBlock(curDepth);
+        BasicBlock endBlk = new BasicBlock(curDepth);
 
         curBlock.addInstruction(new JumpInstr(condBlk,curBlock));//要为condBlk新建一个块吗
 
@@ -163,7 +164,9 @@ public class Procedure {
         curBlock = bodyBlk;
         whileBegins.push(condBlk);
         whileEnds.push(endBlk);
+        bodyBlk.setDepth(++curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
+        bodyBlk.setDepth(--curDepth);
         whileBegins.pop();
         whileEnds.pop();
 
@@ -175,9 +178,9 @@ public class Procedure {
 
     private void dealIf(Ast.IfStmt ifStmt, DataType returnType, SymTab symTab) {
         boolean hasElseBlk = ifStmt.elseStmt != null;
-        BasicBlock thenBlk = new BasicBlock();
-        BasicBlock elseBlk = new BasicBlock();
-        BasicBlock endBlk = hasElseBlk ? new BasicBlock() : elseBlk;
+        BasicBlock thenBlk = new BasicBlock(curDepth);
+        BasicBlock elseBlk = new BasicBlock(curDepth);
+        BasicBlock endBlk = hasElseBlk ? new BasicBlock(curDepth) : elseBlk;
         //TODO:确保正确计算且类型为i1
         Value cond = calculateLOr(ifStmt.condition, thenBlk, elseBlk, symTab);
         /*
@@ -300,7 +303,7 @@ public class Procedure {
 
 
         for (int i = 0; i < bin.getOps().size(); i++) {
-            nextBlk = new BasicBlock();
+            nextBlk = new BasicBlock(curDepth);
             Token op = bin.getOps().get(i);
             Ast.Exp nextExp = bin.getRestExps().get(i);
             assert op.getType() == TokenType.LOR;
@@ -323,7 +326,7 @@ public class Procedure {
         Value condValue = transform2i1(calculateExpr(bin.getFirstExp(), symTab));
 
         for (int i = 0; i < bin.getOps().size(); i++) {
-            nextBlk = new BasicBlock();
+            nextBlk = new BasicBlock(curDepth);
             Token op = bin.getOps().get(i);
             Ast.Exp nextExp = bin.getRestExps().get(i);
             assert op.getType() == TokenType.LAND;

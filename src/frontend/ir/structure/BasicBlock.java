@@ -8,15 +8,59 @@ import frontend.ir.instr.terminator.ReturnInstr;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.HashSet;
 
 public class BasicBlock extends Value {
     private final CustomList instructions = new CustomList();
     private int labelCnt;
+    private int depth;
     private boolean isRet;
-    
-    public BasicBlock() {
+    private HashSet<BasicBlock> pres;
+    private HashSet<BasicBlock> sucs;
+    private HashSet<BasicBlock> doms;
+    private HashSet<BasicBlock> iDoms;
+    public BasicBlock(int depth) {
         super();
         isRet = false;
+        this.depth = depth;
+        pres = new HashSet<>();
+        sucs = new HashSet<>();
+        doms = new HashSet<>();
+        iDoms = new HashSet<>();
+    }
+
+    public void setDepth(int depth) {
+        this.depth = depth;
+    }
+
+    public Instruction getEndInstr() {
+        return (Instruction) instructions.getTail();
+    }
+
+    public void setPres(HashSet<BasicBlock> pres) {
+        this.pres = pres;
+    }
+
+    public void setSucs(HashSet<BasicBlock> sucs) {
+        this.sucs = sucs;
+    }
+
+    public void setDoms(HashSet<BasicBlock> doms) {
+        this.doms = doms;
+    }
+    public HashSet<BasicBlock> getIDoms() {
+        return iDoms;
+    }
+    public HashSet<BasicBlock> getPres() {
+        return pres;
+    }
+
+    public HashSet<BasicBlock> getSucs() {
+        return sucs;
+    }
+
+    public HashSet<BasicBlock> getDoms() {
+        return doms;
     }
 
     public void setLabelCnt(int labelCnt) {

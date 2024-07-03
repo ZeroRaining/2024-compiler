@@ -15,6 +15,10 @@ public class JumpInstr extends Instruction {
         setUse(Target);
     }
 
+    public BasicBlock getTarget() {
+        return Target;
+    }
+
     @Override
     public Integer getValue() {
         return -1;
