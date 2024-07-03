@@ -126,8 +126,8 @@ public class Procedure {
         condBlk.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(condBlk);
         curBlock = condBlk;
-        Value cond = calculateExpr(item.cond, symTab);
-        condBlk.addInstruction(new BranchInstr(cond, bodyBlk, endBlk, condBlk));
+        Value cond = calculateLOr(item.cond, bodyBlk, endBlk, symTab);
+        curBlock.addInstruction(new BranchInstr(cond, bodyBlk, endBlk, curBlock));
 
         //fixme：if和while同时创建一个新end块，会导致没有语句
         bodyBlk.setLabelCnt(curBlkIndex++);
