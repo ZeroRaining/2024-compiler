@@ -12,6 +12,7 @@ public class JumpInstr extends Instruction {
     public JumpInstr(BasicBlock Target, BasicBlock parent) {
         super(parent);
         this.Target = Target;
+        setUse(Target);
     }
 
     @Override

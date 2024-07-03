@@ -15,6 +15,9 @@ public class BranchInstr extends Instruction {
         this.condition = cond;
         this.thenTarget = thenTarget;
         this.elseTarget = elseTarget;
+        setUse(thenTarget);
+        setUse(elseTarget);
+        setUse(cond);
     }
 
     public Value getCond() {
