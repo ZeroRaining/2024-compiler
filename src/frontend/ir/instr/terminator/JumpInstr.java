@@ -2,9 +2,7 @@ package frontend.ir.instr.terminator;
 
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
-import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
-import frontend.ir.symbols.SymTab;
 
 public class JumpInstr extends Instruction {
     private BasicBlock Target;
@@ -31,6 +29,6 @@ public class JumpInstr extends Instruction {
 
     @Override
     public String print() {
-        return "br label %blk_" + Target.getLabelCnt();
+        return "br label " + Target.value2string();
     }
 }

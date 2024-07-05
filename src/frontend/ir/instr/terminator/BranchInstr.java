@@ -34,7 +34,7 @@ public class BranchInstr extends Instruction {
 
     @Override
     public Number getValue() {
-        return -1;
+        throw new RuntimeException("no value in branch");
     }
 
     @Override
@@ -45,7 +45,7 @@ public class BranchInstr extends Instruction {
     @Override
     public String print() {
         return "br " + getCond().getDataType() + " " + condition.value2string() +
-                ", label %blk_" + getThenTarget().getLabelCnt() + ", label %blk_" + getElseTarget().getLabelCnt();
+                ", label " + getThenTarget().value2string() + ", label " + getElseTarget().value2string();
     }
 }
 

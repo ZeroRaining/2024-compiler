@@ -118,7 +118,7 @@ public class BasicBlock extends Value {
     
     @Override
     public String value2string() {
-        throw new RuntimeException("基本块暂时没有值");
+        return "%blk_" + labelCnt;
     }
 
     public CustomList getInstructions() {
