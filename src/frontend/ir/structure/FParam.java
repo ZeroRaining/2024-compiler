@@ -13,7 +13,7 @@ public class FParam extends Value {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         return virtualReg;
     }
     

@@ -139,7 +139,7 @@ public class Function extends Value implements FuncDef {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         throw new RuntimeException("函数暂时没有值");
     }
     

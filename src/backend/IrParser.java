@@ -290,7 +290,7 @@ public class IrParser {
 
         //TODO:关于move指令的到时候再写吧
         if (irValue instanceof ConstInt) {
-            return parseConstIntOperand(((ConstInt) irValue).getValue(), maxImm, irFunction, bb);
+            return parseConstIntOperand(((ConstInt) irValue).getNumber(), maxImm, irFunction, bb);
         }
         return null;//待删
     }

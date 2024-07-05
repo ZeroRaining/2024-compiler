@@ -74,7 +74,7 @@ public class Symbol {
     }
 
     public Number getValue() {
-        return initVal.getValue();
+        return initVal.getNumber();
     }
 
     public Value getAllocValue() {

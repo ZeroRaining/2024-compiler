@@ -32,6 +32,8 @@ public abstract class Instruction extends Value {
     
     @Override
     public String value2string() {
-        return "%" + this.getValue();
+        return "%reg_" + this.getNumber();
     }
+
+    public abstract void modifyValue(Value from, Value to);
 }

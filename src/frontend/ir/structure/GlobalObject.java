@@ -21,7 +21,7 @@ public class GlobalObject extends Value {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         throw new RuntimeException("全局对象不好说 value 是什么");
     }
     

@@ -15,7 +15,7 @@ public abstract class Value extends CustomList.Node {
     public void insertAtTail(Use use) {
         useList.addToTail(use);
     }
-    public abstract Number getValue();
+    public abstract Number getNumber();
     public abstract DataType getDataType();
     public abstract String value2string();
     public Use getBeginUse() {
@@ -23,6 +23,9 @@ public abstract class Value extends CustomList.Node {
     }
     public Use getEndUse() {
         return (Use) useList.getTail();
+    }
+    public void removeUse(Use use) {
+        use.removeFromList();
     }
 
 }

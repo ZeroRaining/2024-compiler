@@ -6,8 +6,6 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
-import frontend.ir.constvalue.ConstFloat;
-import frontend.ir.symbols.InitVal;
 import frontend.ir.constvalue.ConstInt;
 import frontend.lexer.Token;
 import frontend.lexer.TokenType;
@@ -488,7 +486,7 @@ public class Ast {
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     Value initVal = symbol.getInitVal();
                     if (initVal instanceof ConstInt) {
-                        ret = initVal.getValue().intValue() * sign;
+                        ret = initVal.getNumber().intValue() * sign;
                     } else {
                         return null;
                     }
@@ -525,7 +523,7 @@ public class Ast {
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     Value initVal = symbol.getInitVal();
                     if (initVal instanceof ConstValue) {
-                        ret = initVal.getValue().floatValue() * sign;
+                        ret = initVal.getNumber().floatValue() * sign;
                     } else {
                         return null;
                     }

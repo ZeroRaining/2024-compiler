@@ -1,6 +1,7 @@
 package frontend.ir.structure;
 
 import Utils.CustomList;
+import debug.DEBUG;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
@@ -566,8 +567,14 @@ public class Procedure {
         int i = 0;
         for (CustomList.Node basicBlockNode : basicBlocks) {
             BasicBlock block = (BasicBlock) basicBlockNode;
-            writer.append("blk_").append(String.valueOf(i++)).append(":\n");
+            writer.append(block.value2string()).append(":\n");
             block.printIR(writer);
+        }
+        DEBUG.dbgPrint1("\n");
+        for (CustomList.Node basicBlockNode : basicBlocks) {
+            BasicBlock block = (BasicBlock) basicBlockNode;
+            DEBUG.dbgPrint1(block.value2string());
+            block.printDBG();
         }
     }
 
