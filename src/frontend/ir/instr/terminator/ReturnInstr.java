@@ -7,7 +7,7 @@ import frontend.ir.instr.Instruction;
 
 public class ReturnInstr extends Instruction {
     private final DataType returnType;
-    private final Value returnValue;
+    private Value returnValue;
     
     public ReturnInstr(DataType returnType, BasicBlock parentBB) {
         super(parentBB);
@@ -31,7 +31,7 @@ public class ReturnInstr extends Instruction {
     }
     
     @Override
-    public Integer getValue() {
+    public Integer getNumber() {
         return -1;
     }
     
@@ -55,5 +55,14 @@ public class ReturnInstr extends Instruction {
 
     public Value getReturnValue() {
         return returnValue;
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        if (returnValue == from) {
+            returnValue = to;
+        } else {
+            throw new RuntimeException();
+        }
     }
 }

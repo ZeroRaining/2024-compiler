@@ -1,5 +1,6 @@
 package frontend.ir.instr.memop;
 
+import frontend.ir.Value;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.symbols.Symbol;
 
@@ -13,7 +14,7 @@ public class LoadInstr extends MemoryOperation {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         return result;
     }
     
@@ -30,6 +31,12 @@ public class LoadInstr extends MemoryOperation {
         }
         return stringBuilder.toString();
     }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        throw new RuntimeException("没有可以置换的 value");
+    }
+
     public Symbol getSymbol() {
         return symbol;
     }

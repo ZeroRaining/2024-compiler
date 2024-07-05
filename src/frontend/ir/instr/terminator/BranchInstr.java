@@ -33,7 +33,7 @@ public class BranchInstr extends Instruction {
     }
 
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         throw new RuntimeException("no value in branch");
     }
 
@@ -46,6 +46,11 @@ public class BranchInstr extends Instruction {
     public String print() {
         return "br " + getCond().getDataType() + " " + condition.value2string() +
                 ", label " + getThenTarget().value2string() + ", label " + getElseTarget().value2string();
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        throw new RuntimeException("没有可以置换的 value");
     }
 }
 

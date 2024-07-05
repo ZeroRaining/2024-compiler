@@ -35,7 +35,7 @@ public class CallInstr extends Instruction {
     
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         return result;
     }
     
@@ -62,5 +62,10 @@ public class CallInstr extends Instruction {
         }
         stringBuilder.append(")");
         return stringBuilder.toString();
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        throw new RuntimeException("没有可以置换的 value");
     }
 }

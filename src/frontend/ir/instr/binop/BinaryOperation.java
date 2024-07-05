@@ -7,8 +7,8 @@ import frontend.ir.instr.Instruction;
 
 public abstract class BinaryOperation extends Instruction {
     private final int result; // 新分配一个寄存器用来存结果
-    private final Value op1;
-    private final Value op2;
+    private Value op1;
+    private Value op2;
     private final DataType type;
     private final String operationName;
     
@@ -24,7 +24,7 @@ public abstract class BinaryOperation extends Instruction {
     }
     
     @Override
-    public Integer getValue() {
+    public Integer getNumber() {
         return result;
     }
     
@@ -38,5 +38,22 @@ public abstract class BinaryOperation extends Instruction {
         return "%" + result + " = " +
                 operationName + " " + type + " " +
                 op1.value2string() + ", " + op2.value2string();
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        boolean ok = false;
+        if (op1 == from) {
+            op1 = to;
+            ok = true;
+        }
+        if (op2 == from) {
+            op2 = to;
+            ok = true;
+        }
+        if (ok) {
+            return;
+        }
+        throw new RuntimeException();
     }
 }

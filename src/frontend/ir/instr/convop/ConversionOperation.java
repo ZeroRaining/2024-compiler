@@ -9,7 +9,7 @@ public abstract class ConversionOperation extends Instruction {
     private final int result;
     private final DataType form;
     private final DataType to;
-    private final Value value;
+    private Value value;
     private final String opName;
     
     public ConversionOperation(int result, DataType form, DataType to, Value value, String name, BasicBlock parentBB) {
@@ -23,7 +23,7 @@ public abstract class ConversionOperation extends Instruction {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         return result;
     }
     
@@ -37,5 +37,14 @@ public abstract class ConversionOperation extends Instruction {
         return "%" + result + " = " +
                 opName + " " + form + " " +
                 value.value2string() + " to " + to;
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        if (value == from) {
+            value = to;
+        } else {
+            throw new RuntimeException();
+        }
     }
 }

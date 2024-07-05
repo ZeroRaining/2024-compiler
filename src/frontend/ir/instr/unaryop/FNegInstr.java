@@ -7,7 +7,7 @@ import frontend.ir.instr.Instruction;
 
 public class FNegInstr extends Instruction {
     private final int result;
-    private final Value value;
+    private Value value;
     
     public FNegInstr(int result, Value value, BasicBlock parentBB) {
         super(parentBB);
@@ -17,7 +17,7 @@ public class FNegInstr extends Instruction {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         return result;
     }
     
@@ -29,5 +29,14 @@ public class FNegInstr extends Instruction {
     @Override
     public String print() {
         return "%" + result + " = fneg float " + value.value2string();
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        if (value == from) {
+            value = to;
+        } else {
+            throw new RuntimeException();
+        }
     }
 }
