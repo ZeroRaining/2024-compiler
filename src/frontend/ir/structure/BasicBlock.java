@@ -121,7 +121,7 @@ public class BasicBlock extends Value {
     
     @Override
     public String value2string() {
-        return "%blk_" + labelCnt;
+        return "blk_" + labelCnt;
     }
 
     public CustomList getInstructions() {

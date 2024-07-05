@@ -30,7 +30,7 @@ public class JumpInstr extends Instruction {
 
     @Override
     public String print() {
-        return "br label " + Target.value2string();
+        return "br label %" + Target.value2string();
     }
 
     @Override

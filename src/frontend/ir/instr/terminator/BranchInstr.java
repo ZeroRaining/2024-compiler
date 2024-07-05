@@ -45,7 +45,7 @@ public class BranchInstr extends Instruction {
     @Override
     public String print() {
         return "br " + getCond().getDataType() + " " + condition.value2string() +
-                ", label " + getThenTarget().value2string() + ", label " + getElseTarget().value2string();
+                ", label %" + getThenTarget().value2string() + ", label %" + getElseTarget().value2string();
     }
 
     @Override
