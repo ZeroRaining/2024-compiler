@@ -19,7 +19,30 @@ public class ArrayInitVal extends Value {
     }
     
     public void addInitValue(Value newVal) {
-        initList.add(newVal);
+        if (newVal == null) {
+            throw new NullPointerException();
+        }
+        if (newVal instanceof ArrayInitVal) {
+            int dim = ((ArrayInitVal) newVal).getDim();
+            if (dim < this.getDim() - 1) {
+                int len = limList.size();
+                List<Integer> nextLimList = limList.subList(len - 1 - dim, len);
+                ArrayInitVal newInit = new ArrayInitVal(dataType, nextLimList);
+                newInit.addInitValue(newVal);
+                addInitValue(newInit);
+            } else {
+                initList.add(newVal);
+            }
+        } else if (this.getDim() == 1) {
+            initList.add(newVal);
+        } else {
+            ArrayList<Integer> nextLimList = new ArrayList<>();
+            nextLimList.add(limList.get(limList.size() - 1));
+            ArrayInitVal newInit = new ArrayInitVal(dataType, nextLimList);
+            newInit.addInitValue(newVal);
+            addInitValue(newInit);
+        }
+        
     }
     
     public Value getValueWithIndex(List<Integer> indexList) {
@@ -48,6 +71,10 @@ public class ArrayInitVal extends Value {
         } else {
             return init;
         }
+    }
+    
+    private int getDim() {
+        return this.limList.size();
     }
     
     @Override
