@@ -255,8 +255,7 @@ public class Procedure {
         if (curBlock == null || symTab == null || item == null) {
             throw new NullPointerException();
         }
-        symTab.addSymbols(item);
-        List<Symbol> newSymList = symTab.getNewSymList();
+        List<Symbol> newSymList = symTab.parseNewSymbols(item);
         for (Symbol symbol : newSymList) {
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
             Value initVal = symbol.getInitVal();
@@ -271,6 +270,7 @@ public class Procedure {
                 }
                 curBlock.addInstruction(new StoreInstr(init, symbol, curBlock));
             }
+            symTab.addSym(symbol);
         }
     }
 
@@ -544,23 +544,25 @@ public class Procedure {
         for (Ast.Exp exp : call.getParams()) {
             rParams.add(calculateExpr(exp, symTab));
         }
-        CallInstr instr = Lib.getInstance().makeCall(curRegIndex++, call.getName(), rParams, curBlock);
-        if (instr != null) {
-            if (instr.getDataType() == DataType.VOID) {
-                curRegIndex--;
+        String name = call.getName();
+        CallInstr instr = Lib.getInstance().makeCall(curRegIndex++, name, rParams, curBlock);
+        if (instr == null) {
+            instr = Function.makeCall(curRegIndex - 1, name, rParams, curBlock);
+            if (instr == null) {
+                throw new RuntimeException("不是哥们，你这是什么函数啊？");
             }
-            curBlock.addInstruction(instr);
-            return instr;
-        } else {
-            throw new RuntimeException("自定义函数调用尚未支持");
         }
+        if (instr.getDataType() == DataType.VOID) {
+            curRegIndex--;
+        }
+        curBlock.addInstruction(instr);
+        return instr;
     }
     
     public void printIR(Writer writer) throws IOException {
         if (writer == null) {
             throw new NullPointerException();
         }
-        // todo 首先应该挖个坑给参数埋起来（分配内存）
         int i = 0;
         for (CustomList.Node basicBlockNode : basicBlocks) {
             BasicBlock block = (BasicBlock) basicBlockNode;

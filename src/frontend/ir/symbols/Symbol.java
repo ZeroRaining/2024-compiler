@@ -3,8 +3,7 @@ package frontend.ir.symbols;
 import backend.itemStructure.AsmType;
 import frontend.ir.DataType;
 import frontend.ir.Value;
-import frontend.ir.constvalue.ConstValue;
-import frontend.syntax.Ast;
+import frontend.ir.structure.GlobalObject;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ public class Symbol {
     private final boolean constant;
     private final boolean global;
     private final Value initVal;
-    private Value allocInstr;   // 用来获取 IR 中保存该变量地址的指针
+    private Value allocValue;   // 用来获取 IR 中保存该变量地址的指针
 
     public Symbol(String name, DataType type, List<Integer> limitList,
                   boolean constant, boolean global, Value initVal) {
@@ -25,7 +24,11 @@ public class Symbol {
         this.constant = constant;
         this.global = global;
         this.initVal = initVal;
-        this.allocInstr = null;
+        if (global) {
+            this.allocValue = new GlobalObject(name, type);
+        } else {
+            this.allocValue = null;
+        }
     }
 
     public String getName() {
@@ -48,8 +51,8 @@ public class Symbol {
         return initVal;
     }
 
-    public void setAllocInstr(Value allocInstr) {
-        this.allocInstr = allocInstr;
+    public void setAllocValue(Value allocValue) {
+        this.allocValue = allocValue;
     }
 
 
@@ -74,10 +77,10 @@ public class Symbol {
         return initVal.getValue();
     }
 
-    public Value getAllocInstr() {
-        if (allocInstr == null) {
+    public Value getAllocValue() {
+        if (allocValue == null) {
             throw new RuntimeException("还没有定义");
         }
-        return allocInstr;
+        return allocValue;
     }
 }

@@ -52,8 +52,13 @@ public class CallInstr extends Instruction {
         }
         stringBuilder.append("call ").append(returnType);
         stringBuilder.append(" @").append(funcDef.getName()).append("(");
-        for (Value value : rParams) {
+        int size = rParams.size();
+        for (int i = 0; i < size; i++) {
+            Value value = rParams.get(i);
             stringBuilder.append(value.getDataType()).append(" ").append(value.value2string());
+            if (i < size - 1) {
+                stringBuilder.append(", ");
+            }
         }
         stringBuilder.append(")");
         return stringBuilder.toString();

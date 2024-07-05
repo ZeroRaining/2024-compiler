@@ -9,7 +9,7 @@ public class LoadInstr extends MemoryOperation {
     public LoadInstr(int result, Symbol symbol, BasicBlock parentBB) {
         super(symbol, parentBB);
         this.result = result;
-        setUse(symbol.getAllocInstr());
+        setUse(symbol.getAllocValue());
     }
     
     @Override
@@ -26,7 +26,7 @@ public class LoadInstr extends MemoryOperation {
         if (symbol.isGlobal()) {
             stringBuilder.append("@").append(symbol.getName());
         } else {
-            stringBuilder.append(symbol.getAllocInstr().value2string());
+            stringBuilder.append(symbol.getAllocValue().value2string());
         }
         return stringBuilder.toString();
     }
