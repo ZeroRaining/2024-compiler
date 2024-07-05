@@ -32,6 +32,8 @@ public class Lib {
         // Timing
         allFunctions.put("starttime",   null);  // void starttime()     todo
         allFunctions.put("stoptime",    null);  // void stoptime()      todo
+        // MEM
+        allFunctions.put("memset", FuncMemset.class);           // void *memset(void *str, int c, size_t n)
     }
     
     public static Lib getInstance() {
