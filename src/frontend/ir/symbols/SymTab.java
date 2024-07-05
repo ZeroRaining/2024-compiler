@@ -74,7 +74,7 @@ public class SymTab {
             Value initVal;
             Ast.Init init = def.getInit();
             if (init != null) {
-                initVal = InitVal.createInitVal(dataType, init, this);
+                initVal = createInitVal(dataType, init, limList);
             } else if (isGlobal()) {
                 initVal = dataType == DataType.FLOAT ? new ConstFloat(0.0f) :
                                                        new ConstInt(0);
@@ -85,6 +85,95 @@ public class SymTab {
             newSymList.add(symbol);
         }
         return newSymList;
+    }
+    
+    private Value createInitVal(DataType type, Ast.Init init, List<Integer> limList) {
+        if (init instanceof Ast.Exp) {
+            return dealNonArrayInit(type, (Ast.Exp) init);
+        } else if (init instanceof Ast.InitArray) {
+            return dealArrayInit(type, (Ast.InitArray) init, limList);
+        } else {
+            throw new RuntimeException("奇怪的定义类型");
+        }
+    }
+    
+    private Value dealNonArrayInit(DataType type, Ast.Exp init) {
+        if (type == null || init == null) {
+            throw new NullPointerException();
+        }
+        switch (init.checkConstType(this)) {
+            case INT:
+                if (type == DataType.INT) {
+                    return new ConstInt(init.getConstInt(this));
+                } else if (type == DataType.FLOAT) {
+                    return new ConstFloat(init.getConstInt(this).floatValue());
+                }
+                else {
+                    throw new RuntimeException("你给我传了个什么鬼类型啊");
+                }
+            case FLOAT:
+                if (type == DataType.INT) {
+                    return new ConstInt(init.getConstFloat(this).intValue());
+                } else if (type == DataType.FLOAT) {
+                    return new ConstFloat(init.getConstFloat(this));
+                } else {
+                    throw new RuntimeException("你给我传了个什么鬼类型啊");
+                }
+            default:
+                if (this.isGlobal()) {
+                    throw new RuntimeException("全局变量初始值似乎不是确定值");
+                }
+                return new InitExpr(init);
+        }
+    }
+    
+    private Value dealArrayInit(DataType type, Ast.InitArray init, List<Integer> limList) {
+        if (type == null || init == null) {
+            throw new NullPointerException();
+        }
+        List<Ast.Init> initList = init.getInitList();
+        ArrayInitVal arrayInitVal = new ArrayInitVal(type, limList);
+        if (limList.size() > 1) {
+            int len = limList.get(0);
+            int cnt = 0;
+            List<Integer> nextLimList = new ArrayList<>(limList.subList(1, limList.size()));
+            ArrayInitVal innerInitVal = new ArrayInitVal(type, nextLimList);
+            for (Ast.Init innerInit : initList) {
+                if (innerInit instanceof Ast.Exp) {
+                    if (cnt++ >= len) {
+                        cnt = 1;
+                        arrayInitVal.addInitValue(innerInitVal);
+                        innerInitVal = new ArrayInitVal(type, nextLimList);
+                    }
+                    innerInitVal.addInitValue(dealNonArrayInit(type, (Ast.Exp) innerInit));
+                } else if (innerInit instanceof Ast.InitArray) {
+                    if (cnt > 0) {
+                        arrayInitVal.addInitValue(innerInitVal);
+                        innerInitVal = new ArrayInitVal(type, nextLimList);
+                        cnt = 0;
+                    }
+                    arrayInitVal.addInitValue(dealArrayInit(type, (Ast.InitArray) innerInit, nextLimList));
+                } else {
+                    throw new RuntimeException("奇怪的定义类型");
+                }
+            }
+            if (cnt > 0) {
+                arrayInitVal.addInitValue(innerInitVal);
+            }
+            
+        } else {
+            for (Ast.Init innerInit : initList) {
+                Value initVal;
+                if (innerInit instanceof Ast.Exp) {
+                    initVal = dealNonArrayInit(type, (Ast.Exp) innerInit);
+                } else {
+                    throw new RuntimeException("最低维度只应该出现非数组类型");
+                }
+                arrayInitVal.addInitValue(initVal);
+            }
+        }
+        
+        return arrayInitVal;
     }
     
     public boolean isGlobal() {

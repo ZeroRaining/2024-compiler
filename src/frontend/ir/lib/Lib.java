@@ -33,7 +33,8 @@ public class Lib {
         allFunctions.put("starttime",   null);  // void starttime()     todo
         allFunctions.put("stoptime",    null);  // void stoptime()      todo
         // MEM
-        allFunctions.put("memset", FuncMemset.class);           // void *memset(void *str, int c, size_t n)
+        allFunctions.put("memset", FuncMemset.class);
+        // void *memset(void *str, int c, size_t n)     简化： void memset(int*, int, int)
     }
     
     public static Lib getInstance() {

@@ -54,10 +54,13 @@ public class Symbol {
     public void setAllocValue(Value allocValue) {
         this.allocValue = allocValue;
     }
-
-
+    
     public List<Integer> getLimitList() {
         return limitList;
+    }
+    
+    public boolean isArray() {
+        return !limitList.isEmpty();
     }
 
     public AsmType getAsmType() {
@@ -82,5 +85,12 @@ public class Symbol {
             throw new RuntimeException("还没有定义");
         }
         return allocValue;
+    }
+    
+    public String printArrayTypeName() {
+        if (initVal instanceof ArrayInitVal) {
+            return ((ArrayInitVal) initVal).printArrayTypeName();
+        }
+        throw new RuntimeException("这是数组吗？");
     }
 }
