@@ -1,11 +1,17 @@
+import frontend.ir.structure.Function;
 import frontend.ir.structure.Program;
 import frontend.lexer.Token;
 import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;
 import frontend.syntax.Ast;
 import frontend.syntax.Parser;
+import midend.SSA.DFG;
+import midend.SSA.Mem2Reg;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
@@ -59,6 +65,9 @@ public class Compiler {
         TokenList tokenList = Lexer.getInstance().lex(source);
         Ast ast = new Parser(tokenList).parseAst();
         Program program = new Program(ast);
+        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
+        DFG dfg = new DFG(functions);
+        Mem2Reg mem2Reg = new Mem2Reg(functions);
         BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
         program.printIR(writer);
         writer.close();

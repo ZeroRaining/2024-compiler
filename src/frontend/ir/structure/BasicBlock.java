@@ -1,7 +1,9 @@
 package frontend.ir.structure;
 
 import Utils.CustomList;
+import debug.DEBUG;
 import frontend.ir.DataType;
+import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.terminator.ReturnInstr;
@@ -28,6 +30,7 @@ public class BasicBlock extends Value {
         sucs = new HashSet<>();
         doms = new HashSet<>();
         iDoms = new HashSet<>();
+        DF = new HashSet<>();
     }
 
     public void setDepth(int depth) {
@@ -107,7 +110,7 @@ public class BasicBlock extends Value {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         throw new RuntimeException("基本块暂时没有值");
     }
     
@@ -123,5 +126,31 @@ public class BasicBlock extends Value {
 
     public CustomList getInstructions() {
         return instructions;
+    }
+
+    public void printHashset(HashSet<BasicBlock> hashSet, String s) {
+        StringBuilder str = new StringBuilder(s);
+        str.append(": ");
+        for(BasicBlock b : hashSet) {
+            str.append(b.value2string()).append(" ");
+        }
+        DEBUG.dbgPrint2(String.valueOf(str));
+    }
+
+    public void printDBG() {
+        StringBuilder str = new StringBuilder();
+        DEBUG.dbgPrint("used: ");
+        Use use = this.getBeginUse();
+        if (use == null) {
+            DEBUG.dbgPrint1("chao???");
+        } else {
+            DEBUG.dbgPrint1((use.getUser()).getParentBB().value2string());
+        }
+        printHashset(sucs, "sucs");
+        printHashset(pres, "pres");
+        printHashset(doms, "doms");
+        printHashset(iDoms, "iDoms");
+        printHashset(DF, "DF");
+        DEBUG.dbgPrint1("");
     }
 }

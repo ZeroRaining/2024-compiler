@@ -11,14 +11,8 @@ import frontend.ir.structure.Function;
 import java.util.*;
 
 public class DFG {
-    private Queue<Integer> worklist;
-    private HashMap<Integer, Boolean> visited;
-    private HashMap<Integer, Boolean> placed;
-    private ArrayList<Function> functions;
-    public DFG(ArrayList<Function> functions) {
-        worklist = new LinkedList<Integer>();
-        visited = new HashMap<>();
-        placed = new HashMap<>();
+    private HashSet<Function> functions;
+    public DFG(HashSet<Function> functions) {
         this.functions = functions;
         for (Function function : functions) {
             removeBlk(function);
@@ -95,28 +89,39 @@ public class DFG {
         }
     }
 
-
-
-    private void removeBlk(Function function) {
-        Iterator<CustomList.Node> blks = function.getBasicBlocks().iterator();
-        HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
-        HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
-
-        while (blks.hasNext()) {
-            BasicBlock block = (BasicBlock) blks.next();
-            if (block.getBeginUse() == null) {
-                blks.remove();
-            } else {
-                pres.put(block, new HashSet<>());
-                sucs.put(block, new HashSet<>());
+    private void dfs4remove(BasicBlock block) {
+        if (block.getBeginUse() == null) {
+            Instruction instr = block.getEndInstr();
+            block.removeFromList();
+            if (instr instanceof JumpInstr) {
+                dfs4remove(((JumpInstr) instr).getTarget());
+            } else if (instr instanceof BranchInstr) {
+                dfs4remove(((BranchInstr) instr).getThenTarget());
+                dfs4remove(((BranchInstr) instr).getElseTarget());
             }
         }
+    }
 
-        blks = function.getBasicBlocks().iterator();
+    private void removeBlk(Function function) {
+        BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
+        HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
+        HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
+//        while (firstBlk != null) {
+//            dfs4remove(firstBlk);
+//            firstBlk = (BasicBlock) firstBlk.getNext();
+//        }
+        BasicBlock tmpBlk = (BasicBlock) function.getBasicBlocks().getHead();
+        while (tmpBlk != null) {
+            pres.put(tmpBlk, new HashSet<>());
+            sucs.put(tmpBlk, new HashSet<>());
+            tmpBlk = (BasicBlock) tmpBlk.getNext();
+        }
+
+        Iterator<CustomList.Node> blks = function.getBasicBlocks().iterator();
         while (blks.hasNext()) {
             BasicBlock block = (BasicBlock) blks.next();
             Use use = block.getBeginUse();
-            for (;use != block.getEndUse(); use = (Use) use.getNext()) {
+            for (;use != null; use = (Use) use.getNext()) {
                 BasicBlock user = use.getUser().getParentBB();
                 pres.get(block).add(user);
                 sucs.get(user).add(block);
