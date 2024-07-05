@@ -10,6 +10,7 @@ public class AllocaInstr extends MemoryOperation {
     public AllocaInstr(int result, Symbol symbol, BasicBlock parentBB) {
         super(symbol, parentBB);
         this.result = result;
+        this.type.setPointer();
         symbol.setAllocValue(this);
     }
     
