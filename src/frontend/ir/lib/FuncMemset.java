@@ -36,9 +36,6 @@ public class FuncMemset extends LibFunc {
         DataType type0 = rParams.get(0).getDataType();
         DataType type1 = rParams.get(1).getDataType();
         DataType type2 = rParams.get(2).getDataType();
-        if (type0 != DataType.INT || type1 != DataType.INT || type2 != DataType.INT) {
-            return false;
-        }
-        return type0.isPointer();
+        return type0 == DataType.INT && type1 == DataType.INT && type2 == DataType.INT;
     }
 }

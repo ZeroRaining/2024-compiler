@@ -4,6 +4,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
+import frontend.ir.constvalue.ConstValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +74,36 @@ public class ArrayInitVal extends Value {
         }
     }
     
-    private int getDim() {
+    /**
+     * 这个函数用来获取那些地方存了非零的初始化值
+     * 前一个用来记录结果，后一个是递归过程中记录前驱序号用的，初始都是空列表
+     */
+    public void getNonZeroIndex(List<List<Integer>> res, List<Integer> indexList) {
+        if (getDim() == 1) {
+            for (int i = 0; i < initList.size(); i++) {
+                Value init = initList.get(i);
+                if (init instanceof ConstValue && init.getNumber().intValue() == 0) {
+                    continue;
+                }
+                ArrayList<Integer> newInnerRes = new ArrayList<>(indexList);
+                newInnerRes.add(i);
+                res.add(newInnerRes);
+            }
+        } else {
+            for (int i = 0; i < initList.size(); i++) {
+                Value init = initList.get(i);
+                if (init instanceof ArrayInitVal) {
+                    ArrayList<Integer> myIndexList = new ArrayList<>(indexList);
+                    myIndexList.add(i);
+                    ((ArrayInitVal) init).getNonZeroIndex(res, myIndexList);
+                } else {
+                    throw new RuntimeException("非基层数组不是数组？");
+                }
+            }
+        }
+    }
+    
+    public int getDim() {
         return this.limList.size();
     }
     
@@ -170,5 +200,14 @@ public class ArrayInitVal extends Value {
             stringBuilder.append("]");
         }
         return stringBuilder.toString();
+    }
+    
+    public int getSize() {
+        // todo 会不会爆 int 啊
+        int size = 4;   // i32 和 float 都是 4 字节
+        for (Integer integer : limList) {
+            size *= integer;
+        }
+        return size;
     }
 }

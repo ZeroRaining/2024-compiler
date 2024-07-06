@@ -75,6 +75,8 @@ public class SymTab {
             Ast.Init init = def.getInit();
             if (init != null) {
                 initVal = createInitVal(dataType, init, limList);
+            } else if (!limList.isEmpty()) {
+                initVal = new ArrayInitVal(dataType, limList);
             } else if (isGlobal()) {
                 initVal = dataType == DataType.FLOAT ? new ConstFloat(0.0f) :
                                                        new ConstInt(0);
@@ -134,7 +136,7 @@ public class SymTab {
         List<Ast.Init> initList = init.getInitList();
         ArrayInitVal arrayInitVal = new ArrayInitVal(type, limList);
         if (limList.size() > 1) {
-            int len = limList.get(0);
+            int len = limList.get(limList.size() - 1);
             int cnt = 0;
             List<Integer> nextLimList = new ArrayList<>(limList.subList(1, limList.size()));
             ArrayInitVal innerInitVal = new ArrayInitVal(type, nextLimList);

@@ -26,6 +26,7 @@ import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.unaryop.FNegInstr;
 import frontend.ir.lib.Lib;
+import frontend.ir.symbols.ArrayInitVal;
 import frontend.ir.symbols.InitExpr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
@@ -271,15 +272,50 @@ public class Procedure {
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
             Value initVal = symbol.getInitVal();
             if (initVal != null) {
-                Value init;
                 if (initVal instanceof ConstValue) {
-                    init = initVal;
+                    curBlock.addInstruction(new StoreInstr(initVal, symbol, curBlock));
                 } else if (initVal instanceof InitExpr) {
-                    init = calculateExpr(((InitExpr) initVal).getExp(), symTab);
+                    Value init = calculateExpr(((InitExpr) initVal).getExp(), symTab);
+                    curBlock.addInstruction(new StoreInstr(init, symbol, curBlock));
+                } else if (initVal instanceof ArrayInitVal) {
+                    ArrayList<Value> baseIndexList = new ArrayList<>();
+                    for (int i = 0; i < ((ArrayInitVal) initVal).getDim(); i++) {
+                        baseIndexList.add(new ConstInt(0));
+                    }
+                    GEPInstr toBase = new GEPInstr(curRegIndex++, baseIndexList, symbol, curBlock);
+                    curBlock.addInstruction(toBase);
+                    ArrayList<Value> rParams = new ArrayList<>();
+                    rParams.add(toBase);
+                    rParams.add(new ConstInt(0));
+                    rParams.add(new ConstInt(((ArrayInitVal) initVal).getSize()));
+                    CallInstr memset = Lib.getInstance().makeCall(curRegIndex++, "memset", rParams, curBlock);
+                    curBlock.addInstruction(memset);
+                    
+                    List<List<Integer>> toInit = new ArrayList<>();
+                    ((ArrayInitVal) initVal).getNonZeroIndex(toInit, new ArrayList<>());
+                    for (List<Integer> list : toInit) {
+                        Value valToInit = ((ArrayInitVal) initVal).getValueWithIndex(list);
+                        ArrayList<Value> indexList = new ArrayList<>();
+                        for (Integer index : list) {
+                            indexList.add(new ConstInt(index));
+                        }
+                        if (valToInit instanceof ConstValue) {
+                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+                            curBlock.addInstruction(ptr);
+                            curBlock.addInstruction(new StoreInstr(valToInit, symbol, ptr, curBlock));
+                        } else if (valToInit instanceof InitExpr) {
+                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+                            curBlock.addInstruction(ptr);
+                            Value init = calculateExpr(((InitExpr) valToInit).getExp(), symTab);
+                            curBlock.addInstruction(new StoreInstr(init, symbol, ptr, curBlock));
+                        } else {
+                            throw new RuntimeException("最后一层了只能是常数或者表达式了吧");
+                        }
+                    }
                 } else {
-                    throw new RuntimeException("这里还没有支持常量和表达式之外的形式");
+                    throw new RuntimeException("这什么玩意？");
                 }
-                curBlock.addInstruction(new StoreInstr(init, symbol, curBlock));
+                
             }
             symTab.addSym(symbol);
         }
