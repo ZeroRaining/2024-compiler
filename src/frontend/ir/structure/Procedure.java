@@ -10,9 +10,11 @@ import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.Fp2Si;
+import frontend.ir.instr.convop.Sext;
 import frontend.ir.instr.convop.Si2Fp;
 import frontend.ir.instr.convop.Zext;
 import frontend.ir.instr.memop.AllocaInstr;
+import frontend.ir.instr.memop.GEPInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
@@ -249,7 +251,26 @@ public class Procedure {
             right = new Fp2Si(curRegIndex++, right, curBlock);
             curBlock.addInstruction((Instruction) right);
         }
-        curBlock.addInstruction(new StoreInstr(right, left, curBlock));
+        if (left.isArray()) {
+            ArrayList<Value> indexList = new ArrayList<>();
+            for (Ast.Exp exp : lVal.getIndexList()) {
+                Value res = calculateExpr(exp, symTab);
+                if (res.getDataType() != DataType.INT) {
+                    throw new RuntimeException("数组下标竟然不是整数？");
+                }
+                if (res instanceof Instruction) {
+                    res = new Sext(curRegIndex++, res, curBlock);
+                    curBlock.addInstruction((Instruction) res);
+                }
+                indexList.add(res);
+            }
+            Instruction ptr = new GEPInstr(curRegIndex++, indexList, left, curBlock);
+            curBlock.addInstruction(ptr);
+            curBlock.addInstruction(new StoreInstr(right, left, ptr, curBlock));
+        } else {
+            curBlock.addInstruction(new StoreInstr(right, left, curBlock));
+        }
+        
     }
     
     private void dealDecl(SymTab symTab, Ast.Decl item) {
