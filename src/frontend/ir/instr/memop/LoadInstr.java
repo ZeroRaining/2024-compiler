@@ -21,7 +21,7 @@ public class LoadInstr extends MemoryOperation {
     @Override
     public String print() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("%").append(result).append(" = load ");
+        stringBuilder.append("%reg_").append(result).append(" = load ");
         String ty = symbol.getType().toString();
         stringBuilder.append(ty).append(", ").append(ty).append("* ");
         if (symbol.isGlobal()) {

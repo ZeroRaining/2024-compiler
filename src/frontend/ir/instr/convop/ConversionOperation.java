@@ -34,7 +34,7 @@ public abstract class ConversionOperation extends Instruction {
     
     @Override
     public String print() {
-        return "%" + result + " = " +
+        return "%reg_" + result + " = " +
                 opName + " " + form + " " +
                 value.value2string() + " to " + to;
     }

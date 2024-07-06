@@ -30,7 +30,7 @@ public class GEPInstr extends MemoryOperation {
     @Override
     public String print() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("%").append(result).append(" = getelementptr ");
+        stringBuilder.append("%reg_").append(result).append(" = getelementptr ");
         stringBuilder.append(symbol.printArrayTypeName()).append(", ");
         stringBuilder.append(symbol.printArrayTypeName()).append("* ");
         if (symbol.isGlobal()) {

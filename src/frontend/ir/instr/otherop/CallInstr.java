@@ -48,7 +48,7 @@ public class CallInstr extends Instruction {
     public String print() {
         StringBuilder stringBuilder = new StringBuilder();
         if (result != null) {
-            stringBuilder.append("%").append(result).append(" = ");
+            stringBuilder.append("%reg_").append(result).append(" = ");
         }
         stringBuilder.append("call ").append(returnType);
         stringBuilder.append(" @").append(funcDef.getName()).append("(");

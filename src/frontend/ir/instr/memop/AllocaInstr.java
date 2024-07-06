@@ -21,7 +21,7 @@ public class AllocaInstr extends MemoryOperation {
     
     @Override
     public String print() {
-        return "%" + result + " = alloca " + getDataType();
+        return "%reg_" + result + " = alloca " + getDataType();
     }
 
     @Override
