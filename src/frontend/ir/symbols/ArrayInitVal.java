@@ -125,25 +125,35 @@ public class ArrayInitVal extends Value {
                 return "zeroinitializer";
             }
         } else {
-            stringBuilder.append("[");
+            StringBuilder sb = new StringBuilder();
+            boolean hasNonZero = false;
             for (int i = 0; i < limList.get(0); i++) {
                 if (i < initList.size()) {
                     Value init = initList.get(i);
                     if (init instanceof ArrayInitVal) {
-                        stringBuilder.append(((ArrayInitVal) init).printArrayTypeName()).append(" ");
-                        stringBuilder.append(init.value2string());
+                        sb.append(((ArrayInitVal) init).printArrayTypeName()).append(" ");
+                        String initStr = init.value2string();
+                        if (!initStr.equals("zeroinitializer")) {
+                            hasNonZero = true;
+                        }
+                        sb.append(initStr);
                     } else {
                         throw new RuntimeException("非基层数组里出现单蹦元素");
                     }
                 } else {
-                    stringBuilder.append(((ArrayInitVal) initList.get(0)).printArrayTypeName());
-                    stringBuilder.append(" zeroinitializer");
+                    sb.append(((ArrayInitVal) initList.get(0)).printArrayTypeName());
+                    sb.append(" zeroinitializer");
                 }
                 if (i < limList.get(0) - 1) {
-                    stringBuilder.append(", ");
+                    sb.append(", ");
                 }
             }
-            stringBuilder.append("]");
+            if (hasNonZero) {
+                stringBuilder.append("[").append(sb).append("]");
+            } else {
+                stringBuilder.append("zeroinitializer");
+            }
+            
         }
         
         
