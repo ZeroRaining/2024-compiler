@@ -252,18 +252,7 @@ public class Procedure {
             curBlock.addInstruction((Instruction) right);
         }
         if (left.isArray()) {
-            ArrayList<Value> indexList = new ArrayList<>();
-            for (Ast.Exp exp : lVal.getIndexList()) {
-                Value res = calculateExpr(exp, symTab);
-                if (res.getDataType() != DataType.INT) {
-                    throw new RuntimeException("数组下标竟然不是整数？");
-                }
-                if (res instanceof Instruction) {
-                    res = new Sext(curRegIndex++, res, curBlock);
-                    curBlock.addInstruction((Instruction) res);
-                }
-                indexList.add(res);
-            }
+            List<Value> indexList = getIndexList(lVal, symTab);
             Instruction ptr = new GEPInstr(curRegIndex++, indexList, left, curBlock);
             curBlock.addInstruction(ptr);
             curBlock.addInstruction(new StoreInstr(right, left, ptr, curBlock));
@@ -507,12 +496,21 @@ public class Procedure {
                 res = dealCall((Ast.Call) primary, symTab);
             } else if (primary instanceof Ast.LVal) {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
-                if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
-                    res = symbol.getInitVal();
-                } else {
-                    Instruction load = new LoadInstr(curRegIndex++, symbol, curBlock);
+                if (symbol.isArray()) {
+                    List<Value> indexList = getIndexList((Ast.LVal) primary, symTab);
+                    Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+                    curBlock.addInstruction(ptr);
+                    Instruction load = new LoadInstr(curRegIndex++, symbol, ptr, curBlock);
                     curBlock.addInstruction(load);
                     res = load;
+                } else {
+                    if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
+                        res = symbol.getInitVal();
+                    } else {
+                        Instruction load = new LoadInstr(curRegIndex++, symbol, curBlock);
+                        curBlock.addInstruction(load);
+                        res = load;
+                    }
                 }
             } else if (primary instanceof Ast.Number) {
                 if (((Ast.Number) primary).isIntConst()) {
@@ -558,6 +556,25 @@ public class Procedure {
         }
     }
     
+    List<Value> getIndexList(Ast.LVal lVal, SymTab symTab) {
+        if (lVal == null) {
+            throw new NullPointerException();
+        }
+        ArrayList<Value> indexList = new ArrayList<>();
+        for (Ast.Exp innerexp : lVal.getIndexList()) {
+            Value innerRes = calculateExpr(innerexp, symTab);
+            if (innerRes.getDataType() != DataType.INT) {
+                throw new RuntimeException("数组下标不是整数？");
+            }
+            if (innerRes instanceof Instruction) {
+                innerRes = new Sext(curRegIndex++, innerRes, curBlock);
+                curBlock.addInstruction((Instruction) innerRes);
+            }
+            indexList.add(innerRes);
+        }
+        return indexList;
+    }
+    
     Value dealCall(Ast.Call call, SymTab symTab) {
         if (call == null) {
             throw new NullPointerException();
@@ -585,7 +602,6 @@ public class Procedure {
         if (writer == null) {
             throw new NullPointerException();
         }
-        int i = 0;
         for (CustomList.Node basicBlockNode : basicBlocks) {
             BasicBlock block = (BasicBlock) basicBlockNode;
             writer.append(block.value2string()).append(":\n");

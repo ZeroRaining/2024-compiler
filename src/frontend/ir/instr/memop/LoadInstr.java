@@ -6,11 +6,20 @@ import frontend.ir.symbols.Symbol;
 
 public class LoadInstr extends MemoryOperation {
     private final int result;
+    private Value ptr = null;
     
     public LoadInstr(int result, Symbol symbol, BasicBlock parentBB) {
         super(symbol, parentBB);
         this.result = result;
         setUse(symbol.getAllocValue());
+    }
+    
+    public LoadInstr(int result, Symbol symbol, Value ptr, BasicBlock parentBB) {
+        super(symbol, parentBB);
+        this.result = result;
+        setUse(symbol.getAllocValue());
+        this.ptr = ptr;
+        setUse(ptr);
     }
     
     @Override
@@ -24,7 +33,9 @@ public class LoadInstr extends MemoryOperation {
         stringBuilder.append("%reg_").append(result).append(" = load ");
         String ty = symbol.getType().toString();
         stringBuilder.append(ty).append(", ").append(ty).append("* ");
-        if (symbol.isGlobal()) {
+        if (ptr != null) {
+            stringBuilder.append(ptr.value2string());
+        } else if (symbol.isGlobal()) {
             stringBuilder.append("@").append(symbol.getName());
         } else {
             stringBuilder.append(symbol.getAllocValue().value2string());
