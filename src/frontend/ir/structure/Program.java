@@ -72,7 +72,12 @@ public class Program {
         }
         for (Symbol symbol : globalSymTab.getAllSym()) {
             writer.append("@").append(symbol.getName()).append(" = global ");
-            writer.append(symbol.getType().toString()).append(" ");
+            if (symbol.isArray()) {
+                writer.append(symbol.printArrayTypeName());
+            } else {
+                writer.append(symbol.getType().toString());
+            }
+            writer.append(" ");
             writer.append(symbol.getInitVal().value2string()).append("\n");
         }
         writer.append("\n");

@@ -35,7 +35,7 @@ public abstract class BinaryOperation extends Instruction {
     
     @Override
     public String print() {
-        return "%" + result + " = " +
+        return "%reg_" + result + " = " +
                 operationName + " " + type + " " +
                 op1.value2string() + ", " + op2.value2string();
     }

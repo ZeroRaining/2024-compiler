@@ -6,12 +6,21 @@ import frontend.ir.symbols.Symbol;
 
 public class StoreInstr extends MemoryOperation {
     private Value value;
+    private Value ptr = null;
     
     public StoreInstr(Value value, Symbol symbol, BasicBlock parentBB) {
         super(symbol, parentBB);
         this.value = value;
         setUse(value);
         setUse(symbol.getAllocValue());
+    }
+    
+    public StoreInstr(Value value, Symbol symbol, Value ptr, BasicBlock parentBB) {
+        super(symbol, parentBB);
+        this.value = value;
+        this.ptr = ptr;
+        setUse(value);
+        setUse(ptr);
     }
 
     //store.getValue = value in storeInstr
@@ -23,10 +32,14 @@ public class StoreInstr extends MemoryOperation {
     public Value getValue() {
         return value;
     }
+    
     @Override
     public String print() {
         String base = "store " + symbol.getType() + " " + value.value2string() +
                 ", " + symbol.getType() + "* ";
+        if (ptr != null) {
+            return base + ptr.value2string();
+        }
         if (symbol.isGlobal()) {
             return base + "@" + symbol.getName();
         } else {
@@ -38,7 +51,9 @@ public class StoreInstr extends MemoryOperation {
     public void modifyValue(Value from, Value to) {
         if (value == from) {
             value = to;
-        } else {
+        } else if (ptr == from) {
+            ptr = to;
+        }else {
             throw new RuntimeException();
         }
     }

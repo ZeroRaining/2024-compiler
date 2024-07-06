@@ -10,7 +10,6 @@ public class AllocaInstr extends MemoryOperation {
     public AllocaInstr(int result, Symbol symbol, BasicBlock parentBB) {
         super(symbol, parentBB);
         this.result = result;
-        this.type.setPointer();
         symbol.setAllocValue(this);
     }
     
@@ -21,7 +20,11 @@ public class AllocaInstr extends MemoryOperation {
     
     @Override
     public String print() {
-        return "%" + result + " = alloca " + getDataType();
+        if (symbol.isArray()) {
+            return "%reg_" + result + " = alloca " + symbol.printArrayTypeName();
+        } else {
+            return "%reg_" + result + " = alloca " + getDataType();
+        }
     }
 
     @Override

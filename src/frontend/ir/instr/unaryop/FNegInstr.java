@@ -28,7 +28,7 @@ public class FNegInstr extends Instruction {
     
     @Override
     public String print() {
-        return "%" + result + " = fneg float " + value.value2string();
+        return "%reg_" + result + " = fneg float " + value.value2string();
     }
 
     @Override

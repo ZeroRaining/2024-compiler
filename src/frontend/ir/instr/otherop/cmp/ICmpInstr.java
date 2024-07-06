@@ -15,7 +15,7 @@ public class ICmpInstr extends Cmp {
     @Override
     public String print() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("%").append(result).append(" = icmp ");
+        stringBuilder.append("%reg_").append(result).append(" = icmp ");
         switch (cond) {
             case EQ: stringBuilder.append("eq"); break;
             case NE: stringBuilder.append("ne"); break;
