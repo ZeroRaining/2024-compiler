@@ -56,4 +56,11 @@ public abstract class BinaryOperation extends Instruction {
         }
         throw new RuntimeException();
     }
+
+    public Value getOp1() {
+        return op1;
+    }
+    public Value getOp2() {
+        return op2;
+    }
 }

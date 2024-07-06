@@ -46,4 +46,14 @@ public abstract class Cmp extends Instruction {
             throw new RuntimeException();
         }
     }
+
+    public CmpCond getCond() {
+        return cond;
+    }
+    public Value getOp1() {
+        return op1;
+    }
+    public Value getOp2() {
+        return op2;
+    }
 }

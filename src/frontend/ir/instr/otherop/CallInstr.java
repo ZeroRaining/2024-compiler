@@ -68,4 +68,8 @@ public class CallInstr extends Instruction {
     public void modifyValue(Value from, Value to) {
         throw new RuntimeException("没有可以置换的 value");
     }
+
+    public List<Value> getrParams() {
+        return rParams;
+    }
 }

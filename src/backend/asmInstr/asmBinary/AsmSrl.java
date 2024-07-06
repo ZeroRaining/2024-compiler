@@ -2,12 +2,9 @@ package backend.asmInstr.asmBinary;
 
 import backend.itemStructure.AsmOperand;
 
-public class AsmAdd extends AsmBinary {
+public class AsmSrl extends AsmBinary{
     public boolean isWord = false;
-
-    public AsmAdd(AsmOperand dst, AsmOperand src1, AsmOperand src2) {
+    public AsmSrl(AsmOperand dst, AsmOperand src1, AsmOperand src2) {
         super(dst, src1, src2);
     }
-
-
 }

@@ -19,5 +19,12 @@ public class AsmBlock extends Node{
     public void addInstrTail(AsmInstr instr) {
         instrs.addToTail(instr);
     }
+    public int getIndex() {
+        return index;
+    }
+
+    public CustomList getInstrs() {
+        return instrs;
+    }
 
 }
