@@ -93,4 +93,8 @@ public class Symbol {
         }
         throw new RuntimeException("这是数组吗？");
     }
+    
+    public int getDim() {
+        return this.limitList.size();
+    }
 }

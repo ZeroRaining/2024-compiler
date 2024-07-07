@@ -536,9 +536,13 @@ public class Procedure {
                     List<Value> indexList = getIndexList((Ast.LVal) primary, symTab);
                     Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
                     curBlock.addInstruction(ptr);
-                    Instruction load = new LoadInstr(curRegIndex++, symbol, ptr, curBlock);
-                    curBlock.addInstruction(load);
-                    res = load;
+                    if (ptr.getPointerLevel() == 1) {
+                        Instruction load = new LoadInstr(curRegIndex++, symbol, ptr, curBlock);
+                        curBlock.addInstruction(load);
+                        res = load;
+                    } else {
+                        res = ptr;
+                    }
                 } else {
                     if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                         res = symbol.getInitVal();
@@ -624,7 +628,9 @@ public class Procedure {
         if (instr == null) {
             instr = Function.makeCall(curRegIndex - 1, name, rParams, curBlock);
             if (instr == null) {
-                throw new RuntimeException("不是哥们，你这是什么函数啊？");
+                // todo 这里坑有点多啊
+                instr = Lib.getInstance().makeCall(curRegIndex++, "putint", rParams, curBlock);
+//                throw new RuntimeException("不是哥们，你这是什么函数啊？");
             }
         }
         if (instr.getDataType() == DataType.VOID) {

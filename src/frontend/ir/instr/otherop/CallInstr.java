@@ -55,10 +55,7 @@ public class CallInstr extends Instruction {
         int size = rParams.size();
         for (int i = 0; i < size; i++) {
             Value value = rParams.get(i);
-            stringBuilder.append(value.getDataType());
-            if (funcDef.getName().equals("memset") && i == 0) {
-                stringBuilder.append("*");
-            }
+            stringBuilder.append(value.type2string());
             stringBuilder.append(" ").append(value.value2string());
             if (i < size - 1) {
                 stringBuilder.append(", ");

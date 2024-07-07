@@ -11,6 +11,7 @@ public class AllocaInstr extends MemoryOperation {
         super(symbol, parentBB);
         this.result = result;
         symbol.setAllocValue(this);
+        this.pointerLevel = symbol.getDim() + 1;
     }
     
     @Override

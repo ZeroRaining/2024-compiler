@@ -18,8 +18,30 @@ public class GEPInstr extends MemoryOperation {
     
     public GEPInstr(int result, List<Value> indexList, Symbol symbol, BasicBlock parentBB) {
         super(symbol, parentBB);
+        if (symbol == null || indexList == null) {
+            throw new NullPointerException();
+        }
         this.result = result;
         this.indexList = indexList;
+        this.pointerLevel = symbol.getDim() + 1 - indexList.size();
+    }
+    
+    @Override
+    public String type2string() {
+        if (this.pointerLevel > 1) {
+            List<Integer> limList = this.symbol.getLimitList();
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 1; i < limList.size(); i++) {
+                stringBuilder.append("[").append(limList.get(i)).append(" x ");
+            }
+            stringBuilder.append(symbol.getType());
+            for (int i = 1; i < limList.size(); i++) {
+                stringBuilder.append("]");
+            }
+            return stringBuilder.append("*").toString();
+        } else {
+            return this.symbol.getType() + "*";
+        }
     }
     
     @Override
