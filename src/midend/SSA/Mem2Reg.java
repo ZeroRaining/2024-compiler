@@ -16,17 +16,15 @@ import frontend.ir.structure.Function;
 import java.util.*;
 
 public class Mem2Reg {
-    private HashSet<Function> functions;
-    private int curRegCnt = 0;//TODO:!!!!!
-    public Mem2Reg(HashSet<Function> functions) {
-        this.functions = functions;
+    private static int curRegCnt = 0;//TODO:!!!!!
+    public static void doMem2Reg(HashSet<Function> functions) {
         for (Function function : functions) {
             curRegCnt = 0;
             removeAlloc(function);
         }
     }
 
-    private void removeAlloc(Function function) {
+    private static void removeAlloc(Function function) {
         for (CustomList.Node node : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) node;
             for (CustomList.Node item : block.getInstructions()) {
@@ -38,7 +36,7 @@ public class Mem2Reg {
         }
     }
 
-    private void remove(Instruction instr) {
+    private static void remove(Instruction instr) {
         ArrayList<BasicBlock> defBlks = new ArrayList<>();
         ArrayList<BasicBlock> useBlks = new ArrayList<>();
         ArrayList<Instruction> defIns = new ArrayList<>();
@@ -120,7 +118,7 @@ public class Mem2Reg {
         instr.removeFromList();
     }
 
-    private void dfs4rename(Stack<Value> S, BasicBlock now, ArrayList<Instruction> useIns, ArrayList<Instruction> defIns) {
+    private static void dfs4rename(Stack<Value> S, BasicBlock now, ArrayList<Instruction> useIns, ArrayList<Instruction> defIns) {
         int cnt = 0;
         for (CustomList.Node item : now.getInstructions()) {
             Instruction instr = (Instruction) item;
@@ -161,7 +159,7 @@ public class Mem2Reg {
         }
     }
 
-    public Value getTopOfStack(Stack<Value> S) {
+    public static Value getTopOfStack(Stack<Value> S) {
         if (S.isEmpty()) {
             return new ConstInt(0);
         } else{
@@ -170,7 +168,7 @@ public class Mem2Reg {
     }
 
 
-    private void useDBG(Instruction instr) {
+    private static void useDBG(Instruction instr) {
         DEBUG.dbgPrint1(instr.print());
         DEBUG.dbgPrint1("use:");
         for (Use use = instr.getBeginUse(); use != null; use = (Use) use.getNext()) {

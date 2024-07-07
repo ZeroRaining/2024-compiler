@@ -11,9 +11,7 @@ import frontend.ir.structure.Function;
 import java.util.*;
 
 public class DFG {
-    private HashSet<Function> functions;
-    public DFG(HashSet<Function> functions) {
-        this.functions = functions;
+    public static void doDFG(HashSet<Function> functions) {
         for (Function function : functions) {
             removeBlk(function);
             makeDoms(function);
@@ -22,7 +20,7 @@ public class DFG {
         }
     }
 
-    private void makeDF(Function function) {
+    private static void makeDF(Function function) {
         for (CustomList.Node item : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) item;
             HashSet<BasicBlock> DF = new HashSet<>();
@@ -42,7 +40,7 @@ public class DFG {
 
 
     //b1 -> b2 -> b3
-    private void makeIDoms(Function function) {
+    private static void makeIDoms(Function function) {
         for (CustomList.Node item : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) item;
             HashSet<BasicBlock> iDoms = new HashSet<>();
@@ -54,7 +52,7 @@ public class DFG {
             block.setIDoms(iDoms);
         }
     }
-    private boolean AIDomB(BasicBlock A, BasicBlock B) {
+    private static boolean AIDomB(BasicBlock A, BasicBlock B) {
         HashSet<BasicBlock> ADoms = A.getDoms();
         if (!ADoms.contains(B)) {
             return false;
@@ -71,7 +69,7 @@ public class DFG {
         }
         return true;
     }
-    private void dfs(BasicBlock bb, BasicBlock not,HashSet<BasicBlock> know) {
+    private static void dfs(BasicBlock bb, BasicBlock not,HashSet<BasicBlock> know) {
         if (bb.equals(not)) {
             return;
         }
@@ -102,7 +100,7 @@ public class DFG {
 //        }
 //    }
 
-    private void makeDoms(Function function) {
+    private static void makeDoms(Function function) {
         BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
         for (CustomList.Node item : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) item;
@@ -120,7 +118,7 @@ public class DFG {
         }
     }
 
-    private void dfs4dom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> independent) {
+    private static void dfs4dom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> independent) {
         if (block.equals(otherBlk)) {
             return;
         }
@@ -135,7 +133,7 @@ public class DFG {
         }
     }
 
-    private void dfs4remove(BasicBlock block) {
+    private static void dfs4remove(BasicBlock block) {
         if (block.getBeginUse() == null) {
             Instruction instr = block.getEndInstr();
             block.removeFromList();
@@ -148,7 +146,7 @@ public class DFG {
         }
     }
 
-    private void removeBlk(Function function) {
+    private static void removeBlk(Function function) {
         BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
         HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
         HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
