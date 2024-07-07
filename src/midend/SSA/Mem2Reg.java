@@ -69,7 +69,7 @@ public class Mem2Reg {
             assert store instanceof StoreInstr;
             Value toStoreValue = ((StoreInstr) store).getValue();//要被使用的值1
             for (Instruction load : useIns) {//load指令
-                load.modifyAllUseThisToUseA(toStoreValue);
+                load.replaceUseTo(toStoreValue);
             }
         } else {
             ArrayList<BasicBlock> toPuts = new ArrayList<>();
@@ -125,7 +125,7 @@ public class Mem2Reg {
             if (!(instr instanceof PhiInstr) && useIns.contains(instr)) {
                 //changeValue
                 assert instr instanceof LoadInstr;
-                instr.modifyAllUseThisToUseA(getTopOfStack(S));
+                instr.replaceUseTo(getStackValue(S));
             }
             if (defIns.contains(instr)) {
                 assert instr instanceof StoreInstr || instr instanceof PhiInstr;
@@ -145,7 +145,7 @@ public class Mem2Reg {
                     break;
                 }
                 if (useIns.contains(instr)) {
-                    instr.modifyUse(now, getTopOfStack(S));
+                    instr.modifyUse(now, getStackValue(S));
                 }
             }
         }
@@ -159,12 +159,8 @@ public class Mem2Reg {
         }
     }
 
-    public static Value getTopOfStack(Stack<Value> S) {
-        if (S.isEmpty()) {
-            return new ConstInt(0);
-        } else{
-            return S.peek();
-        }
+    public static Value getStackValue(Stack<Value> S) {
+        return S.isEmpty() ? new ConstInt(0) : S.peek();
     }
 
 
