@@ -31,8 +31,7 @@ public class Mem2Reg {
             BasicBlock block = (BasicBlock) node;
             for (CustomList.Node item : block.getInstructions()) {
                 Instruction instr = (Instruction) item;
-                //TODO: 数组alloc不能删
-                if (instr instanceof AllocaInstr) {
+                if (instr instanceof AllocaInstr && instr.getPointerLevel() == 1) {
                     remove(instr);
                 }
             }

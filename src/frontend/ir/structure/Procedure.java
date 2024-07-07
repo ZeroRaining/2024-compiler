@@ -185,13 +185,9 @@ public class Procedure {
         BasicBlock thenBlk = new BasicBlock(curDepth);
         BasicBlock elseBlk = new BasicBlock(curDepth);
         BasicBlock endBlk = hasElseBlk ? new BasicBlock(curDepth) : elseBlk;
-        //TODO:确保正确计算且类型为i1
+
         Value cond = calculateLOr(ifStmt.condition, thenBlk, elseBlk, symTab);
-        /*
-         * 结束后的curBlk有两种情况
-         * 1.里面只有一个条件，此时curBlk是if(a)所在的块，
-         * 2.里面有多个条件，此时
-         */
+
         curBlock.addInstruction(new BranchInstr(cond, thenBlk, elseBlk, curBlock));
 
         thenBlk.setLabelCnt(curBlkIndex++);
@@ -628,9 +624,7 @@ public class Procedure {
         if (instr == null) {
             instr = Function.makeCall(curRegIndex - 1, name, rParams, curBlock);
             if (instr == null) {
-                // todo 这里坑有点多啊
-                instr = Lib.getInstance().makeCall(curRegIndex++, "putint", rParams, curBlock);
-//                throw new RuntimeException("不是哥们，你这是什么函数啊？");
+                throw new RuntimeException("不是哥们，你这是什么函数啊？");
             }
         }
         if (instr.getDataType() == DataType.VOID) {

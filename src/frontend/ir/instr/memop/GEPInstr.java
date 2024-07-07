@@ -37,7 +37,6 @@ public class GEPInstr extends MemoryOperation {
             StringBuilder stringBuilder = new StringBuilder();
             int lim = limList.size();
             int start = lim + 2 - pointerLevel;
-            System.out.println(lim + ", " + pointerLevel);
             for (int i = start; i < lim; i++) {
                 stringBuilder.append("[").append(limList.get(i)).append(" x ");
             }
