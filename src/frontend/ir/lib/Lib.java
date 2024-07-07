@@ -30,8 +30,8 @@ public class Lib {
         allFunctions.put("putfarray",   FuncPutfarray.class);   // void putfarray(int, float[]);
         allFunctions.put("putf",        null);                  // void putf(<fmt>, int, ...);  todo
         // Timing
-        allFunctions.put("starttime",   null);  // void starttime()     todo
-        allFunctions.put("stoptime",    null);  // void stoptime()      todo
+        allFunctions.put("starttime",   FuncStarttime.class);   // void starttime()
+        allFunctions.put("stoptime",    FuncStoptime.class);    // void stoptime()
         // MEM
         allFunctions.put("memset", FuncMemset.class);
         // void *memset(void *str, int c, size_t n)     简化： void memset(int*, int, int)

@@ -622,11 +622,17 @@ public class Procedure {
             rParams.add(calculateExpr(exp, symTab));
         }
         String name = call.getName();
+        if (name.equals("starttime") || name.equals("stoptime")) {
+            if (!rParams.isEmpty()) {
+                throw new RuntimeException("计时函数不应该显式传参");
+            }
+            rParams.add(new ConstInt(0));   //这里应该传行号，但是 AST 暂时不支持行号，喵喵队也没传，索性不传了
+        }
         CallInstr instr = Lib.getInstance().makeCall(curRegIndex++, name, rParams, curBlock);
         if (instr == null) {
             instr = Function.makeCall(curRegIndex - 1, name, rParams, curBlock);
             if (instr == null) {
-                throw new RuntimeException("不是哥们，你这是什么函数啊？");
+                throw new RuntimeException("不是哥们，你这是什么函数啊？" + name);
             }
         }
         if (instr.getDataType() == DataType.VOID) {
