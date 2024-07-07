@@ -12,6 +12,7 @@ import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
+import frontend.ir.symbols.Symbol;
 
 import java.util.*;
 
@@ -27,12 +28,15 @@ public class Mem2Reg {
     private static void removeAlloc(Function function) {
         for (CustomList.Node node : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) node;
-            for (CustomList.Node item : block.getInstructions()) {
-                Instruction instr = (Instruction) item;
+            Instruction instr = (Instruction) block.getInstructions().getHead();
+            while (instr != null) {
+                System.out.println(instr.print());
                 if (instr instanceof AllocaInstr && instr.getPointerLevel() == 1) {
                     remove(instr);
                 }
+                instr = (Instruction) instr.getNext();
             }
+
         }
     }
 
@@ -69,7 +73,7 @@ public class Mem2Reg {
             assert store instanceof StoreInstr;
             Value toStoreValue = ((StoreInstr) store).getValue();//要被使用的值1
             for (Instruction load : useIns) {//load指令
-                load.modifyAllUseThisToUseA(toStoreValue);
+                load.replaceUseTo(toStoreValue);
             }
         } else {
             ArrayList<BasicBlock> toPuts = new ArrayList<>();
@@ -125,7 +129,7 @@ public class Mem2Reg {
             if (!(instr instanceof PhiInstr) && useIns.contains(instr)) {
                 //changeValue
                 assert instr instanceof LoadInstr;
-                instr.modifyAllUseThisToUseA(getTopOfStack(S));
+                instr.replaceUseTo(getStackValue(S));
             }
             if (defIns.contains(instr)) {
                 assert instr instanceof StoreInstr || instr instanceof PhiInstr;
@@ -145,7 +149,7 @@ public class Mem2Reg {
                     break;
                 }
                 if (useIns.contains(instr)) {
-                    instr.modifyUse(now, getTopOfStack(S));
+                    instr.modifyUse(now, getStackValue(S));
                 }
             }
         }
@@ -159,12 +163,8 @@ public class Mem2Reg {
         }
     }
 
-    public static Value getTopOfStack(Stack<Value> S) {
-        if (S.isEmpty()) {
-            return new ConstInt(0);
-        } else{
-            return S.peek();
-        }
+    public static Value getStackValue(Stack<Value> S) {
+        return S.isEmpty() ? new ConstInt(0) : S.peek();
     }
 
 

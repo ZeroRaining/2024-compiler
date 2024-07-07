@@ -38,7 +38,7 @@ public abstract class Value extends CustomList.Node {
         use.removeFromList();
     }
 
-    public void modifyAllUseThisToUseA(Value to) {
+    public void replaceUseTo(Value to) {
         Use use = this.getBeginUse();//使用this的值
         //TODO：将使用this的值，变为to
         while (use != null) {

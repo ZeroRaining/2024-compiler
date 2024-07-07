@@ -45,60 +45,24 @@ public class DFG {
             BasicBlock block = (BasicBlock) item;
             HashSet<BasicBlock> iDoms = new HashSet<>();
             for (BasicBlock dom1 : block.getDoms()) {
-                if (AIDomB(block, dom1)) {
+                boolean flag = block.getDoms().contains(dom1);
+                if (block == dom1) {
+                    flag = false;
+                }
+                for (BasicBlock temp: block.getDoms()) {
+                    if (!temp.equals(block) && !temp.equals(dom1)) {
+                        if (temp.getDoms().contains(dom1)) {
+                            flag = false;
+                        }
+                    }
+                }
+                if (flag) {
                     iDoms.add(dom1);
                 }
             }
             block.setIDoms(iDoms);
         }
     }
-    private static boolean AIDomB(BasicBlock A, BasicBlock B) {
-        HashSet<BasicBlock> ADoms = A.getDoms();
-        if (!ADoms.contains(B)) {
-            return false;
-        }
-        if (A.equals(B)) {
-            return false;
-        }
-        for (BasicBlock temp: ADoms) {
-            if (!temp.equals(A) && !temp.equals(B)) {
-                if (temp.getDoms().contains(B)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    private static void dfs(BasicBlock bb, BasicBlock not,HashSet<BasicBlock> know) {
-        if (bb.equals(not)) {
-            return;
-        }
-        if (know.contains(bb)) {
-            return;
-        }
-        know.add(bb);
-        for (BasicBlock next: bb.getSucs()) {
-            if (!know.contains(next) && !next.equals(not)) {
-                dfs(next, not, know);
-            }
-        }
-    }
-//    private void makeSingleFuncDom(Function function) {
-//        BasicBlock enter = (BasicBlock) function.getBasicBlocks().getHead();
-//        BasicBlock bb = enter;
-//        for (;bb != null;bb = (BasicBlock) bb.getNext()) {
-//            HashSet<BasicBlock> doms = new HashSet<>();//所有的直接后继
-//            HashSet<BasicBlock> know = new HashSet<>();
-//            dfs4dom(enter, bb, know);
-//            for (BasicBlock temp = enter;temp != null;temp = (BasicBlock) temp.getNext()) {
-//                if (!know.contains(temp)) {
-//                    doms.add(temp);
-//                }
-//            }
-//
-//            bb.setDoms(doms);
-//        }
-//    }
 
     private static void makeDoms(Function function) {
         BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
