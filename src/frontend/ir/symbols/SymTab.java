@@ -6,10 +6,7 @@ import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.syntax.Ast;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class SymTab {
     private final HashMap<String, Symbol> symbolMap = new HashMap<>();
@@ -93,7 +90,7 @@ public class SymTab {
         if (init instanceof Ast.Exp) {
             return dealNonArrayInit(type, (Ast.Exp) init);
         } else if (init instanceof Ast.InitArray) {
-            return dealArrayInit(type, (Ast.InitArray) init, limList);
+            return dealArrayInit(type, ((Ast.InitArray) init).getInitList(), limList);
         } else {
             throw new RuntimeException("奇怪的定义类型");
         }
@@ -129,53 +126,44 @@ public class SymTab {
         }
     }
     
-    private Value dealArrayInit(DataType type, Ast.InitArray init, List<Integer> limList) {
-        if (type == null || init == null) {
+    private Value dealArrayInit(DataType type, List<Ast.Init> initList, List<Integer> limList) {
+        if (type == null || initList == null) {
             throw new NullPointerException();
         }
-        List<Ast.Init> initList = init.getInitList();
-        ArrayInitVal arrayInitVal = new ArrayInitVal(type, limList);
-        if (limList.size() > 1) {
-            int len = limList.get(limList.size() - 1);
-            int cnt = 0;
-            List<Integer> nextLimList = new ArrayList<>(limList.subList(1, limList.size()));
-            ArrayInitVal innerInitVal = new ArrayInitVal(type, nextLimList);
-            for (Ast.Init innerInit : initList) {
-                if (innerInit instanceof Ast.Exp) {
-                    if (cnt++ >= len) {
-                        cnt = 1;
-                        arrayInitVal.addInitValue(innerInitVal);
-                        innerInitVal = new ArrayInitVal(type, nextLimList);
-                    }
-                    innerInitVal.addInitValue(dealNonArrayInit(type, (Ast.Exp) innerInit));
-                } else if (innerInit instanceof Ast.InitArray) {
-                    if (cnt > 0) {
-                        arrayInitVal.addInitValue(innerInitVal);
-                        innerInitVal = new ArrayInitVal(type, nextLimList);
-                        cnt = 0;
-                    }
-                    arrayInitVal.addInitValue(dealArrayInit(type, (Ast.InitArray) innerInit, nextLimList));
+        int dim = limList.size();
+        if (dim < 1) {
+            throw new RuntimeException("不是，哥们，你这数组连一个维度都没有的吗？");
+        }
+        
+        ArrayInitVal myInitVal = new ArrayInitVal(type, limList);
+        Iterator<Ast.Init> it = initList.iterator();
+        
+        if (dim == 1) {
+            while (it.hasNext() && !myInitVal.isFull()) {
+                Ast.Init init = it.next();
+                if (init instanceof Ast.Exp) {
+                    myInitVal.addInitValue(dealNonArrayInit(type, (Ast.Exp) init));
                 } else {
-                    throw new RuntimeException("奇怪的定义类型");
+                    throw new RuntimeException("一维数组的初始化元素必须是表达式");
                 }
+                it.remove();
             }
-            if (cnt > 0) {
-                arrayInitVal.addInitValue(innerInitVal);
-            }
-            
         } else {
-            for (Ast.Init innerInit : initList) {
-                Value initVal;
-                if (innerInit instanceof Ast.Exp) {
-                    initVal = dealNonArrayInit(type, (Ast.Exp) innerInit);
+            List<Integer> nextLimList = limList.subList(1, limList.size());
+            while (it.hasNext() && !myInitVal.isFull()) {
+                Ast.Init init = it.next();
+                if (init instanceof Ast.InitArray) {
+                    List<Ast.Init> nextInitList = ((Ast.InitArray) init).getInitList();
+                    myInitVal.addInitValue(dealArrayInit(type, nextInitList, nextLimList));
+                    it.remove();
                 } else {
-                    throw new RuntimeException("最低维度只应该出现非数组类型");
+                    myInitVal.addInitValue(dealArrayInit(type, initList, nextLimList));
+                    it = initList.iterator();
                 }
-                arrayInitVal.addInitValue(initVal);
             }
         }
         
-        return arrayInitVal;
+        return myInitVal;
     }
     
     public boolean isGlobal() {

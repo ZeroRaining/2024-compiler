@@ -24,6 +24,10 @@ public class GEPInstr extends MemoryOperation {
         this.result = result;
         this.indexList = indexList;
         this.pointerLevel = symbol.getDim() + 1 - indexList.size();
+        setUse(symbol.getAllocValue());
+        for (Value value : indexList) {
+            setUse(value);
+        }
     }
     
     @Override
@@ -31,11 +35,14 @@ public class GEPInstr extends MemoryOperation {
         if (this.pointerLevel > 1) {
             List<Integer> limList = this.symbol.getLimitList();
             StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 1; i < limList.size(); i++) {
+            int lim = limList.size();
+            int start = lim + 2 - pointerLevel;
+            System.out.println(lim + ", " + pointerLevel);
+            for (int i = start; i < lim; i++) {
                 stringBuilder.append("[").append(limList.get(i)).append(" x ");
             }
             stringBuilder.append(symbol.getType());
-            for (int i = 1; i < limList.size(); i++) {
+            for (int i = start; i < lim; i++) {
                 stringBuilder.append("]");
             }
             return stringBuilder.append("*").toString();
