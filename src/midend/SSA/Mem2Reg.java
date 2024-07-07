@@ -12,6 +12,7 @@ import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
+import frontend.ir.symbols.Symbol;
 
 import java.util.*;
 
@@ -27,12 +28,15 @@ public class Mem2Reg {
     private static void removeAlloc(Function function) {
         for (CustomList.Node node : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) node;
-            for (CustomList.Node item : block.getInstructions()) {
-                Instruction instr = (Instruction) item;
+            Instruction instr = (Instruction) block.getInstructions().getHead();
+            while (instr != null) {
+                System.out.println(instr.print());
                 if (instr instanceof AllocaInstr && instr.getPointerLevel() == 1) {
                     remove(instr);
                 }
+                instr = (Instruction) instr.getNext();
             }
+
         }
     }
 

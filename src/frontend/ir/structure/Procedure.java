@@ -44,6 +44,7 @@ public class Procedure {
     private int curBlkIndex = 0;
     private int curDepth = 0;
     private BasicBlock curBlock;
+    private BasicBlock retBlock;
     private final Stack<BasicBlock> whileBegins;
     private final Stack<BasicBlock> whileEnds;
 
@@ -55,12 +56,45 @@ public class Procedure {
         firstBasicBlock.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(firstBasicBlock);
         curBlock = firstBasicBlock;
+        retBlock = new BasicBlock(curDepth);
+        init(returnType, funcSymTab);
         whileBegins = new Stack<>();
         whileEnds = new Stack<>();
         storeParams(fParams, funcSymTab);
         parseCodeBlock(block, returnType, funcSymTab);
+        finaLize(returnType, funcSymTab);
     }
-    
+
+    private void finaLize(DataType returnType, SymTab funcSymTab) {
+        if (returnType == null) {
+            throw new RuntimeException("会不会写函数啊，小老弟？！");
+        }
+        if (returnType != DataType.VOID) {
+            //空串表示用于存返回值的变量
+            curBlock = retBlock;
+            curBlock.setLabelCnt(curBlkIndex++);
+            basicBlocks.addToTail(curBlock);
+            Instruction instr = new LoadInstr(curRegIndex++,funcSymTab.getSym(""), curBlock);
+            curBlock.addInstruction(instr);
+            curBlock.addInstruction(new ReturnInstr(returnType, instr, curBlock));
+        } else {
+            curBlock.addInstruction(new ReturnInstr(returnType,curBlock));
+        }
+    }
+
+    private void init(DataType returnType, SymTab funcSymTab) {
+        if (returnType == null) {
+            throw new RuntimeException("会不会写函数啊，小老弟？！");
+        }
+        if (returnType != DataType.VOID) {
+            //空串表示用于存返回值的变量
+            Symbol symbol = new Symbol("", returnType, new ArrayList<>(), false, false, null);
+            funcSymTab.addSym(symbol);
+            curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
+            curBlock.addInstruction(new StoreInstr(new ConstInt(0), funcSymTab.getSym(""), curBlock));
+        }
+    }
+
     private void storeParams(List<Ast.FuncFParam> fParams, SymTab symTab) {
         if (fParams == null || symTab == null) {
             throw new NullPointerException();
@@ -216,9 +250,8 @@ public class Procedure {
             throw new NullPointerException();
         }
         Ast.Exp returnValue = (item).getReturnValue();
-        
         if (returnValue == null) {
-            curBlock.addInstruction(new ReturnInstr(returnType, curBlock));
+            curBlock.addInstruction(new JumpInstr(retBlock, curBlock));
         } else {
             Value value = calculateExpr(returnValue, symTab);
             assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
@@ -229,8 +262,23 @@ public class Procedure {
                 value = new Si2Fp(curRegIndex++, value, curBlock);
                 curBlock.addInstruction((Instruction) value);
             }
-            curBlock.addInstruction(new ReturnInstr(returnType, value, curBlock));
+            curBlock.addInstruction(new StoreInstr(value, symTab.getSym(""), curBlock));
+            curBlock.addInstruction(new JumpInstr(retBlock, curBlock));
         }
+//        if (returnValue == null) {
+//            curBlock.addInstruction(new ReturnInstr(returnType, curBlock));
+//        } else {
+//            Value value = calculateExpr(returnValue, symTab);
+//            assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
+//            if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
+//                value = new Fp2Si(curRegIndex++, value, curBlock);
+//                curBlock.addInstruction((Instruction) value);
+//            } else if (returnType == DataType.FLOAT && value.getDataType() == DataType.INT) {
+//                value = new Si2Fp(curRegIndex++, value, curBlock);
+//                curBlock.addInstruction((Instruction) value);
+//            }
+//            curBlock.addInstruction(new ReturnInstr(returnType, value, curBlock));
+//        }
     }
     
     private void dealAssign(Ast.Assign item, SymTab symTab) {

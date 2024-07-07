@@ -178,8 +178,6 @@ public class CustomList implements Iterable<CustomList.Node> {
                 this.parent.tail = this.prev;
             }
             this.parent.decrementSize();
-            this.prev = this.next = null;
-            this.parent = null;
         }
 
 //        public void setValue(N value) {
