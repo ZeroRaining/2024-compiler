@@ -22,7 +22,7 @@ public abstract class MemoryOperation extends Instruction {
     public DataType getDataType() {
         return type;
     }
-    private Symbol getSymbol() {
+    public Symbol getSymbol() {
         return symbol;
     }
 }

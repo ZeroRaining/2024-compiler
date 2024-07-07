@@ -1,3 +1,6 @@
+import backend.BackendPrinter;
+import backend.IrParser;
+import backend.itemStructure.AsmModule;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Program;
 import frontend.lexer.Token;
@@ -35,7 +38,10 @@ public class Compiler {
         //ParserTest();
 
         //IR生成测试
-        IRTest();
+        //IRTest();
+
+        //irParser测试
+        IRParserTest();
     }
 
     public static void LexerTest() throws IOException {
@@ -72,5 +78,24 @@ public class Compiler {
         program.printIR(writer);
         writer.close();
     }
+
+    public static void IRParserTest() throws IOException {
+        //语法分析测试
+        FileInputStream in = new FileInputStream("in.sy");
+        BufferedInputStream source = new BufferedInputStream(in);
+        TokenList tokenList = Lexer.getInstance().lex(source);
+        Ast ast = new Parser(tokenList).parseAst();
+        Program program = new Program(ast);
+//        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
+//        DFG dfg = new DFG(functions);
+//        Mem2Reg mem2Reg = new Mem2Reg(functions);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
+        program.printIR(writer);
+//        writer.close();
+
+        //IRParser测试
+        AsmModule asmModule = new IrParser(program).parse();
+        new BackendPrinter(asmModule).printBackend();
+    }
 }
-//
+

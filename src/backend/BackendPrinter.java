@@ -11,9 +11,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class backendPrinter {
+public class BackendPrinter {
     private AsmModule module;
-    public backendPrinter(AsmModule module) {
+    public BackendPrinter(AsmModule module) {
         this.module = module;
     }
     public void printBackend() throws IOException {
@@ -53,5 +53,6 @@ public class backendPrinter {
                 }
             }
         }
+        writer.close();
     }
 }

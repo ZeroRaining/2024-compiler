@@ -7,8 +7,8 @@ import frontend.ir.instr.Instruction;
 
 public abstract class BinaryOperation extends Instruction {
     private final int result; // 新分配一个寄存器用来存结果
-    private Value op1;
-    private Value op2;
+    protected Value op1;
+    protected Value op2;
     private final DataType type;
     private final String operationName;
     

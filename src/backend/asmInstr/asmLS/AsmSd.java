@@ -8,4 +8,16 @@ public class AsmSd extends AsmL {
         changeSrc(src);
         changeOffset(offset);
     }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("sd\t");
+        sb.append(src);
+        sb.append(",\t");
+        sb.append(offset);
+        sb.append("(");
+        sb.append(dst);
+        sb.append(")");
+        return sb.toString();
+    }
 }

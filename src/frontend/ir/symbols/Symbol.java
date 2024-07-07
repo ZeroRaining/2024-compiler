@@ -54,11 +54,11 @@ public class Symbol {
     public void setAllocValue(Value allocValue) {
         this.allocValue = allocValue;
     }
-    
+
     public List<Integer> getLimitList() {
         return limitList;
     }
-    
+
     public boolean isArray() {
         return !limitList.isEmpty();
     }
@@ -86,15 +86,22 @@ public class Symbol {
         }
         return allocValue;
     }
-    
+    public int getDim() {
+        return limitList.size();
+    }
+
     public String printArrayTypeName() {
         if (initVal instanceof ArrayInitVal) {
             return ((ArrayInitVal) initVal).printArrayTypeName();
         }
         throw new RuntimeException("这是数组吗？");
     }
-    
-    public int getDim() {
-        return this.limitList.size();
+
+    public int getLimSize() {
+        int size = 1;
+        for(int i : limitList) {
+            size *= i;
+        }
+        return size;
     }
 }

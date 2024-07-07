@@ -11,4 +11,10 @@ public class MulInstr extends BinaryOperation {
         assert op1.getDataType() == DataType.INT;
         assert op2.getDataType() == DataType.INT;
     }
+
+    public void swapOp() {
+        Value tmp = op1;
+        op1 = op2;
+        op2 = tmp;
+    }
 }
