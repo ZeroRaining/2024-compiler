@@ -20,6 +20,13 @@ public class PhiInstr extends Instruction {
         this.type = values.get(0).getDataType();
         this.values = values;
         this.prtBlks = prtBlks;
+        for (Value value : values) {
+            setUse(value);
+        }
+        //TODO : to set or not to set, is a question
+//        for (BasicBlock block : prtBlks) {
+//            setUse(block);
+//        }
     }
 
     @Override
@@ -51,8 +58,20 @@ public class PhiInstr extends Instruction {
         }
         return ret.toString();
     }
+
+    public void modifyUse(Value to, BasicBlock block) {
+        int index = prtBlks.indexOf(block);
+        Value from = values.get(index);
+        super.modifyUse(from, to);
+    }
+
     @Override
     public void modifyValue(Value from, Value to) {
-        throw new RuntimeException("没有可以置换的 value");
+        for (int i = 0; i < values.size(); i++) {
+            if (values.get(i) == to) {
+                values.remove(i);
+                values.add(i, to);
+            }
+        }
     }
 }

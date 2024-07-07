@@ -67,7 +67,7 @@ public class Compiler {
         Program program = new Program(ast);
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
         DFG dfg = new DFG(functions);
-//        Mem2Reg mem2Reg = new Mem2Reg(functions);
+        Mem2Reg mem2Reg = new Mem2Reg(functions);
         BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
         program.printIR(writer);
         writer.close();

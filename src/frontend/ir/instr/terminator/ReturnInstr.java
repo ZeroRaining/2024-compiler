@@ -28,6 +28,7 @@ public class ReturnInstr extends Instruction {
         }
         this.returnType = returnType;
         this.returnValue = returnValue;
+        setUse(returnValue);
     }
     
     @Override

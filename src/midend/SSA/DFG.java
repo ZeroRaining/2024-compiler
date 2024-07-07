@@ -47,24 +47,68 @@ public class DFG {
             BasicBlock block = (BasicBlock) item;
             HashSet<BasicBlock> iDoms = new HashSet<>();
             for (BasicBlock dom1 : block.getDoms()) {
-                for (BasicBlock dom2 : dom1.getDoms()) {
-                    if (!block.getDoms().contains(dom2)) {
-                        iDoms.add(dom2);
-                    }
+                if (AIDomB(block, dom1)) {
+                    iDoms.add(dom1);
                 }
             }
             block.setIDoms(iDoms);
         }
     }
+    private boolean AIDomB(BasicBlock A, BasicBlock B) {
+        HashSet<BasicBlock> ADoms = A.getDoms();
+        if (!ADoms.contains(B)) {
+            return false;
+        }
+        if (A.equals(B)) {
+            return false;
+        }
+        for (BasicBlock temp: ADoms) {
+            if (!temp.equals(A) && !temp.equals(B)) {
+                if (temp.getDoms().contains(B)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    private void dfs(BasicBlock bb, BasicBlock not,HashSet<BasicBlock> know) {
+        if (bb.equals(not)) {
+            return;
+        }
+        if (know.contains(bb)) {
+            return;
+        }
+        know.add(bb);
+        for (BasicBlock next: bb.getSucs()) {
+            if (!know.contains(next) && !next.equals(not)) {
+                dfs(next, not, know);
+            }
+        }
+    }
+//    private void makeSingleFuncDom(Function function) {
+//        BasicBlock enter = (BasicBlock) function.getBasicBlocks().getHead();
+//        BasicBlock bb = enter;
+//        for (;bb != null;bb = (BasicBlock) bb.getNext()) {
+//            HashSet<BasicBlock> doms = new HashSet<>();//所有的直接后继
+//            HashSet<BasicBlock> know = new HashSet<>();
+//            dfs4dom(enter, bb, know);
+//            for (BasicBlock temp = enter;temp != null;temp = (BasicBlock) temp.getNext()) {
+//                if (!know.contains(temp)) {
+//                    doms.add(temp);
+//                }
+//            }
+//
+//            bb.setDoms(doms);
+//        }
+//    }
 
     private void makeDoms(Function function) {
+        BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
         for (CustomList.Node item : function.getBasicBlocks()) {
-            HashSet<BasicBlock> independent = new HashSet<>();
             BasicBlock block = (BasicBlock) item;
-            for (CustomList.Node node : function.getBasicBlocks()) {
-                BasicBlock otherBlk = (BasicBlock) node;
-                dfs4dom(block, otherBlk, independent);
-            }
+            HashSet<BasicBlock> independent = new HashSet<>();
+            dfs4dom(firstBlk, block, independent);
+
             HashSet<BasicBlock> doms = new HashSet<>();
             for (CustomList.Node node : function.getBasicBlocks()) {
                 BasicBlock otherBlk = (BasicBlock) node;
@@ -77,15 +121,17 @@ public class DFG {
     }
 
     private void dfs4dom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> independent) {
-        if (block == otherBlk) {
+        if (block.equals(otherBlk)) {
             return;
         }
         if (independent.contains(otherBlk)) {
             return;
         }
-        independent.add(otherBlk);
-        for (BasicBlock block1 : block.getSucs()) {
-            dfs4dom(block, block1, independent);
+        independent.add(block);
+        for (BasicBlock next : block.getSucs()) {
+            if (!independent.contains(next) && next != otherBlk){
+                dfs4dom(next, otherBlk, independent);
+            }
         }
     }
 
