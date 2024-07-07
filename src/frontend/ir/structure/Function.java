@@ -12,6 +12,7 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -74,17 +75,36 @@ public class Function extends Value implements FuncDef {
         }
         for (int i = 0; i < fParams.size(); i++) {
             Ast.FuncFParam param = fParams.get(i);
-            if (param.isArray()) {
-                // todo
-                throw new RuntimeException("暂时不能处理数组");
-            } else {
-                switch (param.getType().getType()) {
-                    case INT:   writer.append("i32");   break;
-                    case FLOAT: writer.append("float"); break;
-                    default: throw new RuntimeException("出现了奇怪的形参类型");
-                }
-                writer.append(" %").append(Integer.toString(i));
+            DataType type;
+            switch (param.getType().getType()) {
+                case INT:   type = DataType.INT;   break;
+                case FLOAT: type = DataType.FLOAT; break;
+                default: throw new RuntimeException("出现了奇怪的形参类型");
             }
+            
+            if (param.isArray()) {
+                ArrayList<Integer> limList = new ArrayList<>();
+                limList.add(-1);
+                for (Ast.Exp exp : param.getArrayItemList()) {
+                    if (exp.checkConstType(symTab) != DataType.INT) {
+                        throw new RuntimeException("数组维度长度必须能求值到整数");
+                    }
+                    limList.add(exp.getConstInt(symTab));
+                }
+                StringBuilder stringBuilder = new StringBuilder();
+                int lim = limList.size();
+                for (int j = 1; j < lim; j++) {
+                    stringBuilder.append("[").append(limList.get(j)).append(" x ");
+                }
+                stringBuilder.append(type);
+                for (int j = 1; j < lim; j++) {
+                    stringBuilder.append("]");
+                }
+                writer.append(stringBuilder.append("*").toString());
+            } else {
+                writer.append(type.toString());
+            }
+            writer.append(" %").append(Integer.toString(i));
             if (i < fParams.size() - 1) {
                 writer.append(", ");
             }

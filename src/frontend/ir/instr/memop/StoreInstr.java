@@ -35,8 +35,14 @@ public class StoreInstr extends MemoryOperation {
     
     @Override
     public String print() {
-        String base = "store " + symbol.getType() + " " + value.value2string() +
-                ", " + symbol.getType() + "* ";
+        String typeName;
+        if (ptr != null && ptr.getPointerLevel() == 1) {
+            typeName = symbol.getType().toString();
+        } else {
+            typeName = printBaseType();
+        }
+        String base = "store " + typeName + " " + value.value2string() +
+                ", " + typeName + "* ";
         if (ptr != null) {
             return base + ptr.value2string();
         }

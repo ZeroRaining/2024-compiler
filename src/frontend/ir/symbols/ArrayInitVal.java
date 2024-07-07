@@ -199,13 +199,21 @@ public class ArrayInitVal extends Value {
     }
     
     public String printArrayTypeName() {
+        int start = 0;
+        if (limList.get(0) == -1) { // 第一维长度记为 -1 说明第一维长度缺省，即是传参用的指针
+            start = 1;              // 从第一个开始遍历，即去掉外侧的一层括号，最后还要加一个星号
+        }
         StringBuilder stringBuilder = new StringBuilder();
-        for (Integer index : limList) {
+        for (int i = start; i < limList.size(); i++) {
+            Integer index = limList.get(i);
             stringBuilder.append("[").append(index).append(" x ");
         }
         stringBuilder.append(dataType);
-        for (int i = 0; i < limList.size(); i++) {
+        for (int i = start; i < limList.size(); i++) {
             stringBuilder.append("]");
+        }
+        if (start == 1) {
+            stringBuilder.append("*");
         }
         return stringBuilder.toString();
     }

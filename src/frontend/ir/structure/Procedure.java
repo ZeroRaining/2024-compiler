@@ -13,10 +13,7 @@ import frontend.ir.instr.convop.Fp2Si;
 import frontend.ir.instr.convop.Sext;
 import frontend.ir.instr.convop.Si2Fp;
 import frontend.ir.instr.convop.Zext;
-import frontend.ir.instr.memop.AllocaInstr;
-import frontend.ir.instr.memop.GEPInstr;
-import frontend.ir.instr.memop.LoadInstr;
-import frontend.ir.instr.memop.StoreInstr;
+import frontend.ir.instr.memop.*;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.otherop.cmp.FCmpInstr;
@@ -76,11 +73,18 @@ public class Procedure {
                 default: throw new RuntimeException("出现了未曾设想的类型");
             }
             List<Integer> limList = new ArrayList<>();
+            Value initVal = null;
             if (param.isArray()) {
-                // todo
-                throw new RuntimeException("暂时无法处理数组");
+                limList.add(-1);    // 第一维长度不定，暂且记为 -1
+                for (Ast.Exp exp : param.getArrayItemList()) {
+                    if (exp.checkConstType(symTab) != DataType.INT) {
+                        throw new RuntimeException("数组长度必须能计算到确定的整数");
+                    }
+                    limList.add(exp.getConstInt(symTab));
+                }
+                initVal = new ArrayInitVal(dataType, limList);
             }
-            Symbol symbol = new Symbol(name, dataType, limList, false, false, null);
+            Symbol symbol = new Symbol(name, dataType, limList, false, false, initVal);
             symTab.addSym(symbol);
             symbol2FParam.put(symbol, new FParam(curRegIndex++, dataType));
         }
@@ -250,7 +254,7 @@ public class Procedure {
         }
         if (left.isArray()) {
             List<Value> indexList = getIndexList(lVal, symTab);
-            Instruction ptr = new GEPInstr(curRegIndex++, indexList, left, curBlock);
+            Instruction ptr = getPtr(left, indexList);
             curBlock.addInstruction(ptr);
             curBlock.addInstruction(new StoreInstr(right, left, ptr, curBlock));
         } else {
@@ -530,7 +534,7 @@ public class Procedure {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
                 if (symbol.isArray()) {
                     List<Value> indexList = getIndexList((Ast.LVal) primary, symTab);
-                    GEPInstr ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+                    GEPInstr ptr = getPtr(symbol, indexList);
                     curBlock.addInstruction(ptr);
                     if (ptr.getPointerLevel() == 1) {
                         Instruction load = new LoadInstr(curRegIndex++, symbol, ptr, curBlock);
@@ -594,7 +598,19 @@ public class Procedure {
         }
     }
     
-    List<Value> getIndexList(Ast.LVal lVal, SymTab symTab) {
+    private GEPInstr getPtr(Symbol symbol, List<Value> indexList){
+        GEPInstr ptr;
+        if (symbol.isArrayFParam()) {
+            LoadInstr load = new LoadInstr(curRegIndex++, symbol, curBlock);
+            curBlock.addInstruction(load);
+            ptr = new GEPInstr(curRegIndex++, load, indexList, curBlock);
+        } else {
+            ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+        }
+        return ptr;
+    }
+    
+    private List<Value> getIndexList(Ast.LVal lVal, SymTab symTab) {
         if (lVal == null) {
             throw new NullPointerException();
         }
@@ -613,7 +629,7 @@ public class Procedure {
         return indexList;
     }
     
-    Value dealCall(Ast.Call call, SymTab symTab) {
+    private Value dealCall(Ast.Call call, SymTab symTab) {
         if (call == null) {
             throw new NullPointerException();
         }

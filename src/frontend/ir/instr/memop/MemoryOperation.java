@@ -7,7 +7,6 @@ import frontend.ir.symbols.Symbol;
 
 public abstract class MemoryOperation extends Instruction {
     protected final Symbol symbol;
-    protected final DataType type;
     
     public MemoryOperation(Symbol symbol, BasicBlock parentBB) {
         super(parentBB);
@@ -15,14 +14,22 @@ public abstract class MemoryOperation extends Instruction {
             throw new NullPointerException();
         }
         this.symbol = symbol;
-        this.type = symbol.getType();
     }
     
     @Override
     public DataType getDataType() {
-        return type;
+        return symbol.getType();
     }
+    
     private Symbol getSymbol() {
         return symbol;
+    }
+    
+    public String printBaseType() {
+        if (symbol.isArray()) {
+            return symbol.printArrayTypeName();
+        } else {
+            return symbol.getType().toString();
+        }
     }
 }
