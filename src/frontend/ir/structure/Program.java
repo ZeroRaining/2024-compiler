@@ -56,8 +56,8 @@ public class Program {
         }
     }
 
-    public HashSet<Symbol> getGlobalVars() {
-        return globalSymTab.getSymbolSet();
+    public List<Symbol> getGlobalVars() {
+        return globalSymTab.getSymbolList();
     }
     public HashMap<String, Function> getFunctions(){
         return functions;

@@ -182,8 +182,8 @@ public class SymTab {
         return parent == null;
     }
 
-    public HashSet<Symbol> getSymbolSet() {
-        return new HashSet<>(symbolMap.values());
+    public List<Symbol> getSymbolList() {
+        return new ArrayList<>(symbolMap.values());
     }
 
     public List<Symbol> getAllSym() {

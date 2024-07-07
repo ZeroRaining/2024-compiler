@@ -1,10 +1,11 @@
 package backend.asmInstr.asmLS;
 
 import backend.itemStructure.AsmOperand;
-public class AsmLw extends AsmL {
-    public AsmLw(AsmOperand dst, AsmOperand src, AsmOperand offset) {
-        changeDst(dst);
+
+public class AsmFsw extends AsmS{
+    public AsmFsw(AsmOperand src, AsmOperand addr, AsmOperand offset) {
         changeSrc(src);
+        changeAddr(addr);
         changeOffset(offset);
     }
 }

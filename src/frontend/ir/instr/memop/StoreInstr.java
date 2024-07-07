@@ -57,4 +57,8 @@ public class StoreInstr extends MemoryOperation {
             throw new RuntimeException();
         }
     }
+
+    public Symbol getSymbol() {
+        return symbol;
+    }
 }

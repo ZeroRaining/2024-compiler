@@ -47,4 +47,12 @@ public abstract class ConversionOperation extends Instruction {
             throw new RuntimeException();
         }
     }
+
+    public Value getValue() {
+        return value;
+    }
+
+    public String getOpName() {
+        return opName;
+    }
 }

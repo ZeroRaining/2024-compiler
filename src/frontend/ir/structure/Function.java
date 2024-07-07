@@ -23,7 +23,7 @@ public class Function extends Value implements FuncDef {
     private final Procedure procedure;
     private final SymTab symTab;
     private final List<Ast.FuncFParam> fParams;
-    
+
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
         if (funcDef == null) {
             throw new NullPointerException();
@@ -67,7 +67,7 @@ public class Function extends Value implements FuncDef {
         this.procedure.printIR(writer);
         writer.append("}\n");
     }
-    
+
     private void printFParams(Writer writer) throws IOException {
         if (writer == null) {
             throw new NullPointerException();
@@ -95,10 +95,10 @@ public class Function extends Value implements FuncDef {
         return procedure.getBasicBlocks();
     }
 
-    public HashSet<Symbol> getArgs(){
-        return symTab.getSymbolSet();
+    public List<Symbol> getArgs(){
+        return symTab.getSymbolList();
     }
-    
+
     public static CallInstr makeCall(int result, String name, List<Value> rParams, BasicBlock curBlock) {
         if (rParams == null || name == null || curBlock == null) {
             throw new NullPointerException();
@@ -117,7 +117,7 @@ public class Function extends Value implements FuncDef {
             return new CallInstr(result, type, function, rParams, curBlock);
         }
     }
-    
+
     private boolean checkParams(List<Value> rParams) {
         if (rParams == null) {
             throw new NullPointerException();
