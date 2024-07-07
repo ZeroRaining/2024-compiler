@@ -530,14 +530,16 @@ public class Procedure {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
                 if (symbol.isArray()) {
                     List<Value> indexList = getIndexList((Ast.LVal) primary, symTab);
-                    Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+                    GEPInstr ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
                     curBlock.addInstruction(ptr);
                     if (ptr.getPointerLevel() == 1) {
                         Instruction load = new LoadInstr(curRegIndex++, symbol, ptr, curBlock);
                         curBlock.addInstruction(load);
                         res = load;
                     } else {
-                        res = ptr;
+                        Instruction newPtr = new GEPInstr(curRegIndex++, ptr, curBlock);
+                        curBlock.addInstruction(newPtr);
+                        res = newPtr;
                     }
                 } else {
                     if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {

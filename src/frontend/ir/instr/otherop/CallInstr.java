@@ -70,7 +70,7 @@ public class CallInstr extends Instruction {
         throw new RuntimeException("没有可以置换的 value");
     }
 
-    public List<Value> getrParams() {
+    public List<Value> getRParams() {
         return rParams;
     }
 }
