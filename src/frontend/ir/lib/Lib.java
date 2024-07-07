@@ -21,17 +21,17 @@ public class Lib {
         allFunctions.put("getint",      FuncGetint.class);      // int getint();
         allFunctions.put("getch",       FuncGetch.class);       // int getch();
         allFunctions.put("getfloat",    FuncGetfloat.class);    // float getfloat();
-        allFunctions.put("getarray",    null);                  // int getarray(int[]);         todo
-        allFunctions.put("getfarray",   null);                  // int getfarray(float[]);      todo
+        allFunctions.put("getarray",    FuncGetarray.class);    // int getarray(int[]);
+        allFunctions.put("getfarray",   FuncGetfarray.class);   // int getfarray(float[]);
         allFunctions.put("putint",      FuncPutint.class);      // void putint(int);
         allFunctions.put("putch",       FuncPutch.class);       // void putch(int);
         allFunctions.put("putfloat",    FuncPutfloat.class);    // void putfloat(float);
-        allFunctions.put("putarray",    null);                  // void putarray(int, int[]);   todo
-        allFunctions.put("putfarray",   null);                  // void putfarray(int, float[]);todo
+        allFunctions.put("putarray",    FuncPutarray.class);    // void putarray(int, int[]);
+        allFunctions.put("putfarray",   FuncPutfarray.class);   // void putfarray(int, float[]);
         allFunctions.put("putf",        null);                  // void putf(<fmt>, int, ...);  todo
         // Timing
-        allFunctions.put("starttime",   null);  // void starttime()     todo
-        allFunctions.put("stoptime",    null);  // void stoptime()      todo
+        allFunctions.put("starttime",   FuncStarttime.class);   // void starttime()
+        allFunctions.put("stoptime",    FuncStoptime.class);    // void stoptime()
         // MEM
         allFunctions.put("memset", FuncMemset.class);
         // void *memset(void *str, int c, size_t n)     简化： void memset(int*, int, int)

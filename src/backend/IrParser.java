@@ -129,7 +129,7 @@ public class IrParser {
             for (Node instr : ((BasicBlock) bb).getInstructions()) {
                 //TODO:尾递归？
                 if (instr instanceof CallInstr) {
-                    List rParams = ((CallInstr) instr).getrParams();
+                    List rParams = ((CallInstr) instr).getRParams();
                     int size = rParams.size();
                     for (int i = 8; i < size; i++) {
                         if (((Value) rParams.get(i)).getDataType() == INT) {
@@ -784,7 +784,7 @@ public class IrParser {
         AsmBlock asmBlock = blockMap.get(bb);
         //TODO:拿tarFunction
         /*AsmFunction callee = funcMap.get(instr.getFunction());*/
-        List<Value> args = instr.getrParams();
+        List<Value> args = instr.getRParams();
         List<Value> floatArgs = new ArrayList<>();
         List<Value> intArgs = new ArrayList<>();
         for (Value arg : args) {

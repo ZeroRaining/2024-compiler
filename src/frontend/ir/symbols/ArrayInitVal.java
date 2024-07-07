@@ -20,6 +20,10 @@ public class ArrayInitVal extends Value {
     }
     
     public void addInitValue(Value newVal) {
+        initList.add(newVal);
+    }
+    
+    public void addInitValue(Value newVal, int x) {
         if (newVal == null) {
             throw new NullPointerException();
         }
@@ -101,6 +105,10 @@ public class ArrayInitVal extends Value {
                 }
             }
         }
+    }
+    
+    public boolean isFull() {
+        return this.initList.size() == limList.get(0);
     }
     
     public int getDim() {

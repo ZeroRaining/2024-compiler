@@ -23,7 +23,7 @@ public abstract class LibFunc implements FuncDef {
     
     public CallInstr makeCall(int result, List<Value> rParams, BasicBlock curBlock) {
         if (!checkParams(rParams)) {
-            throw new RuntimeException("形参实参不匹配");
+            throw new RuntimeException(this.getName() + "形参实参不匹配");
         }
         DataType type = getType();
         if (type == DataType.VOID) {

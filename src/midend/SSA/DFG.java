@@ -11,9 +11,7 @@ import frontend.ir.structure.Function;
 import java.util.*;
 
 public class DFG {
-    private HashSet<Function> functions;
-    public DFG(HashSet<Function> functions) {
-        this.functions = functions;
+    public static void doDFG(HashSet<Function> functions) {
         for (Function function : functions) {
             removeBlk(function);
             makeDoms(function);
@@ -22,7 +20,7 @@ public class DFG {
         }
     }
 
-    private void makeDF(Function function) {
+    private static void makeDF(Function function) {
         for (CustomList.Node item : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) item;
             HashSet<BasicBlock> DF = new HashSet<>();
@@ -42,29 +40,37 @@ public class DFG {
 
 
     //b1 -> b2 -> b3
-    private void makeIDoms(Function function) {
+    private static void makeIDoms(Function function) {
         for (CustomList.Node item : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) item;
             HashSet<BasicBlock> iDoms = new HashSet<>();
             for (BasicBlock dom1 : block.getDoms()) {
-                for (BasicBlock dom2 : dom1.getDoms()) {
-                    if (!block.getDoms().contains(dom2)) {
-                        iDoms.add(dom2);
+                boolean flag = block.getDoms().contains(dom1);
+                if (block == dom1) {
+                    flag = false;
+                }
+                for (BasicBlock temp: block.getDoms()) {
+                    if (!temp.equals(block) && !temp.equals(dom1)) {
+                        if (temp.getDoms().contains(dom1)) {
+                            flag = false;
+                        }
                     }
+                }
+                if (flag) {
+                    iDoms.add(dom1);
                 }
             }
             block.setIDoms(iDoms);
         }
     }
 
-    private void makeDoms(Function function) {
+    private static void makeDoms(Function function) {
+        BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
         for (CustomList.Node item : function.getBasicBlocks()) {
-            HashSet<BasicBlock> independent = new HashSet<>();
             BasicBlock block = (BasicBlock) item;
-            for (CustomList.Node node : function.getBasicBlocks()) {
-                BasicBlock otherBlk = (BasicBlock) node;
-                dfs4dom(block, otherBlk, independent);
-            }
+            HashSet<BasicBlock> independent = new HashSet<>();
+            dfs4dom(firstBlk, block, independent);
+
             HashSet<BasicBlock> doms = new HashSet<>();
             for (CustomList.Node node : function.getBasicBlocks()) {
                 BasicBlock otherBlk = (BasicBlock) node;
@@ -76,20 +82,22 @@ public class DFG {
         }
     }
 
-    private void dfs4dom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> independent) {
-        if (block == otherBlk) {
+    private static void dfs4dom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> independent) {
+        if (block.equals(otherBlk)) {
             return;
         }
         if (independent.contains(otherBlk)) {
             return;
         }
-        independent.add(otherBlk);
-        for (BasicBlock block1 : block.getSucs()) {
-            dfs4dom(block, block1, independent);
+        independent.add(block);
+        for (BasicBlock next : block.getSucs()) {
+            if (!independent.contains(next) && next != otherBlk){
+                dfs4dom(next, otherBlk, independent);
+            }
         }
     }
 
-    private void dfs4remove(BasicBlock block) {
+    private static void dfs4remove(BasicBlock block) {
         if (block.getBeginUse() == null) {
             Instruction instr = block.getEndInstr();
             block.removeFromList();
@@ -102,7 +110,7 @@ public class DFG {
         }
     }
 
-    private void removeBlk(Function function) {
+    private static void removeBlk(Function function) {
         BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
         HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
         HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
