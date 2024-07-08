@@ -1,7 +1,7 @@
 package backend;
 
-import backend.asmBr.AsmBeqz;
-import backend.asmBr.AsmJ;
+import backend.asmInstr.asmBr.AsmBeqz;
+import backend.asmInstr.asmBr.AsmJ;
 import backend.asmInstr.asmBinary.*;
 import backend.asmInstr.asmConv.AsmFtoi;
 import backend.asmInstr.asmConv.AsmZext;
@@ -150,15 +150,14 @@ public class IrParser {
         }
 
         //TODO:需要函数退出块。为什么需要？好像是寄存器分配部分要。
-        /*
-        asmFunction.setExit(blockMap.get(f.getExit()));
-        asmFunction.setIsTail(f.isTail());*/
+        //asmFunction.setIsTail(f.isTail());
 
         BasicBlock bb = (BasicBlock) f.getBasicBlocks().getHead();
         List<Symbol> args = f.getArgs();
         List<Symbol> iargs = new ArrayList<>();
         List<Symbol> fargs = new ArrayList<>();
-        for (Symbol arg : args) {
+        for (int i = 1; i < args.size(); i++) {
+            Symbol arg = args.get(i);
             if (arg.getAsmType() == AsmType.INT) {
                 iargs.add(arg);
             } else {
@@ -205,13 +204,12 @@ public class IrParser {
             AsmSd asmSd = new AsmSd(RegGeter.RA, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize() - 8));
             blockMap.get(bb).addInstrHead(asmSd);
             AsmLd asmLd = new AsmLd(RegGeter.RA, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize() - 8));
-            //TODO:依赖于exit块的实现
-            //asmFunction.getExit().addInstrTail(asmLd);
+            (asmFunction.getTailBlock()).addInstrTail(asmLd);
         }
         AsmSub asmSub = new AsmSub(RegGeter.SP, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize()));
         blockMap.get(bb).addInstrHead(asmSub);
         AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize()));
-        //插入出口块尾部
+        (asmFunction.getTailBlock()).addInstrTail(asmAdd);
     }
 
     private void parseBlock(BasicBlock bb, Function f) {
@@ -268,7 +266,6 @@ public class IrParser {
         AsmBlock asmBlock = blockMap.get(bb);
         Value retValue = instr.getReturnValue();
         if (retValue != null) {
-            //TODO:依赖于move指令的实现
             if (f.getDataType() == INT) {
                 AsmOperand asmOperand = parseOperand(retValue, 32, f, bb);
                 AsmMove asmMove = new AsmMove(RegGeter.AregsInt.get(0), asmOperand);
@@ -339,6 +336,7 @@ public class IrParser {
         //sw s0,0(s1)
         AsmBlock asmBlock = blockMap.get(bb);
         Symbol addr = instr.getSymbol();
+        //TODO:指针类型
         if (addr.isGlobal()) {
             AsmOperand laReg = genTmpReg(f);
             AsmOperand addrOp = parseGlobalToOperand(addr, bb);
@@ -353,8 +351,6 @@ public class IrParser {
                 AsmFsw asmFsw = new AsmFsw(src, laReg, offset);
                 asmBlock.addInstrTail(asmFsw);
             }
-        } else if (true/*TODO:指针类型*/) {
-            assert true;
         } else {
             AsmOperand src = parseOperand(instr.getValue(), 0, f, bb);
             AsmOperand dst = parseOperand(addr.getAllocValue(), 0, f, bb);
@@ -942,8 +938,7 @@ public class IrParser {
             }
             return tmpReg;
         }
-        AsmVirReg tmpReg = new AsmVirReg();
-        asmFunction.addUsedVirReg(tmpReg);
+        AsmVirReg tmpReg = genTmpReg(irFunction);
         if (!(irValue instanceof ConstInt)) {
             //TODO:operandMap1也要加入键值对？
             operandMap.put(irValue, tmpReg);

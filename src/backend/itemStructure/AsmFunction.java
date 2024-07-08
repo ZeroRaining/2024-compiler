@@ -2,6 +2,7 @@ package backend.itemStructure;
 
 import Utils.CustomList;
 import backend.regs.AsmReg;
+import frontend.ir.structure.BasicBlock;
 
 import java.util.HashSet;
 
@@ -64,5 +65,8 @@ public class AsmFunction {
 
     public CustomList getBlocks() {
         return blocks;
+    }
+    public AsmBlock getTailBlock() {
+        return (AsmBlock) blocks.getTail();
     }
 }

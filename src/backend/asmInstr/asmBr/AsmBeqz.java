@@ -1,4 +1,4 @@
-package backend.asmBr;
+package backend.asmInstr.asmBr;
 
 import backend.asmInstr.AsmInstr;
 import backend.itemStructure.AsmBlock;
@@ -10,5 +10,13 @@ public class AsmBeqz extends AsmInstr {
     public AsmBeqz(AsmOperand cond, AsmBlock target) {
         this.cond = cond;
         this.target = target;
+    }
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("beqz\t");
+        sb.append(cond);
+        sb.append(",\t");
+        sb.append(target);
+        return sb.toString();
     }
 }

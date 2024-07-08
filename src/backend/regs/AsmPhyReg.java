@@ -9,4 +9,7 @@ public class AsmPhyReg extends AsmReg {
         this.index = RegGeter.nameToIndexInt.get(name);
         this.name = name;
     }
+    public String toString() {
+        return name;
+    }
 }
