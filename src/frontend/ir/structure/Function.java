@@ -108,8 +108,8 @@ public class Function extends Value implements FuncDef {
         }
     }
     
-    public Set<Symbol> getFParamSymbolSet() {
-        return this.procedure.getFParamSymbolSet();
+    public List<Symbol> getFParamSymbolList() {
+        return this.procedure.getFParamSymbolList();
     }
 
     public CustomList getBasicBlocks() {
