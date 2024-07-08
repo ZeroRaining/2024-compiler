@@ -11,7 +11,6 @@ public abstract class Value extends CustomList.Node {
     * 负责记录这个这个value被哪些use使用*/
     private CustomList useList;
     public Value() {
-        super();
         useList = new CustomList();
     }
     

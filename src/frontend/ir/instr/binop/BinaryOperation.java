@@ -12,8 +12,7 @@ public abstract class BinaryOperation extends Instruction {
     private final DataType type;
     private final String operationName;
     
-    public BinaryOperation(int result, Value op1, Value op2, String operationName, DataType type, BasicBlock parentBB) {
-        super(parentBB);
+    public BinaryOperation(int result, Value op1, Value op2, String operationName, DataType type) {
         this.result = result;
         this.op1 = op1;
         this.op2 = op2;

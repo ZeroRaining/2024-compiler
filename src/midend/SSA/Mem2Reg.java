@@ -96,7 +96,7 @@ public class Mem2Reg {
                 prtBlks.add(ins.getParentBB());
             }
             for (BasicBlock block : toPuts) {
-                Instruction phi = new PhiInstr(curRegCnt++, values, prtBlks,block);
+                Instruction phi = new PhiInstr(curRegCnt++, values, prtBlks);
                 block.getInstructions().addToHead(phi);
                 useIns.add(phi);
                 defIns.add(phi);

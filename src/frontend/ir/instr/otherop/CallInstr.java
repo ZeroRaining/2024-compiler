@@ -17,8 +17,7 @@ public class CallInstr extends Instruction {
     private final List<Value> rParams;
     private final FuncDef funcDef;
     
-    public CallInstr(Integer result, DataType returnType, FuncDef funcDef, List<Value> rParams ,BasicBlock parentBB) {
-        super(parentBB);
+    public CallInstr(Integer result, DataType returnType, FuncDef funcDef, List<Value> rParams) {
         assert (returnType == DataType.VOID && result == null) || (returnType != DataType.VOID && result != null);
         if (rParams == null) {
             throw new NullPointerException();

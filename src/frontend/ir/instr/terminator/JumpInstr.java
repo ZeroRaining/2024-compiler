@@ -8,8 +8,7 @@ import frontend.ir.instr.Instruction;
 public class JumpInstr extends Instruction {
     private BasicBlock Target;
 
-    public JumpInstr(BasicBlock Target, BasicBlock parent) {
-        super(parent);
+    public JumpInstr(BasicBlock Target) {
         this.Target = Target;
         setUse(Target);
     }

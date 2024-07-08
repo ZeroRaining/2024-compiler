@@ -72,9 +72,9 @@ public class Procedure {
             curBlock = retBlock;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
-            Instruction instr = new LoadInstr(curRegIndex++,funcSymTab.getSym(""), curBlock);
+            Instruction instr = new LoadInstr(curRegIndex++,funcSymTab.getSym(""));
             curBlock.addInstruction(instr);
-            curBlock.addInstruction(new ReturnInstr(returnType, instr, curBlock));
+            curBlock.addInstruction(new ReturnInstr(returnType, instr));
         } else {
             curBlock.addInstruction(new ReturnInstr(returnType,curBlock));
         }
@@ -88,8 +88,8 @@ public class Procedure {
             //空串表示用于存返回值的变量
             Symbol symbol = new Symbol("", returnType, new ArrayList<>(), false, false, null);
             funcSymTab.addSym(symbol);
-            curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
-            curBlock.addInstruction(new StoreInstr(new ConstInt(0), funcSymTab.getSym(""), curBlock));
+            curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol));
+            curBlock.addInstruction(new StoreInstr(new ConstInt(0), funcSymTab.getSym("")));
         }
     }
 
@@ -128,8 +128,8 @@ public class Procedure {
     
     private void storeParams(HashMap<Symbol, FParam> symbol2FParam) {
         for (Symbol symbol : symbol2FParam.keySet()) {
-            curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
-            curBlock.addInstruction(new StoreInstr(symbol2FParam.get(symbol), symbol, curBlock));
+            curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol));
+            curBlock.addInstruction(new StoreInstr(symbol2FParam.get(symbol), symbol));
         }
     }
     
@@ -178,7 +178,7 @@ public class Procedure {
         if (whileBegins.empty()) {
             throw new RuntimeException("continue in wrong position");
         }
-        curBlock.addInstruction(new JumpInstr(whileBegins.peek(),curBlock));
+        curBlock.addInstruction(new JumpInstr(whileBegins.peek()));
         curBlock = new BasicBlock(curDepth);
         curBlock.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(curBlock);
@@ -188,7 +188,7 @@ public class Procedure {
         if (whileEnds.empty()) {
             throw new RuntimeException("break in wrong position");
         }
-        curBlock.addInstruction(new JumpInstr(whileEnds.peek(),curBlock));
+        curBlock.addInstruction(new JumpInstr(whileEnds.peek()));
         curBlock = new BasicBlock(curDepth);
         curBlock.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(curBlock);
@@ -200,13 +200,13 @@ public class Procedure {
         BasicBlock bodyBlk = new BasicBlock(curDepth);
         BasicBlock endBlk = new BasicBlock(curDepth);
 
-        curBlock.addInstruction(new JumpInstr(condBlk,curBlock));//要为condBlk新建一个块吗
+        curBlock.addInstruction(new JumpInstr(condBlk));//要为condBlk新建一个块吗
 
         condBlk.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(condBlk);
         curBlock = condBlk;
         Value cond = calculateLOr(item.cond, bodyBlk, endBlk, symTab);
-        curBlock.addInstruction(new BranchInstr(cond, bodyBlk, endBlk, curBlock));
+        curBlock.addInstruction(new BranchInstr(cond, bodyBlk, endBlk));
 
         //fixme：if和while同时创建一个新end块，会导致没有语句
         bodyBlk.setLabelCnt(curBlkIndex++);
@@ -222,7 +222,7 @@ public class Procedure {
 
         endBlk.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(endBlk);
-        curBlock.addInstruction(new JumpInstr(condBlk, curBlock));
+        curBlock.addInstruction(new JumpInstr(condBlk));
         curBlock = endBlk;
     }
 
@@ -234,7 +234,7 @@ public class Procedure {
 
         Value cond = calculateLOr(ifStmt.condition, thenBlk, elseBlk, symTab);
 
-        curBlock.addInstruction(new BranchInstr(cond, thenBlk, elseBlk, curBlock));
+        curBlock.addInstruction(new BranchInstr(cond, thenBlk, elseBlk));
 
         thenBlk.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(thenBlk);
@@ -247,12 +247,12 @@ public class Procedure {
             curBlock = elseBlk;
             dealStmt(ifStmt.elseStmt, returnType, new SymTab(symTab));
             endBlk.setLabelCnt(curBlkIndex++);
-            curBlock.addInstruction(new JumpInstr(endBlk, curBlock));
+            curBlock.addInstruction(new JumpInstr(endBlk));
         } else {
             endBlk.setLabelCnt(curBlkIndex++);
         }
 
-        thenTmpBlk.addInstruction(new JumpInstr(endBlk, thenTmpBlk));
+        thenTmpBlk.addInstruction(new JumpInstr(endBlk));
         basicBlocks.addToTail(endBlk);
         curBlock = endBlk;
     }
@@ -263,19 +263,19 @@ public class Procedure {
         }
         Ast.Exp returnValue = (item).getReturnValue();
         if (returnValue == null) {
-            curBlock.addInstruction(new JumpInstr(retBlock, curBlock));
+            curBlock.addInstruction(new JumpInstr(retBlock));
         } else {
             Value value = calculateExpr(returnValue, symTab, false);
             assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
             if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
-                value = new Fp2Si(curRegIndex++, value, curBlock);
+                value = new Fp2Si(curRegIndex++, value);
                 curBlock.addInstruction((Instruction) value);
             } else if (returnType == DataType.FLOAT && value.getDataType() == DataType.INT) {
-                value = new Si2Fp(curRegIndex++, value, curBlock);
+                value = new Si2Fp(curRegIndex++, value);
                 curBlock.addInstruction((Instruction) value);
             }
-            curBlock.addInstruction(new StoreInstr(value, symTab.getSym(""), curBlock));
-            curBlock.addInstruction(new JumpInstr(retBlock, curBlock));
+            curBlock.addInstruction(new StoreInstr(value, symTab.getSym("")));
+            curBlock.addInstruction(new JumpInstr(retBlock));
         }
     }
     
@@ -287,20 +287,20 @@ public class Procedure {
         Symbol left = symTab.getSym(lVal.getName());
         Value right = calculateExpr(item.getExp(), symTab, false);
         if (left.getType() == DataType.FLOAT && right.getDataType() == DataType.INT) {
-            right = new Si2Fp(curRegIndex++, right, curBlock);
+            right = new Si2Fp(curRegIndex++, right);
             curBlock.addInstruction((Instruction) right);
         }
         if (left.getType() == DataType.INT && right.getDataType() == DataType.FLOAT) {
-            right = new Fp2Si(curRegIndex++, right, curBlock);
+            right = new Fp2Si(curRegIndex++, right);
             curBlock.addInstruction((Instruction) right);
         }
         if (left.isArray()) {
             List<Value> indexList = getIndexList(lVal, symTab);
             Instruction ptr = getPtr(left, indexList);
             curBlock.addInstruction(ptr);
-            curBlock.addInstruction(new StoreInstr(right, left, ptr, curBlock));
+            curBlock.addInstruction(new StoreInstr(right, left, ptr));
         } else {
-            curBlock.addInstruction(new StoreInstr(right, left, curBlock));
+            curBlock.addInstruction(new StoreInstr(right, left));
         }
         
     }
@@ -311,27 +311,27 @@ public class Procedure {
         }
         List<Symbol> newSymList = symTab.parseNewSymbols(item);
         for (Symbol symbol : newSymList) {
-            curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
+            curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol));
             Value initVal = symbol.getInitVal();
             if (initVal != null) {
                 if (initVal instanceof ConstValue) {
-                    curBlock.addInstruction(new StoreInstr(initVal, symbol, curBlock));
+                    curBlock.addInstruction(new StoreInstr(initVal, symbol));
                 } else if (initVal instanceof InitExpr) {
                     Value init = calculateExpr(((InitExpr) initVal).getExp(), symTab, false);
-                    curBlock.addInstruction(new StoreInstr(init, symbol, curBlock));
+                    curBlock.addInstruction(new StoreInstr(init, symbol));
                 } else if (initVal instanceof ArrayInitVal) {
                     ArrayList<Value> baseIndexList = new ArrayList<>();
                     for (int i = 0; i < ((ArrayInitVal) initVal).getDim(); i++) {
                         baseIndexList.add(new ConstInt(0));
                     }
-                    GEPInstr toBase = new GEPInstr(curRegIndex++, baseIndexList, symbol, curBlock);
+                    GEPInstr toBase = new GEPInstr(curRegIndex++, baseIndexList, symbol);
                     curBlock.addInstruction(toBase);
                     ArrayList<Value> rParams = new ArrayList<>();
                     rParams.add(toBase);
                     rParams.add(new ConstInt(0));
                     rParams.add(new ConstInt(((ArrayInitVal) initVal).getSize()));
                     LibFunc libFunc = Lib.getInstance().getLibFunc("memset");
-                    CallInstr memset = libFunc.makeCall(curRegIndex++, rParams, curBlock);
+                    CallInstr memset = libFunc.makeCall(curRegIndex++, rParams);
                     curBlock.addInstruction(memset);
                     
                     List<List<Integer>> toInit = new ArrayList<>();
@@ -343,14 +343,14 @@ public class Procedure {
                             indexList.add(new ConstInt(index));
                         }
                         if (valToInit instanceof ConstValue) {
-                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
                             curBlock.addInstruction(ptr);
-                            curBlock.addInstruction(new StoreInstr(valToInit, symbol, ptr, curBlock));
+                            curBlock.addInstruction(new StoreInstr(valToInit, symbol, ptr));
                         } else if (valToInit instanceof InitExpr) {
-                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
                             curBlock.addInstruction(ptr);
                             Value init = calculateExpr(((InitExpr) valToInit).getExp(), symTab, false);
-                            curBlock.addInstruction(new StoreInstr(init, symbol, ptr, curBlock));
+                            curBlock.addInstruction(new StoreInstr(init, symbol, ptr));
                         } else {
                             throw new RuntimeException("最后一层了只能是常数或者表达式了吧");
                         }
@@ -372,11 +372,11 @@ public class Procedure {
         if (type == DataType.BOOL) {
             return value;
         } else if (type == DataType.INT) {
-            Instruction instr = new ICmpInstr(curRegIndex++, CmpCond.NE, value, new ConstInt(0),curBlock);
+            Instruction instr = new ICmpInstr(curRegIndex++, CmpCond.NE, value, new ConstInt(0));
             curBlock.addInstruction(instr);
             return instr;
         } else if (type == DataType.FLOAT) {
-            Instruction instr = new FCmpInstr(curRegIndex++, CmpCond.NE, value, new ConstFloat(0),curBlock);
+            Instruction instr = new FCmpInstr(curRegIndex++, CmpCond.NE, value, new ConstFloat(0));
             curBlock.addInstruction(instr);
             return instr;
         } else {
@@ -399,7 +399,7 @@ public class Procedure {
             Token op = bin.getOps().get(i);
             Ast.Exp nextExp = bin.getRestExps().get(i);
             assert op.getType() == TokenType.LOR;
-            curBlock.addInstruction(new BranchInstr(condValue, trueBlk, nextBlk, curBlock));
+            curBlock.addInstruction(new BranchInstr(condValue, trueBlk, nextBlk));
             curBlock = nextBlk;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
@@ -422,7 +422,7 @@ public class Procedure {
             Token op = bin.getOps().get(i);
             Ast.Exp nextExp = bin.getRestExps().get(i);
             assert op.getType() == TokenType.LAND;
-            curBlock.addInstruction(new BranchInstr(condValue, nextBlk, falseBlk, curBlock));
+            curBlock.addInstruction(new BranchInstr(condValue, nextBlk, falseBlk));
             curBlock = nextBlk;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
@@ -458,13 +458,13 @@ public class Procedure {
                 
                 // i1 -> i32
                 if (type1 == DataType.BOOL) {
-                    Instruction instruction = new Zext(curRegIndex++, firstValue, curBlock);
+                    Instruction instruction = new Zext(curRegIndex++, firstValue);
                     curBlock.addInstruction(instruction);
                     firstValue = instruction;
                     type1 = DataType.INT;
                 }
                 if (type2 == DataType.BOOL) {
-                    Instruction instruction = new Zext(curRegIndex++, valueI, curBlock);
+                    Instruction instruction = new Zext(curRegIndex++, valueI);
                     curBlock.addInstruction(instruction);
                     valueI = instruction;
                     type2 = DataType.INT;
@@ -474,12 +474,12 @@ public class Procedure {
                 DataType dataType = (type1 == DataType.INT && type2 == DataType.INT) ? DataType.INT : DataType.FLOAT;
                 if (dataType == DataType.FLOAT) {
                     if (type1 == DataType.INT) {
-                        Instruction instruction = new Si2Fp(curRegIndex++, firstValue, curBlock);
+                        Instruction instruction = new Si2Fp(curRegIndex++, firstValue);
                         curBlock.addInstruction(instruction);
                         firstValue = instruction;
                     }
                     if (type2 == DataType.INT) {
-                        Instruction instruction = new Si2Fp(curRegIndex++, valueI, curBlock);
+                        Instruction instruction = new Si2Fp(curRegIndex++, valueI);
                         curBlock.addInstruction(instruction);
                         valueI = instruction;
                     }
@@ -489,79 +489,79 @@ public class Procedure {
                 switch (op.getType()) {
                     case ADD:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FAddInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new FAddInstr(curRegIndex++, firstValue, valueI);
                         } else {
-                            instruction = new AddInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new AddInstr(curRegIndex++, firstValue, valueI);
                         }
                         break;
                     case SUB:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FSubInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new FSubInstr(curRegIndex++, firstValue, valueI);
                         } else {
-                            instruction = new SubInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new SubInstr(curRegIndex++, firstValue, valueI);
                         }
                         break;
                     case MUL:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FMulInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new FMulInstr(curRegIndex++, firstValue, valueI);
                         } else {
-                            instruction = new MulInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new MulInstr(curRegIndex++, firstValue, valueI);
                         }
                         break;
                     case DIV:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FDivInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new FDivInstr(curRegIndex++, firstValue, valueI);
                         } else {
-                            instruction = new SDivInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new SDivInstr(curRegIndex++, firstValue, valueI);
                         }
                         break;
                     case MOD:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FRemInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new FRemInstr(curRegIndex++, firstValue, valueI);
                         } else {
-                            instruction = new SRemInstr(curRegIndex++, firstValue, valueI, curBlock);
+                            instruction = new SRemInstr(curRegIndex++, firstValue, valueI);
                         }
                         break;
                     case EQ:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FCmpInstr(curRegIndex++, CmpCond.EQ, firstValue, valueI, curBlock);
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.EQ, firstValue, valueI);
                         } else {
-                            instruction = new ICmpInstr(curRegIndex++, CmpCond.EQ, firstValue, valueI, curBlock);
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.EQ, firstValue, valueI);
                         }
                         break;
                     case NE:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FCmpInstr(curRegIndex++, CmpCond.NE, firstValue, valueI, curBlock);
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.NE, firstValue, valueI);
                         } else {
-                            instruction = new ICmpInstr(curRegIndex++, CmpCond.NE, firstValue, valueI, curBlock);
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.NE, firstValue, valueI);
                         }
                         break;
                     case LT:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FCmpInstr(curRegIndex++, CmpCond.LT, firstValue, valueI, curBlock);
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.LT, firstValue, valueI);
                         } else {
-                            instruction = new ICmpInstr(curRegIndex++, CmpCond.LT, firstValue, valueI, curBlock);
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.LT, firstValue, valueI);
                         }
                         break;
                     case LE:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FCmpInstr(curRegIndex++, CmpCond.LE, firstValue, valueI, curBlock);
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.LE, firstValue, valueI);
                         } else {
-                            instruction = new ICmpInstr(curRegIndex++, CmpCond.LE, firstValue, valueI, curBlock);
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.LE, firstValue, valueI);
                         }
                         break;
                     case GT:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FCmpInstr(curRegIndex++, CmpCond.GT, firstValue, valueI, curBlock);
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.GT, firstValue, valueI);
                         } else {
-                            instruction = new ICmpInstr(curRegIndex++, CmpCond.GT, firstValue, valueI, curBlock);
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.GT, firstValue, valueI);
                         }
                         break;
                     case GE:
                         if(dataType == DataType.FLOAT) {
-                            instruction = new FCmpInstr(curRegIndex++, CmpCond.GE, firstValue, valueI, curBlock);
+                            instruction = new FCmpInstr(curRegIndex++, CmpCond.GE, firstValue, valueI);
                         } else {
-                            instruction = new ICmpInstr(curRegIndex++, CmpCond.GE, firstValue, valueI, curBlock);
+                            instruction = new ICmpInstr(curRegIndex++, CmpCond.GE, firstValue, valueI);
                         }
                         break;
                     default: throw new RuntimeException("表达式计算过程中出现了未曾设想的运算符");
@@ -585,11 +585,11 @@ public class Procedure {
                     GEPInstr ptr = getPtr(symbol, indexList);
                     curBlock.addInstruction(ptr);
                     if (ptr.getPointerLevel() == 1) {
-                        Instruction load = new LoadInstr(curRegIndex++, symbol, ptr, curBlock);
+                        Instruction load = new LoadInstr(curRegIndex++, symbol, ptr);
                         curBlock.addInstruction(load);
                         res = load;
                     } else {
-                        Instruction newPtr = new GEPInstr(curRegIndex++, ptr, curBlock);
+                        Instruction newPtr = new GEPInstr(curRegIndex++, ptr);
                         curBlock.addInstruction(newPtr);
                         res = newPtr;
                     }
@@ -597,7 +597,7 @@ public class Procedure {
                     if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                         res = symbol.getInitVal();
                     } else {
-                        Instruction load = new LoadInstr(curRegIndex++, symbol, curBlock);
+                        Instruction load = new LoadInstr(curRegIndex++, symbol);
                         curBlock.addInstruction(load);
                         res = load;
                     }
@@ -619,10 +619,10 @@ public class Procedure {
             if (sign == -1) {
                 switch (res.getDataType()) {
                     case INT:
-                        res = new SubInstr(curRegIndex++, new ConstInt(0), res, curBlock);
+                        res = new SubInstr(curRegIndex++, new ConstInt(0), res);
                         break;
                     case FLOAT:
-                        res = new FNegInstr(curRegIndex++, res, curBlock);
+                        res = new FNegInstr(curRegIndex++, res);
                         break;
                     default:
                         throw new RuntimeException("带符号的指令不能，至少不应该连返回值都没有吧");
@@ -632,9 +632,9 @@ public class Procedure {
             if (((Ast.UnaryExp) exp).checkNot()) {
                 DataType dataType = res.getDataType();
                 if (dataType == DataType.INT) {
-                    res = new ICmpInstr(curRegIndex++, CmpCond.EQ, new ConstInt(0), res, curBlock);
+                    res = new ICmpInstr(curRegIndex++, CmpCond.EQ, new ConstInt(0), res);
                 } else if (dataType == DataType.FLOAT) {
-                    res = new FCmpInstr(curRegIndex++, CmpCond.EQ, new ConstFloat(0), res, curBlock);
+                    res = new FCmpInstr(curRegIndex++, CmpCond.EQ, new ConstFloat(0), res);
                 } else {
                     throw new RuntimeException("!后面返回的应该只能是整数或者浮点数");
                 }
@@ -649,11 +649,11 @@ public class Procedure {
     private GEPInstr getPtr(Symbol symbol, List<Value> indexList){
         GEPInstr ptr;
         if (symbol.isArrayFParam()) {
-            LoadInstr load = new LoadInstr(curRegIndex++, symbol, curBlock);
+            LoadInstr load = new LoadInstr(curRegIndex++, symbol);
             curBlock.addInstruction(load);
-            ptr = new GEPInstr(curRegIndex++, load, indexList, curBlock);
+            ptr = new GEPInstr(curRegIndex++, load, indexList);
         } else {
-            ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+            ptr = new GEPInstr(curRegIndex++, indexList, symbol);
         }
         return ptr;
     }
@@ -669,7 +669,7 @@ public class Procedure {
                 throw new RuntimeException("数组下标不是整数？");
             }
             if (innerRes instanceof Instruction) {
-                innerRes = new Sext(curRegIndex++, innerRes, curBlock);
+                innerRes = new Sext(curRegIndex++, innerRes);
                 curBlock.addInstruction((Instruction) innerRes);
             }
             indexList.add(innerRes);
@@ -698,7 +698,7 @@ public class Procedure {
         if (libFunc != null) {
             List<Ast.FuncFParam> libFParams = libFunc.getFParams();
             funcParamConv(libFParams, rParams);
-            callInstr = libFunc.makeCall(curRegIndex++, rParams, curBlock);
+            callInstr = libFunc.makeCall(curRegIndex++, rParams);
         } else {
             Function myFunc = Function.getFunction(name);
             if (myFunc == null) {
@@ -706,7 +706,7 @@ public class Procedure {
             }
             List<Ast.FuncFParam> fParams = myFunc.getFParams();
             funcParamConv(fParams, rParams);
-            callInstr = Function.makeCall(curRegIndex++, name, rParams, curBlock);
+            callInstr = Function.makeCall(curRegIndex++, name, rParams);
         }
         if (callInstr.getDataType() == DataType.VOID) {
             curRegIndex--;
@@ -725,12 +725,12 @@ public class Procedure {
                 throw new RuntimeException("形参实参出现了意料之外的东西");
             }
             if (rType == DataType.INT && fType == TokenType.FLOAT) {
-                ConversionOperation conv = new Si2Fp(curRegIndex++, curRParam, curBlock);
+                ConversionOperation conv = new Si2Fp(curRegIndex++, curRParam);
                 curBlock.addInstruction(conv);
                 rParams.set(i, conv);
             }
             if (rType == DataType.FLOAT && fType == TokenType.INT) {
-                ConversionOperation conv = new Fp2Si(curRegIndex++, curRParam, curBlock);
+                ConversionOperation conv = new Fp2Si(curRegIndex++, curRParam);
                 curBlock.addInstruction(conv);
                 rParams.set(i, conv);
             }

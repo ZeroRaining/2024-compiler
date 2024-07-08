@@ -9,8 +9,7 @@ public class FNegInstr extends Instruction {
     private final int result;
     private Value value;
     
-    public FNegInstr(int result, Value value, BasicBlock parentBB) {
-        super(parentBB);
+    public FNegInstr(int result, Value value) {
         this.result = result;
         this.value = value;
         setUse(value);

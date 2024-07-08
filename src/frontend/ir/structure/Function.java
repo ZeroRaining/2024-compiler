@@ -124,8 +124,8 @@ public class Function extends Value implements FuncDef {
         return symTab.getSymbolList();
     }
 
-    public static CallInstr makeCall(int result, String name, List<Value> rParams, BasicBlock curBlock) {
-        if (rParams == null || name == null || curBlock == null) {
+    public static CallInstr makeCall(int result, String name, List<Value> rParams) {
+        if (rParams == null || name == null) {
             throw new NullPointerException();
         }
         Function function = FUNCTION_MAP.get(name);
@@ -137,9 +137,9 @@ public class Function extends Value implements FuncDef {
         }
         DataType type = function.getDataType();
         if (type == DataType.VOID) {
-            return new CallInstr(null, type, function, rParams, curBlock);
+            return new CallInstr(null, type, function, rParams);
         } else {
-            return new CallInstr(result, type, function, rParams, curBlock);
+            return new CallInstr(result, type, function, rParams);
         }
     }
 

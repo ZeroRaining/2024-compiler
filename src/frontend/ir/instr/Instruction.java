@@ -7,15 +7,15 @@ import frontend.ir.Value;
 import java.util.ArrayList;
 
 public abstract class Instruction extends Value {
-    private final BasicBlock parentBB;
+    private BasicBlock parentBB;
     protected ArrayList<Use> useList;
     protected ArrayList<Value> useValueList;
-    public Instruction(BasicBlock parentBB) {
-        super();
-        this.parentBB = parentBB;
+    
+    public Instruction() {
         this.useList = new ArrayList<>();
         this.useValueList = new ArrayList<>();
     }
+    
     public void setUse(Value value) {
         Use use = new Use(this,value);
         value.insertAtTail(use);
@@ -23,6 +23,9 @@ public abstract class Instruction extends Value {
         useValueList.add(value);
     }
 
+    public void setParentBB(BasicBlock parentBB) {
+        this.parentBB = parentBB;
+    }
     
     public abstract String print();
     

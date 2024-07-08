@@ -8,15 +8,15 @@ public class LoadInstr extends MemoryOperation {
     private final int result;
     private Value ptr = null;
     
-    public LoadInstr(int result, Symbol symbol, BasicBlock parentBB) {
-        super(symbol, parentBB);
+    public LoadInstr(int result, Symbol symbol) {
+        super(symbol);
         this.result = result;
         setUse(symbol.getAllocValue());
         this.pointerLevel = symbol.getAllocValue().getPointerLevel() - 1;
     }
     
-    public LoadInstr(int result, Symbol symbol, Value ptr, BasicBlock parentBB) {
-        super(symbol, parentBB);
+    public LoadInstr(int result, Symbol symbol, Value ptr) {
+        super(symbol);
         this.result = result;
         // setUse(symbol.getAllocValue()); todo: 我觉得这条应该没啥用，确定之后再删除
         this.ptr = ptr;
