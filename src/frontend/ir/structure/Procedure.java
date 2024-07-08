@@ -169,7 +169,7 @@ public class Procedure {
         } else if (item instanceof Ast.Assign) {
             dealAssign((Ast.Assign) item, symTab);
         } else if (item instanceof Ast.ExpStmt) {
-            calculateExpr(((Ast.ExpStmt) item).getExp(), symTab);
+            calculateExpr(((Ast.ExpStmt) item).getExp(), symTab, true);
         } else {
             throw new RuntimeException("出现了尚未支持的语句类型" + item.getClass());
         }
@@ -266,7 +266,7 @@ public class Procedure {
         if (returnValue == null) {
             curBlock.addInstruction(new JumpInstr(retBlock, curBlock));
         } else {
-            Value value = calculateExpr(returnValue, symTab);
+            Value value = calculateExpr(returnValue, symTab, false);
             assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
             if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
                 value = new Fp2Si(curRegIndex++, value, curBlock);
@@ -278,20 +278,6 @@ public class Procedure {
             curBlock.addInstruction(new StoreInstr(value, symTab.getSym(""), curBlock));
             curBlock.addInstruction(new JumpInstr(retBlock, curBlock));
         }
-//        if (returnValue == null) {
-//            curBlock.addInstruction(new ReturnInstr(returnType, curBlock));
-//        } else {
-//            Value value = calculateExpr(returnValue, symTab);
-//            assert value.getDataType() != DataType.VOID && returnType != DataType.VOID;
-//            if (returnType == DataType.INT && value.getDataType() == DataType.FLOAT) {
-//                value = new Fp2Si(curRegIndex++, value, curBlock);
-//                curBlock.addInstruction((Instruction) value);
-//            } else if (returnType == DataType.FLOAT && value.getDataType() == DataType.INT) {
-//                value = new Si2Fp(curRegIndex++, value, curBlock);
-//                curBlock.addInstruction((Instruction) value);
-//            }
-//            curBlock.addInstruction(new ReturnInstr(returnType, value, curBlock));
-//        }
     }
     
     private void dealAssign(Ast.Assign item, SymTab symTab) {
@@ -300,7 +286,7 @@ public class Procedure {
         }
         Ast.LVal lVal = item.getLVal();
         Symbol left = symTab.getSym(lVal.getName());
-        Value right = calculateExpr(item.getExp(), symTab);
+        Value right = calculateExpr(item.getExp(), symTab, false);
         if (left.getType() == DataType.FLOAT && right.getDataType() == DataType.INT) {
             right = new Si2Fp(curRegIndex++, right, curBlock);
             curBlock.addInstruction((Instruction) right);
@@ -332,7 +318,7 @@ public class Procedure {
                 if (initVal instanceof ConstValue) {
                     curBlock.addInstruction(new StoreInstr(initVal, symbol, curBlock));
                 } else if (initVal instanceof InitExpr) {
-                    Value init = calculateExpr(((InitExpr) initVal).getExp(), symTab);
+                    Value init = calculateExpr(((InitExpr) initVal).getExp(), symTab, false);
                     curBlock.addInstruction(new StoreInstr(init, symbol, curBlock));
                 } else if (initVal instanceof ArrayInitVal) {
                     ArrayList<Value> baseIndexList = new ArrayList<>();
@@ -363,7 +349,7 @@ public class Procedure {
                         } else if (valToInit instanceof InitExpr) {
                             Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
                             curBlock.addInstruction(ptr);
-                            Value init = calculateExpr(((InitExpr) valToInit).getExp(), symTab);
+                            Value init = calculateExpr(((InitExpr) valToInit).getExp(), symTab, false);
                             curBlock.addInstruction(new StoreInstr(init, symbol, ptr, curBlock));
                         } else {
                             throw new RuntimeException("最后一层了只能是常数或者表达式了吧");
@@ -399,7 +385,7 @@ public class Procedure {
     //if ( A || (B && C) || D)
     private Value calculateLOr(Ast.Exp exp, BasicBlock trueBlk, BasicBlock falseBlk, SymTab symTab) {
         if (!(exp instanceof Ast.BinaryExp)) {
-            return transform2i1(calculateExpr(exp, symTab));
+            return transform2i1(calculateExpr(exp, symTab, false));
         }
         Ast.BinaryExp bin = (Ast.BinaryExp) exp;
         BasicBlock nextBlk = falseBlk;
@@ -423,11 +409,11 @@ public class Procedure {
 
     private Value calculateLAnd(Ast.Exp exp, BasicBlock falseBlk, SymTab symTab) {
         if (!(exp instanceof Ast.BinaryExp)) {
-            return transform2i1(calculateExpr(exp, symTab));
+            return transform2i1(calculateExpr(exp, symTab, false));
         }
         Ast.BinaryExp bin = (Ast.BinaryExp) exp;
         BasicBlock nextBlk;
-        Value condValue = transform2i1(calculateExpr(bin.getFirstExp(), symTab));
+        Value condValue = transform2i1(calculateExpr(bin.getFirstExp(), symTab, false));
 
         for (int i = 0; i < bin.getOps().size(); i++) {
             nextBlk = new BasicBlock(curDepth);
@@ -438,12 +424,15 @@ public class Procedure {
             curBlock = nextBlk;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
-            condValue = calculateExpr(nextExp, symTab);
+            condValue = calculateExpr(nextExp, symTab, false);
         }
         return condValue;
     }
-    private Value calculateExpr(Ast.Exp exp, SymTab symTab) {
+    private Value calculateExpr(Ast.Exp exp, SymTab symTab, boolean canBeEmpty) {
         if (exp == null) {
+            if (canBeEmpty) {
+                return null;
+            }
             throw new NullPointerException();
         }
         switch (exp.checkConstType(symTab)) {
@@ -451,12 +440,12 @@ public class Procedure {
             case FLOAT: return new ConstFloat(exp.getConstFloat(symTab));
         }
         if (exp instanceof Ast.BinaryExp) {
-            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp(), symTab);
+            Value firstValue = calculateExpr(((Ast.BinaryExp) exp).getFirstExp(), symTab, canBeEmpty);
             List<Ast.Exp> rest = ((Ast.BinaryExp) exp).getRestExps();
             for (int i = 0; i < rest.size(); i++) {
                 Ast.Exp expI = rest.get(i);
                 Token op = ((Ast.BinaryExp) exp).getOps().get(i);
-                Value valueI = calculateExpr(expI, symTab);
+                Value valueI = calculateExpr(expI, symTab, canBeEmpty);
                 
                 DataType type1 = firstValue.getDataType();
                 DataType type2 = valueI.getDataType();
@@ -584,7 +573,7 @@ public class Procedure {
             Ast.PrimaryExp primary = ((Ast.UnaryExp) exp).getPrimaryExp();
             Value res;
             if (primary instanceof Ast.Exp) {
-                res = calculateExpr((Ast.Exp) primary, symTab);
+                res = calculateExpr((Ast.Exp) primary, symTab, canBeEmpty);
             } else if (primary instanceof Ast.Call) {
                 res = dealCall((Ast.Call) primary, symTab);
             } else if (primary instanceof Ast.LVal) {
@@ -673,7 +662,7 @@ public class Procedure {
         }
         ArrayList<Value> indexList = new ArrayList<>();
         for (Ast.Exp innerexp : lVal.getIndexList()) {
-            Value innerRes = calculateExpr(innerexp, symTab);
+            Value innerRes = calculateExpr(innerexp, symTab, false);
             if (innerRes.getDataType() != DataType.INT) {
                 throw new RuntimeException("数组下标不是整数？");
             }
@@ -692,7 +681,7 @@ public class Procedure {
         }
         ArrayList<Value> rParams = new ArrayList<>();
         for (Ast.Exp exp : call.getParams()) {
-            rParams.add(calculateExpr(exp, symTab));
+            rParams.add(calculateExpr(exp, symTab, false));
         }
         String name = call.getName();
         if (name.equals("starttime") || name.equals("stoptime")) {
