@@ -41,9 +41,10 @@ public class Procedure {
     private int curBlkIndex = 0;
     private int curDepth = 0;
     private BasicBlock curBlock;
-    private BasicBlock retBlock;
+    private final BasicBlock retBlock;
     private final Stack<BasicBlock> whileBegins;
     private final Stack<BasicBlock> whileEnds;
+    private final HashSet<Symbol> fParamSymbolSet = new HashSet<>();
 
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
         if (fParams == null || block == null) {
@@ -54,15 +55,18 @@ public class Procedure {
         basicBlocks.addToTail(firstBasicBlock);
         curBlock = firstBasicBlock;
         retBlock = new BasicBlock(curDepth);
-        init(returnType, funcSymTab);
         whileBegins = new Stack<>();
         whileEnds = new Stack<>();
-        storeParams(fParams, funcSymTab);
+        HashMap<Symbol, FParam> symbol2FParam = new HashMap<>();
+        parseParams(fParams, funcSymTab, symbol2FParam);
+        fParamSymbolSet.addAll(symbol2FParam.keySet());
+        init(returnType, funcSymTab);
+        storeParams(symbol2FParam);
         parseCodeBlock(block, returnType, funcSymTab);
-        finaLize(returnType, funcSymTab);
+        finalize(returnType, funcSymTab);
     }
 
-    private void finaLize(DataType returnType, SymTab funcSymTab) {
+    private void finalize(DataType returnType, SymTab funcSymTab) {
         if (returnType == null) {
             throw new RuntimeException("会不会写函数啊，小老弟？！");
         }
@@ -92,11 +96,10 @@ public class Procedure {
         }
     }
 
-    private void storeParams(List<Ast.FuncFParam> fParams, SymTab symTab) {
+    private void parseParams(List<Ast.FuncFParam> fParams, SymTab symTab, HashMap<Symbol, FParam> symbol2FParam) {
         if (fParams == null || symTab == null) {
             throw new NullPointerException();
         }
-        HashMap<Symbol, FParam> symbol2FParam = new HashMap<>();
         String name;
         DataType dataType;
         for (Ast.FuncFParam param : fParams) {
@@ -122,11 +125,17 @@ public class Procedure {
             symTab.addSym(symbol);
             symbol2FParam.put(symbol, new FParam(curRegIndex++, dataType));
         }
-        
+    }
+    
+    private void storeParams(HashMap<Symbol, FParam> symbol2FParam) {
         for (Symbol symbol : symbol2FParam.keySet()) {
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
             curBlock.addInstruction(new StoreInstr(symbol2FParam.get(symbol), symbol, curBlock));
         }
+    }
+    
+    public Set<Symbol> getFParamSymbolSet() {
+        return this.fParamSymbolSet;
     }
     
     public void parseCodeBlock(Ast.Block block, DataType returnType, SymTab symTab) {

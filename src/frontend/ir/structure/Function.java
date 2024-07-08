@@ -12,10 +12,7 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class Function extends Value implements FuncDef {
     private static final HashMap<String, Function> FUNCTION_MAP = new HashMap<>();
@@ -104,11 +101,15 @@ public class Function extends Value implements FuncDef {
             } else {
                 writer.append(type.toString());
             }
-            writer.append(" %").append(Integer.toString(i));
+            writer.append(" %reg_").append(Integer.toString(i));
             if (i < fParams.size() - 1) {
                 writer.append(", ");
             }
         }
+    }
+    
+    public Set<Symbol> getFParamSymbolSet() {
+        return this.procedure.getFParamSymbolSet();
     }
 
     public CustomList getBasicBlocks() {

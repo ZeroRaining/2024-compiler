@@ -24,6 +24,6 @@ public class FParam extends Value {
     
     @Override
     public String value2string() {
-        return "%" + virtualReg;
+        return "%reg_" + virtualReg;
     }
 }
