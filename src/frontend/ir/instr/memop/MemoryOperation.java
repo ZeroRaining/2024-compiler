@@ -21,7 +21,7 @@ public abstract class MemoryOperation extends Instruction {
         return symbol.getType();
     }
     
-    private Symbol getSymbol() {
+    public Symbol getSymbol() {
         return symbol;
     }
     

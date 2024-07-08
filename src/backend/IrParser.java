@@ -114,7 +114,7 @@ public class IrParser {
             int blockIndex = 0;
             for (Node bb : f.getBasicBlocks()) {
                 //基于新的块编号策略
-                AsmBlock asmBlock = new AsmBlock(blockIndex++);
+                AsmBlock asmBlock = new AsmBlock(f.getName() + "_" + ((BasicBlock) bb).value2string());
                 asmFunction.addBlock(asmBlock);
                 blockMap.put((BasicBlock) bb, asmBlock);
             }
@@ -153,7 +153,7 @@ public class IrParser {
         //asmFunction.setIsTail(f.isTail());
 
         BasicBlock bb = (BasicBlock) f.getBasicBlocks().getHead();
-        List<Symbol> args = f.getArgs();
+        List<Symbol> args = f.getFParamSymbolList();
         List<Symbol> iargs = new ArrayList<>();
         List<Symbol> fargs = new ArrayList<>();
         for (int i = 1; i < args.size(); i++) {
@@ -203,13 +203,9 @@ public class IrParser {
         if (asmFunction.getRaSize() != 0) {
             AsmSd asmSd = new AsmSd(RegGeter.RA, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize() - 8));
             blockMap.get(bb).addInstrHead(asmSd);
-            AsmLd asmLd = new AsmLd(RegGeter.RA, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize() - 8));
-            (asmFunction.getTailBlock()).addInstrTail(asmLd);
         }
         AsmSub asmSub = new AsmSub(RegGeter.SP, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize()));
         blockMap.get(bb).addInstrHead(asmSub);
-        AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize()));
-        (asmFunction.getTailBlock()).addInstrTail(asmAdd);
     }
 
     private void parseBlock(BasicBlock bb, Function f) {
@@ -276,19 +272,28 @@ public class IrParser {
                 asmBlock.addInstrTail(asmMove);
             }
         }
+        AsmFunction asmFunction = funcMap.get(f);
+        AsmLd asmLd = new AsmLd(RegGeter.RA, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize() - 8));
+        asmBlock.addInstrTail(asmLd);
+        AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize()));
+        asmBlock.addInstrTail(asmAdd);
         asmBlock.addInstrTail(new AsmRet());
     }
 
     private void parseAlloca(AllocaInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmFunction asmFunction = funcMap.get(f);
-        AsmType type = instr.getSymbol().getAsmType();
-        //动帧指针
+        AsmType type;
+        if(instr.getPointerLevel()!=0){
+            type=AsmType.POINTER;
+        }
+        type = instr.getSymbol().getAsmType();
         int offset = asmFunction.getArgsSize() + asmFunction.getAllocaSize();
         AsmOperand offOp = parseConstIntOperand(offset, 12, f, bb);
-        //TODO:指针类型
         if (type == AsmType.ARRAY) {
             asmFunction.addAllocaSize(4 * instr.getSymbol().getLimSize());
+        } else if (type==AsmType.POINTER) {
+            asmFunction.addAllocaSize(8);
         } else {
             asmFunction.addAllocaSize(4);
         }
@@ -532,7 +537,7 @@ public class IrParser {
         boolean isSrc1Const = instr.getOp1() instanceof ConstInt;
         boolean isSrc2Const = instr.getOp2() instanceof ConstInt;
         if (isSrc1Const || isSrc2Const) {
-            if(isSrc1Const&&!isSrc2Const){
+            if (isSrc1Const && !isSrc2Const) {
                 instr.swapOp();
             }
             AsmOperand dst = parseOperand(instr, 0, f, bb);

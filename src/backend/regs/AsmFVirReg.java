@@ -1,11 +1,15 @@
 package backend.regs;
 
-public class AsmFVirReg extends AsmReg{
-    private static int index;
+public class AsmFVirReg extends AsmReg {
+    private static int wholeIndex = 0;
+    private int personalIndex = 0;
+
     public AsmFVirReg() {
-        index++;
+        personalIndex = wholeIndex;
+        wholeIndex++;
     }
+
     public String toString() {
-        return "fvir" + index;
+        return "fvir" + personalIndex;
     }
 }

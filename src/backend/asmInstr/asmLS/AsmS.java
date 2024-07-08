@@ -3,7 +3,7 @@ package backend.asmInstr.asmLS;
 import backend.asmInstr.AsmInstr;
 import backend.itemStructure.AsmOperand;
 public class AsmS extends AsmInstr {
-    protected AsmOperand dst, src, addr, offset;
+    protected AsmOperand src, addr, offset;
     public void changeSrc(AsmOperand src) {
         addUseReg(this.src, src);
         this.src = src;

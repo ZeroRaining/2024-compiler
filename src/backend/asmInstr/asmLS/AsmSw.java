@@ -16,7 +16,7 @@ public class AsmSw extends AsmS{
         sb.append(",\t");
         sb.append(offset);
         sb.append("(");
-        sb.append(dst);
+        sb.append(addr);
         sb.append(")");
         return sb.toString();
     }

@@ -9,4 +9,7 @@ public class AsmLabel extends AsmOperand {
     public String getName() {
         return name;
     }
+    public String toString() {
+        return name;
+    }
 }

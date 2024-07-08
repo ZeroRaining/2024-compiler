@@ -2,10 +2,10 @@ package backend.asmInstr.asmLS;
 
 import backend.itemStructure.AsmOperand;
 
-public class AsmSd extends AsmL {
-    public AsmSd(AsmOperand dst, AsmOperand src, AsmOperand offset) {
-        changeDst(dst);
+public class AsmSd extends AsmS {
+    public AsmSd(AsmOperand src, AsmOperand addr, AsmOperand offset) {
         changeSrc(src);
+        changeAddr(addr);
         changeOffset(offset);
     }
 
@@ -16,7 +16,7 @@ public class AsmSd extends AsmL {
         sb.append(",\t");
         sb.append(offset);
         sb.append("(");
-        sb.append(dst);
+        sb.append(addr);
         sb.append(")");
         return sb.toString();
     }

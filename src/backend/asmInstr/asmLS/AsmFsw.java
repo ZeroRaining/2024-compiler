@@ -12,11 +12,11 @@ public class AsmFsw extends AsmS{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("fsw\t");
-        sb.append(dst);
+        sb.append(src);
         sb.append(",\t");
         sb.append(offset);
         sb.append("(");
-        sb.append(src);
+        sb.append(addr);
         sb.append(")");
         return sb.toString();
     }
