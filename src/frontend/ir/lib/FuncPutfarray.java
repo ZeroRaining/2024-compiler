@@ -2,12 +2,14 @@ package frontend.ir.lib;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.syntax.Ast;
 
 import java.util.List;
 
 public class FuncPutfarray extends LibFunc {
-    public FuncPutfarray(List<Value> rParams) {
-        super(rParams);
+    public FuncPutfarray() {
+        fParams.add(Ast.FuncFParam.INT_PARAM);
+        fParams.add(Ast.FuncFParam.FLOAT_PARAM);
     }
     
     @Override

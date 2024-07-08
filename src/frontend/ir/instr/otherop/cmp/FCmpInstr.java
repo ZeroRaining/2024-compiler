@@ -2,12 +2,11 @@ package frontend.ir.instr.otherop.cmp;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
-import frontend.ir.structure.BasicBlock;
 
 public class FCmpInstr extends Cmp {
     
-    public FCmpInstr(int result, CmpCond cond, Value op1, Value op2, BasicBlock parentBB) {
-        super(result, cond, op1, op2, parentBB);
+    public FCmpInstr(int result, CmpCond cond, Value op1, Value op2) {
+        super(result, cond, op1, op2);
         if (op1.getDataType() != DataType.FLOAT || op2.getDataType() != DataType.FLOAT) {
             throw new RuntimeException("浮点数比较必须是两个浮点数之间");
         }

@@ -22,6 +22,7 @@ public class BasicBlock extends Value {
     private HashSet<BasicBlock> doms;
     private HashSet<BasicBlock> iDoms;
     private HashSet<BasicBlock> DF;
+    
     public BasicBlock(int depth) {
         super();
         isRet = false;
@@ -95,6 +96,7 @@ public class BasicBlock extends Value {
         if (instr instanceof ReturnInstr) {
             isRet = true;
         }
+        instr.setParentBB(this);
         instructions.addToTail(instr);
     }
     

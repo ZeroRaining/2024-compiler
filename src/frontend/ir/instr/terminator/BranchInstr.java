@@ -10,8 +10,7 @@ public class BranchInstr extends Instruction {
     private BasicBlock thenTarget;
     private BasicBlock elseTarget;
 
-    public BranchInstr(Value cond, BasicBlock thenTarget, BasicBlock elseTarget, BasicBlock parent) {
-        super(parent);
+    public BranchInstr(Value cond, BasicBlock thenTarget, BasicBlock elseTarget) {
         this.condition = cond;
         this.thenTarget = thenTarget;
         this.elseTarget = elseTarget;

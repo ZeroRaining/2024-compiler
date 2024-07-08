@@ -12,8 +12,7 @@ public abstract class ConversionOperation extends Instruction {
     private Value value;
     private final String opName;
     
-    public ConversionOperation(int result, DataType from, DataType to, Value value, String name, BasicBlock parentBB) {
-        super(parentBB);
+    public ConversionOperation(int result, DataType from, DataType to, Value value, String name) {
         this.result = result;
         this.from = from;
         this.to     = to;

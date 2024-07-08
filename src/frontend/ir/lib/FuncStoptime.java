@@ -6,8 +6,7 @@ import frontend.ir.Value;
 import java.util.List;
 
 public class FuncStoptime extends LibFunc {
-    public FuncStoptime(List<Value> rParams) {
-        super(rParams);
+    public FuncStoptime() {
     }
     
     @Override

@@ -2,7 +2,6 @@ package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
-import frontend.ir.structure.BasicBlock;
 import frontend.ir.symbols.Symbol;
 
 import java.util.ArrayList;
@@ -20,9 +19,9 @@ public class GEPInstr extends MemoryOperation {
     private final String arrayTypeName;
     private final String ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
     
-    public GEPInstr(int result, List<Value> indexList, Symbol symbol, BasicBlock parentBB) {
-        super(symbol, parentBB);
-        if (symbol == null || indexList == null) {
+    public GEPInstr(int result, List<Value> indexList, Symbol symbol) {
+        super(symbol);
+        if (indexList == null) {
             throw new NullPointerException();
         }
         this.result = result;
@@ -40,8 +39,8 @@ public class GEPInstr extends MemoryOperation {
         }
     }
     
-    public GEPInstr(int result, GEPInstr base, BasicBlock parentBB) {
-        super(base.symbol, parentBB);
+    public GEPInstr(int result, GEPInstr base) {
+        super(base.symbol);
         this.result = result;
         this.indexList = new ArrayList<>();
         indexList.add(new ConstInt(0));
@@ -51,8 +50,8 @@ public class GEPInstr extends MemoryOperation {
         setUse(base);
     }
     
-    public GEPInstr(int result, LoadInstr base, List<Value> indexList, BasicBlock parentBB) {
-        super(base.symbol, parentBB);
+    public GEPInstr(int result, LoadInstr base, List<Value> indexList) {
+        super(base.symbol);
         this.result = result;
         this.indexList = indexList;
         this.pointerLevel = symbol.getDim() + 1 - indexList.size();

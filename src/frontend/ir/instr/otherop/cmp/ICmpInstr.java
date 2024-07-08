@@ -5,8 +5,8 @@ import frontend.ir.Value;
 import frontend.ir.structure.BasicBlock;
 
 public class ICmpInstr extends Cmp {
-    public ICmpInstr(int result, CmpCond cond, Value op1, Value op2, BasicBlock parentBB) {
-        super(result, cond, op1, op2, parentBB);
+    public ICmpInstr(int result, CmpCond cond, Value op1, Value op2) {
+        super(result, cond, op1, op2);
         if (op1.getDataType() != DataType.INT || op2.getDataType() != DataType.INT) {
             throw new RuntimeException("整数比较必须是两个三十二位整数之间");
         }

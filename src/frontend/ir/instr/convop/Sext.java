@@ -9,7 +9,7 @@ import frontend.ir.structure.BasicBlock;
  * 还没有单独设置 i64 这个类型，这个指令就是用来输出摆摆样子的
  */
 public class Sext extends ConversionOperation{
-    public Sext(int result, Value value, BasicBlock parentBB) {
-        super(result, DataType.INT, DataType.LONG_INT, value, "sext", parentBB);
+    public Sext(int result, Value value) {
+        super(result, DataType.INT, DataType.LONG_INT, value, "sext");
     }
 }

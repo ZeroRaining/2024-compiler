@@ -1,16 +1,14 @@
 package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
-import frontend.ir.structure.BasicBlock;
 import frontend.ir.symbols.Symbol;
 
-import java.util.List;
 
 public class AllocaInstr extends MemoryOperation {
     private final int result;
     
-    public AllocaInstr(int result, Symbol symbol, BasicBlock parentBB) {
-        super(symbol, parentBB);
+    public AllocaInstr(int result, Symbol symbol) {
+        super(symbol);
         this.result = result;
         symbol.setAllocValue(this);
         this.pointerLevel = symbol.getDim() + 1;

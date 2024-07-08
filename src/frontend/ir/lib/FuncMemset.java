@@ -2,12 +2,15 @@ package frontend.ir.lib;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.syntax.Ast;
 
 import java.util.List;
 
 public class FuncMemset extends LibFunc {
-    public FuncMemset(List<Value> rParams) {
-        super(rParams);
+    public FuncMemset() {
+        fParams.add(null);  // todo: 这个是用来做参数隐式转换的时候用的，但是这个库函数不应该被用户调用，也就不涉及类型转换
+        fParams.add(Ast.FuncFParam.INT_PARAM);
+        fParams.add(Ast.FuncFParam.INT_PARAM);
     }
     
     @Override
@@ -39,6 +42,9 @@ public class FuncMemset extends LibFunc {
         if (rParams.get(0).getPointerLevel() != 1) {
             return false;
         }
-        return type0 == DataType.INT && type1 == DataType.INT && type2 == DataType.INT;
+        if (type0 != DataType.INT && type0 != DataType.FLOAT) {
+            return false;
+        }
+        return type1 == DataType.INT && type2 == DataType.INT;
     }
 }

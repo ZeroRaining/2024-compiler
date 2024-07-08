@@ -14,8 +14,7 @@ public class PhiInstr extends Instruction {
     private ArrayList<Value> values;
     private ArrayList<BasicBlock> prtBlks;
 
-    public PhiInstr(int result, ArrayList<Value> values, ArrayList<BasicBlock> prtBlks, BasicBlock parent) {
-        super(parent);
+    public PhiInstr(int result, ArrayList<Value> values, ArrayList<BasicBlock> prtBlks) {
         this.result = result;
         this.type = values.get(0).getDataType();
         this.values = values;
@@ -68,9 +67,8 @@ public class PhiInstr extends Instruction {
     @Override
     public void modifyValue(Value from, Value to) {
         for (int i = 0; i < values.size(); i++) {
-            if (values.get(i) == to) {
-                values.remove(i);
-                values.add(i, to);
+            if (values.get(i) == from) {
+                values.set(i, to);
             }
         }
     }

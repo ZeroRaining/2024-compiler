@@ -8,15 +8,15 @@ public class StoreInstr extends MemoryOperation {
     private Value value;
     private Value ptr = null;
     
-    public StoreInstr(Value value, Symbol symbol, BasicBlock parentBB) {
-        super(symbol, parentBB);
+    public StoreInstr(Value value, Symbol symbol) {
+        super(symbol);
         this.value = value;
         setUse(value);
         setUse(symbol.getAllocValue());
     }
     
-    public StoreInstr(Value value, Symbol symbol, Value ptr, BasicBlock parentBB) {
-        super(symbol, parentBB);
+    public StoreInstr(Value value, Symbol symbol, Value ptr) {
+        super(symbol);
         this.value = value;
         this.ptr = ptr;
         setUse(value);

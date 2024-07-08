@@ -6,8 +6,7 @@ import frontend.ir.Value;
 import java.util.List;
 
 public class FuncGetint extends LibFunc {
-    public FuncGetint(List<Value> rParams) {
-        super(rParams);
+    public FuncGetint() {
     }
     
     @Override

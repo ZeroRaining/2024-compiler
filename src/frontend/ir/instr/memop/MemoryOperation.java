@@ -8,8 +8,7 @@ import frontend.ir.symbols.Symbol;
 public abstract class MemoryOperation extends Instruction {
     protected final Symbol symbol;
     
-    public MemoryOperation(Symbol symbol, BasicBlock parentBB) {
-        super(parentBB);
+    public MemoryOperation(Symbol symbol) {
         if (symbol == null) {
             throw new NullPointerException();
         }
