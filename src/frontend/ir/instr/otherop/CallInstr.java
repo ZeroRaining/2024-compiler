@@ -67,7 +67,14 @@ public class CallInstr extends Instruction {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        throw new RuntimeException("没有可以置换的 value");
+        for (int i = 0; i < rParams.size(); i++) {
+            Value value = rParams.get(i);
+            if (value == from) {
+                rParams.set(i, to);
+                return;
+            }
+        }
+        throw new RuntimeException("No such value");
     }
 
     public List<Value> getRParams() {
