@@ -146,9 +146,6 @@ public class IrParser {
             parseBlock((BasicBlock) bb, f);
         }
 
-        //TODO:需要函数退出块。为什么需要？好像是寄存器分配部分要。
-        //asmFunction.setIsTail(f.isTail());
-
         BasicBlock bb = (BasicBlock) f.getBasicBlocks().getHead();
         List<Symbol> args = f.getFParamSymbolList();
         List<Symbol> iargs = new ArrayList<>();
@@ -212,7 +209,6 @@ public class IrParser {
     }
 
     private void parseInstr(Instruction instr, Function f, BasicBlock bb) {
-        //TODO:还有很多指令没有写qaq
         if (instr instanceof ReturnInstr)
             parseRet((ReturnInstr) instr, bb, f);
         else if (instr instanceof AllocaInstr)
