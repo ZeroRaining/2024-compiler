@@ -69,4 +69,9 @@ public class AsmFunction {
     public AsmBlock getTailBlock() {
         return (AsmBlock) blocks.getTail();
     }
+
+    public String toString() {
+        //应该无法用到
+        return null;
+    }
 }
