@@ -147,48 +147,50 @@ public class IrParser {
         }
 
         BasicBlock bb = (BasicBlock) f.getBasicBlocks().getHead();
-        List<Symbol> args = f.getFParamSymbolList();
-        List<Symbol> iargs = new ArrayList<>();
-        List<Symbol> fargs = new ArrayList<>();
+        List<Value> args = f.getFParamValueList();
+        List<Value> iargs = new ArrayList<>();
+        List<Value> fargs = new ArrayList<>();
         for (int i = 0; i < args.size(); i++) {
-            Symbol arg = args.get(i);
-            if (arg.getAsmType() == AsmType.INT) {
+            Value arg = args.get(i);
+            if (arg.getPointerLevel() != 0) {
                 iargs.add(arg);
-            } else {
+            } else if (arg.getDataType() == FLOAT) {
                 fargs.add(arg);
+            } else {
+                iargs.add(arg);
             }
         }
         int iargnum = Math.min(iargs.size(), 8);
         int fargnum = Math.min(fargs.size(), 8);
         for (int i = 0; i < iargnum; i++) {
-            Value arg = iargs.get(i).getAllocValue();
+            Value arg = iargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
             AsmMove asmMove = new AsmMove(asmOperand, RegGeter.AregsInt.get(i));
             blockMap.get(bb).addInstrHead(asmMove);
         }
         for (int i = 0; i < fargnum; i++) {
-            Value arg = fargs.get(i).getAllocValue();
+            Value arg = fargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
             AsmMove asmMove = new AsmMove(asmOperand, RegGeter.AregsFloat.get(i));
             blockMap.get(bb).addInstrHead(asmMove);
         }
         int offset = asmFunction.getWholeSize();
         for (int i = 8; i < iargs.size(); i++) {
-            Value arg = iargs.get(i).getAllocValue();
+            Value arg = iargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
-            if (arg.getDataType() == INT) {
+            if (arg.getPointerLevel() != 0) {
                 //TODO:暂时不处理栈大小超过2048字节的情况
                 AsmLw asmLw = new AsmLw(asmOperand, RegGeter.SP, new AsmImm12(offset));
                 blockMap.get(bb).addInstrHead(asmLw);
-                offset += 4;
+                offset += 8;
             } else {
                 AsmLd asmLd = new AsmLd(asmOperand, RegGeter.SP, new AsmImm12(offset));
                 blockMap.get(bb).addInstrHead(asmLd);
-                offset += 8;
+                offset += 4;
             }
         }
         for (int i = 8; i < fargs.size(); i++) {
-            Value arg = fargs.get(i).getAllocValue();
+            Value arg = fargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
             AsmFlw asmflw = new AsmFlw(asmOperand, RegGeter.SP, new AsmImm12(offset));
             blockMap.get(bb).addInstrHead(asmflw);
