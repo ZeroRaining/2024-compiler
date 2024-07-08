@@ -120,7 +120,7 @@ public class Procedure {
             }
             Symbol symbol = new Symbol(name, dataType, limList, false, false, initVal);
             symTab.addSym(symbol);
-            FParam fParam = new FParam(curRegIndex++, dataType);
+            FParam fParam = new FParam(curRegIndex++, dataType, symbol.getDim());
             symbol2FParam.put(symbol, fParam);
             fParamValueList.add(fParam);
         }
