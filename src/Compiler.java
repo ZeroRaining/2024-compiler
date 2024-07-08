@@ -19,12 +19,21 @@ public class Compiler {
         BufferedInputStream source = new BufferedInputStream(arg.getSrcStream());
         // asm 输出流还没有哦
 
-        //词法分析，得到TokenList
+        //词法分析，得到 TokenList
         TokenList tokenList = Lexer.getInstance().lex(source);
-        //语法分析，得到AST
+        //语法分析，得到 AST
         Ast ast = new Parser(tokenList).parseAst();
         //IR生成
         Program program = new Program(ast);
+        
+        // 开启优化
+        if (arg.getOptLevel() == 1) {
+            HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
+            DFG.doDFG(functions);
+            Mem2Reg.doMem2Reg(functions);
+        }
+        
+        // 打印 IR
         if (arg.toPrintIR()) {
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
             program.printIR(irWriter);
