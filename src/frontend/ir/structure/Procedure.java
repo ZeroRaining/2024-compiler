@@ -42,7 +42,7 @@ public class Procedure {
     private final BasicBlock retBlock;
     private final Stack<BasicBlock> whileBegins;
     private final Stack<BasicBlock> whileEnds;
-    private final ArrayList<Symbol> fParamSymbolList = new ArrayList<>();
+    private final ArrayList<Value> fParamValueList = new ArrayList<>();
 
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
         if (fParams == null || block == null) {
@@ -120,8 +120,9 @@ public class Procedure {
             }
             Symbol symbol = new Symbol(name, dataType, limList, false, false, initVal);
             symTab.addSym(symbol);
-            symbol2FParam.put(symbol, new FParam(curRegIndex++, dataType));
-            fParamSymbolList.add(symbol);
+            FParam fParam = new FParam(curRegIndex++, dataType);
+            symbol2FParam.put(symbol, fParam);
+            fParamValueList.add(fParam);
         }
     }
     
@@ -132,8 +133,8 @@ public class Procedure {
         }
     }
     
-    public List<Symbol> getFParamSymbolList() {
-        return this.fParamSymbolList;
+    public List<Value> getFParamSymbolList() {
+        return this.fParamValueList;
     }
     
     public void parseCodeBlock(Ast.Block block, DataType returnType, SymTab symTab) {

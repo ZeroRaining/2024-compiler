@@ -112,7 +112,7 @@ public class Function extends Value implements FuncDef {
         }
     }
     
-    public List<Symbol> getFParamSymbolList() {
+    public List<Value> getFParamValueList() {
         return this.procedure.getFParamSymbolList();
     }
 
