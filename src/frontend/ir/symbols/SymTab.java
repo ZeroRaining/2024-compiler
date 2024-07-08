@@ -29,7 +29,7 @@ public class SymTab {
             return symbolMap.get(sym);
         }
         if (parent == null) {
-            return null;
+            throw new RuntimeException("No such symbol");
         }
         return parent.getSym(sym);
     }
@@ -82,6 +82,10 @@ public class SymTab {
             }
             Symbol symbol = new Symbol(name, dataType, limList, constant, parent == null, initVal);
             newSymList.add(symbol);
+            if (isGlobal() || constant) {
+                // 对于全局对象和不可变对象，定义过程中可以直接算出结果，而且不涉及局部对全局的覆盖，故可以直接解析一个把一个加到表里
+                this.addSym(symbol);
+            }
         }
         return newSymList;
     }

@@ -1,14 +1,9 @@
 package frontend.ir.lib;
 
-import frontend.ir.Value;
-import frontend.ir.instr.otherop.CallInstr;
-import frontend.ir.structure.BasicBlock;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 
 public class Lib {
     private static final Lib instance = new Lib();
@@ -41,21 +36,21 @@ public class Lib {
         return instance;
     }
     
-    public CallInstr makeCall(int result, String funcName, List<Value> rParams, BasicBlock curBlock) {
+    public LibFunc getLibFunc(String funcName) {
         Class<? extends LibFunc> funcClass = allFunctions.get(funcName);
         if (funcClass == null) {
             return null;
         }
         LibFunc func;
         try {
-            func = funcClass.getDeclaredConstructor(List.class).newInstance(rParams);
+            func = funcClass.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         if (usedFunc.add(funcClass)) {
             usedFuncInstance.add(func);
         }
-        return func.makeCall(result, rParams, curBlock);
+        return func;
     }
     
     public void declareUsedFunc(Writer writer) throws IOException {

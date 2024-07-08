@@ -46,6 +46,10 @@ public class Function extends Value implements FuncDef {
         procedure = new Procedure(returnType, fParams, funcDef.getBody(), symTab);
     }
     
+    public static Function getFunction(String name) {
+        return FUNCTION_MAP.get(name);
+    }
+    
     public void printIR(Writer writer) throws IOException {
         if (writer == null) {
             throw new NullPointerException();
@@ -126,7 +130,7 @@ public class Function extends Value implements FuncDef {
         }
         Function function = FUNCTION_MAP.get(name);
         if (function == null) {
-            return null;
+            throw new RuntimeException("兄弟，这是最后的防线了，真没有别的函数了");
         }
         if (!function.checkParams(rParams)) {
             throw new RuntimeException("形参实参不匹配");
@@ -144,19 +148,23 @@ public class Function extends Value implements FuncDef {
             throw new NullPointerException();
         }
         if (rParams.size() != fParams.size()) {
-            return false;
+            throw new RuntimeException();
         }
         for (int i = 0; i < fParams.size(); i++) {
             if (rParams.get(i).getDataType() == DataType.INT &&
                     fParams.get(i).getType().getType() != TokenType.INT) {
-                return false;
+                throw new RuntimeException();
             }
             if (rParams.get(i).getDataType() == DataType.FLOAT &&
                     fParams.get(i).getType().getType() != TokenType.FLOAT) {
-                return false;
+                throw new RuntimeException();
             }
         }
         return true;
+    }
+    
+    public List<Ast.FuncFParam> getFParams() {
+        return fParams;
     }
     
     @Override

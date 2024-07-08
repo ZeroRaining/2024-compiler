@@ -6,8 +6,7 @@ import frontend.ir.Value;
 import java.util.List;
 
 public class FuncStarttime extends LibFunc{
-    public FuncStarttime(List<Value> rParams) {
-        super(rParams);
+    public FuncStarttime() {
     }
     
     @Override

@@ -2,12 +2,13 @@ package frontend.ir.lib;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.syntax.Ast;
 
 import java.util.List;
 
 public class FuncPutint extends LibFunc {
-    public FuncPutint(List<Value> rParams) {
-        super(rParams);
+    public FuncPutint() {
+        fParams.add(Ast.FuncFParam.INT_PARAM);
     }
     
     @Override

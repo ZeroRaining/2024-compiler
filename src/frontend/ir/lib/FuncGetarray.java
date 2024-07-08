@@ -2,12 +2,14 @@ package frontend.ir.lib;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.syntax.Ast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FuncGetarray extends LibFunc {
-    public FuncGetarray(List<Value> rParams) {
-        super(rParams);
+    public FuncGetarray() {
+        fParams.add(Ast.FuncFParam.INT_PARAM);
     }
     
     @Override

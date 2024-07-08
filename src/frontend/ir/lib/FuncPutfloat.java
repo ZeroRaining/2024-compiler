@@ -2,12 +2,13 @@ package frontend.ir.lib;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.syntax.Ast;
 
 import java.util.List;
 
 public class FuncPutfloat extends LibFunc {
-    public FuncPutfloat(List<Value> rParams) {
-        super(rParams);
+    public FuncPutfloat() {
+        fParams.add(Ast.FuncFParam.FLOAT_PARAM);
     }
     
     @Override

@@ -9,10 +9,7 @@ import frontend.ir.constvalue.ConstInt;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
-import frontend.ir.instr.convop.Fp2Si;
-import frontend.ir.instr.convop.Sext;
-import frontend.ir.instr.convop.Si2Fp;
-import frontend.ir.instr.convop.Zext;
+import frontend.ir.instr.convop.*;
 import frontend.ir.instr.memop.*;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.cmp.CmpCond;
@@ -23,6 +20,7 @@ import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.unaryop.FNegInstr;
 import frontend.ir.lib.Lib;
+import frontend.ir.lib.LibFunc;
 import frontend.ir.symbols.ArrayInitVal;
 import frontend.ir.symbols.InitExpr;
 import frontend.ir.symbols.SymTab;
@@ -331,7 +329,8 @@ public class Procedure {
                     rParams.add(toBase);
                     rParams.add(new ConstInt(0));
                     rParams.add(new ConstInt(((ArrayInitVal) initVal).getSize()));
-                    CallInstr memset = Lib.getInstance().makeCall(curRegIndex++, "memset", rParams, curBlock);
+                    LibFunc libFunc = Lib.getInstance().getLibFunc("memset");
+                    CallInstr memset = libFunc.makeCall(curRegIndex++, rParams, curBlock);
                     curBlock.addInstruction(memset);
                     
                     List<List<Integer>> toInit = new ArrayList<>();
@@ -690,18 +689,49 @@ public class Procedure {
             }
             rParams.add(new ConstInt(0));   //这里应该传行号，但是 AST 暂时不支持行号，喵喵队也没传，索性不传了
         }
-        CallInstr instr = Lib.getInstance().makeCall(curRegIndex++, name, rParams, curBlock);
-        if (instr == null) {
-            instr = Function.makeCall(curRegIndex - 1, name, rParams, curBlock);
-            if (instr == null) {
+        CallInstr callInstr;
+        LibFunc libFunc = Lib.getInstance().getLibFunc(name);
+        // todo: 数组（指针）类型可能会转换吗？反正现在是不能处理的。。。
+        if (libFunc != null) {
+            List<Ast.FuncFParam> libFParams = libFunc.getFParams();
+            funcParamConv(libFParams, rParams);
+            callInstr = libFunc.makeCall(curRegIndex++, rParams, curBlock);
+        } else {
+            Function myFunc = Function.getFunction(name);
+            if (myFunc == null) {
                 throw new RuntimeException("不是哥们，你这是什么函数啊？" + name);
             }
+            List<Ast.FuncFParam> fParams = myFunc.getFParams();
+            funcParamConv(fParams, rParams);
+            callInstr = Function.makeCall(curRegIndex++, name, rParams, curBlock);
         }
-        if (instr.getDataType() == DataType.VOID) {
+        if (callInstr.getDataType() == DataType.VOID) {
             curRegIndex--;
         }
-        curBlock.addInstruction(instr);
-        return instr;
+        curBlock.addInstruction(callInstr);
+        return callInstr;
+    }
+    
+    private void funcParamConv(List<Ast.FuncFParam> fParams, List<Value> rParams) {
+        for (int i = 0; i < fParams.size(); i++) {
+            Value curRParam = rParams.get(i);
+            DataType rType = curRParam.getDataType();
+            TokenType fType = fParams.get(i).getType().getType();
+            if ((rType != DataType.INT && rType != DataType.FLOAT)
+                    || (fType != TokenType.INT && fType != TokenType.FLOAT)) {
+                throw new RuntimeException("形参实参出现了意料之外的东西");
+            }
+            if (rType == DataType.INT && fType == TokenType.FLOAT) {
+                ConversionOperation conv = new Si2Fp(curRegIndex++, curRParam, curBlock);
+                curBlock.addInstruction(conv);
+                rParams.set(i, conv);
+            }
+            if (rType == DataType.FLOAT && fType == TokenType.INT) {
+                ConversionOperation conv = new Fp2Si(curRegIndex++, curRParam, curBlock);
+                curBlock.addInstruction(conv);
+                rParams.set(i, conv);
+            }
+        }
     }
     
     public void printIR(Writer writer) throws IOException {

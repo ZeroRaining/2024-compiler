@@ -152,6 +152,16 @@ public class Ast {
         private final Token ident;
         private final boolean array; // whether it is an array
         private final ArrayList<Exp> arrayItemList; // array sizes of each dim
+        public static final FuncFParam INT_PARAM = new FuncFParam(
+                new Token(TokenType.INT, "0"),
+                new Token(TokenType.IDENT, ""),
+                false, null
+        );
+        public static final FuncFParam FLOAT_PARAM = new FuncFParam(
+                new Token(TokenType.FLOAT, "0"),
+                new Token(TokenType.IDENT, ""),
+                false, null
+        );
         
         public FuncFParam(Token type, Token ident, boolean array, ArrayList<Exp> arrayItemList) {
             this.type = type;

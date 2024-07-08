@@ -30,10 +30,7 @@ public class Program {
                 }
                 functions.put(funcName, new Function((Ast.FuncDef) compUnit, globalSymTab));
             } else if (compUnit instanceof Ast.Decl) {
-                List<Symbol> newSymList = globalSymTab.parseNewSymbols((Ast.Decl) compUnit);
-                for (Symbol symbol : newSymList) {
-                    globalSymTab.addSym(symbol);
-                }
+                globalSymTab.parseNewSymbols((Ast.Decl) compUnit);
             } else {
                 throw new RuntimeException("未定义的编译单元");
             }
