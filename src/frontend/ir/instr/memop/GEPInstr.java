@@ -51,12 +51,24 @@ public class GEPInstr extends MemoryOperation {
         setUse(base);
     }
     
+    public GEPInstr(int result, LoadInstr base, List<Value> indexList, BasicBlock parentBB) {
+        super(base.symbol, parentBB);
+        this.result = result;
+        this.indexList = indexList;
+        this.pointerLevel = symbol.getDim() + 1 - indexList.size();
+        String superType = base.printBaseType();
+        this.arrayTypeName = superType.substring(0, superType.length() - 1);
+        this.ptrVal = base.value2string();
+        setUse(base);
+    }
+    
     @Override
     public String type2string() {
         return this.printBaseType() + "*";
     }
     
-    private String printBaseType() {
+    @Override
+    public String printBaseType() {
         if (this.pointerLevel > 1) {
             List<Integer> limList = this.symbol.getLimitList();
             StringBuilder stringBuilder = new StringBuilder();
@@ -86,7 +98,10 @@ public class GEPInstr extends MemoryOperation {
         stringBuilder.append("%reg_").append(result).append(" = getelementptr ");
         stringBuilder.append(arrayTypeName).append(", ");
         stringBuilder.append(arrayTypeName).append("* ");
-        stringBuilder.append(ptrVal).append(", i64 0");
+        stringBuilder.append(ptrVal);
+        if (!symbol.isArrayFParam()) {
+            stringBuilder.append(", i64 0");
+        }
         for (Value index : indexList) {
             stringBuilder.append(", i64 ").append(index.value2string());
         }

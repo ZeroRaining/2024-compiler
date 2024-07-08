@@ -12,14 +12,16 @@ public class LoadInstr extends MemoryOperation {
         super(symbol, parentBB);
         this.result = result;
         setUse(symbol.getAllocValue());
+        this.pointerLevel = symbol.getAllocValue().getPointerLevel() - 1;
     }
     
     public LoadInstr(int result, Symbol symbol, Value ptr, BasicBlock parentBB) {
         super(symbol, parentBB);
         this.result = result;
-        setUse(symbol.getAllocValue());
+        // setUse(symbol.getAllocValue()); todo: 我觉得这条应该没啥用，确定之后再删除
         this.ptr = ptr;
         setUse(ptr);
+        this.pointerLevel = ptr.getPointerLevel() - 1;
     }
     
     @Override
@@ -31,7 +33,12 @@ public class LoadInstr extends MemoryOperation {
     public String print() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("%reg_").append(result).append(" = load ");
-        String ty = symbol.getType().toString();
+        String ty;
+        if (ptr != null && ptr.getPointerLevel() == 1) {
+            ty = symbol.getType().toString();
+        } else {
+            ty = printBaseType();
+        }
         stringBuilder.append(ty).append(", ").append(ty).append("* ");
         if (ptr != null) {
             stringBuilder.append(ptr.value2string());

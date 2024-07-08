@@ -4,6 +4,8 @@ import frontend.ir.Value;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.symbols.Symbol;
 
+import java.util.List;
+
 public class AllocaInstr extends MemoryOperation {
     private final int result;
     

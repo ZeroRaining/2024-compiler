@@ -13,10 +13,7 @@ import frontend.ir.instr.convop.Fp2Si;
 import frontend.ir.instr.convop.Sext;
 import frontend.ir.instr.convop.Si2Fp;
 import frontend.ir.instr.convop.Zext;
-import frontend.ir.instr.memop.AllocaInstr;
-import frontend.ir.instr.memop.GEPInstr;
-import frontend.ir.instr.memop.LoadInstr;
-import frontend.ir.instr.memop.StoreInstr;
+import frontend.ir.instr.memop.*;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.otherop.cmp.FCmpInstr;
@@ -44,9 +41,10 @@ public class Procedure {
     private int curBlkIndex = 0;
     private int curDepth = 0;
     private BasicBlock curBlock;
-    private BasicBlock retBlock;
+    private final BasicBlock retBlock;
     private final Stack<BasicBlock> whileBegins;
     private final Stack<BasicBlock> whileEnds;
+    private final ArrayList<Symbol> fParamSymbolList = new ArrayList<>();
 
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
         if (fParams == null || block == null) {
@@ -57,15 +55,17 @@ public class Procedure {
         basicBlocks.addToTail(firstBasicBlock);
         curBlock = firstBasicBlock;
         retBlock = new BasicBlock(curDepth);
-        init(returnType, funcSymTab);
         whileBegins = new Stack<>();
         whileEnds = new Stack<>();
-        storeParams(fParams, funcSymTab);
+        HashMap<Symbol, FParam> symbol2FParam = new HashMap<>();
+        parseParams(fParams, funcSymTab, symbol2FParam);
+        init(returnType, funcSymTab);
+        storeParams(symbol2FParam);
         parseCodeBlock(block, returnType, funcSymTab);
-        finaLize(returnType, funcSymTab);
+        finalize(returnType, funcSymTab);
     }
 
-    private void finaLize(DataType returnType, SymTab funcSymTab) {
+    private void finalize(DataType returnType, SymTab funcSymTab) {
         if (returnType == null) {
             throw new RuntimeException("会不会写函数啊，小老弟？！");
         }
@@ -95,11 +95,10 @@ public class Procedure {
         }
     }
 
-    private void storeParams(List<Ast.FuncFParam> fParams, SymTab symTab) {
+    private void parseParams(List<Ast.FuncFParam> fParams, SymTab symTab, HashMap<Symbol, FParam> symbol2FParam) {
         if (fParams == null || symTab == null) {
             throw new NullPointerException();
         }
-        HashMap<Symbol, FParam> symbol2FParam = new HashMap<>();
         String name;
         DataType dataType;
         for (Ast.FuncFParam param : fParams) {
@@ -110,19 +109,33 @@ public class Procedure {
                 default: throw new RuntimeException("出现了未曾设想的类型");
             }
             List<Integer> limList = new ArrayList<>();
+            Value initVal = null;
             if (param.isArray()) {
-                // todo
-                throw new RuntimeException("暂时无法处理数组");
+                limList.add(-1);    // 第一维长度不定，暂且记为 -1
+                for (Ast.Exp exp : param.getArrayItemList()) {
+                    if (exp.checkConstType(symTab) != DataType.INT) {
+                        throw new RuntimeException("数组长度必须能计算到确定的整数");
+                    }
+                    limList.add(exp.getConstInt(symTab));
+                }
+                initVal = new ArrayInitVal(dataType, limList);
             }
-            Symbol symbol = new Symbol(name, dataType, limList, false, false, null);
+            Symbol symbol = new Symbol(name, dataType, limList, false, false, initVal);
             symTab.addSym(symbol);
             symbol2FParam.put(symbol, new FParam(curRegIndex++, dataType));
+            fParamSymbolList.add(symbol);
         }
-        
+    }
+    
+    private void storeParams(HashMap<Symbol, FParam> symbol2FParam) {
         for (Symbol symbol : symbol2FParam.keySet()) {
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol, curBlock));
             curBlock.addInstruction(new StoreInstr(symbol2FParam.get(symbol), symbol, curBlock));
         }
+    }
+    
+    public List<Symbol> getFParamSymbolList() {
+        return this.fParamSymbolList;
     }
     
     public void parseCodeBlock(Ast.Block block, DataType returnType, SymTab symTab) {
@@ -298,7 +311,7 @@ public class Procedure {
         }
         if (left.isArray()) {
             List<Value> indexList = getIndexList(lVal, symTab);
-            Instruction ptr = new GEPInstr(curRegIndex++, indexList, left, curBlock);
+            Instruction ptr = getPtr(left, indexList);
             curBlock.addInstruction(ptr);
             curBlock.addInstruction(new StoreInstr(right, left, ptr, curBlock));
         } else {
@@ -578,7 +591,7 @@ public class Procedure {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
                 if (symbol.isArray()) {
                     List<Value> indexList = getIndexList((Ast.LVal) primary, symTab);
-                    GEPInstr ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+                    GEPInstr ptr = getPtr(symbol, indexList);
                     curBlock.addInstruction(ptr);
                     if (ptr.getPointerLevel() == 1) {
                         Instruction load = new LoadInstr(curRegIndex++, symbol, ptr, curBlock);
@@ -642,7 +655,19 @@ public class Procedure {
         }
     }
     
-    List<Value> getIndexList(Ast.LVal lVal, SymTab symTab) {
+    private GEPInstr getPtr(Symbol symbol, List<Value> indexList){
+        GEPInstr ptr;
+        if (symbol.isArrayFParam()) {
+            LoadInstr load = new LoadInstr(curRegIndex++, symbol, curBlock);
+            curBlock.addInstruction(load);
+            ptr = new GEPInstr(curRegIndex++, load, indexList, curBlock);
+        } else {
+            ptr = new GEPInstr(curRegIndex++, indexList, symbol, curBlock);
+        }
+        return ptr;
+    }
+    
+    private List<Value> getIndexList(Ast.LVal lVal, SymTab symTab) {
         if (lVal == null) {
             throw new NullPointerException();
         }
@@ -661,7 +686,7 @@ public class Procedure {
         return indexList;
     }
     
-    Value dealCall(Ast.Call call, SymTab symTab) {
+    private Value dealCall(Ast.Call call, SymTab symTab) {
         if (call == null) {
             throw new NullPointerException();
         }

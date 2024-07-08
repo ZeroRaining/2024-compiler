@@ -1,6 +1,4 @@
-import backend.BackendPrinter;
-import backend.IrParser;
-import backend.itemStructure.AsmModule;
+import arg.Arg;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Program;
 import frontend.lexer.Token;
@@ -12,36 +10,29 @@ import midend.SSA.DFG;
 import midend.SSA.Mem2Reg;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
         //解析命令行
-        //Arg arg = Arg.parse(args);
-        //BufferedInputStream source = new BufferedInputStream(arg.srcStream);
+        Arg arg = Arg.parse(args);
+        BufferedInputStream source = new BufferedInputStream(arg.getSrcStream());
+        // asm 输出流还没有哦
 
         //词法分析，得到TokenList
-        //TokenList tokenList = Lexer.getInstance().lex(source);
-
+        TokenList tokenList = Lexer.getInstance().lex(source);
         //语法分析，得到AST
-        //Ast ast = new Parser(tokenList).parseAst();
-
+        Ast ast = new Parser(tokenList).parseAst();
         //IR生成
-        //Program program = new Program(ast);
+        Program program = new Program(ast);
+        if (arg.toPrintIR()) {
+            BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
+            program.printIR(irWriter);
+            irWriter.close();
+        }
 
-        //词法分析测试
-        //LexerTest();
-
-        //语法分析测试
-        //ParserTest();
-
-        //IR生成测试
-        //IRTest();
-
-        //irParser测试
-        IRParserTest();
+        // IR生成测试
+        // IRTest();
     }
 
     public static void LexerTest() throws IOException {
@@ -78,24 +69,5 @@ public class Compiler {
         program.printIR(writer);
         writer.close();
     }
-
-    public static void IRParserTest() throws IOException {
-        //语法分析测试
-        FileInputStream in = new FileInputStream("in.sy");
-        BufferedInputStream source = new BufferedInputStream(in);
-        TokenList tokenList = Lexer.getInstance().lex(source);
-        Ast ast = new Parser(tokenList).parseAst();
-        Program program = new Program(ast);
-//        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
-//        DFG dfg = new DFG(functions);
-//        Mem2Reg mem2Reg = new Mem2Reg(functions);
-        BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
-        program.printIR(writer);
-//        writer.close();
-
-        //IRParser测试
-        AsmModule asmModule = new IrParser(program).parse();
-        new BackendPrinter(asmModule).printBackend();
-    }
 }
-
+//

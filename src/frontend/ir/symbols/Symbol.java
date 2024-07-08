@@ -104,4 +104,8 @@ public class Symbol {
         }
         return size;
     }
+    
+    public boolean isArrayFParam() {
+        return !limitList.isEmpty() && limitList.get(0) == -1;
+    }
 }
