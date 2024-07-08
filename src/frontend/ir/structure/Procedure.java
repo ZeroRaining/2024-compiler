@@ -359,7 +359,9 @@ public class Procedure {
                 }
                 
             }
-            symTab.addSym(symbol);
+            if (!symbol.isConstant()) {
+                symTab.addSym(symbol);
+            }
         }
     }
 
