@@ -35,10 +35,10 @@ public class Compiler {
 //        }
 
         // IR生成测试
-        //IRTest();
+        IRTest();
 
         //后端代码生成测试
-        CodeGenTest();
+        //CodeGenTest();
     }
 
     public static void LexerTest() throws IOException {

@@ -924,7 +924,10 @@ public class IrParser {
         AsmFunction asmFunction = funcMap.get(f);
         AsmBlock asmBlock = blockMap.get(bb);
         List<Value> indexList = instr.getIndexList();
-        AsmOperand base;
+        AsmOperand base = parseOperand(instr.getPtrVal(), 0, f, bb);
+        AsmOperand result = parseOperand(instr, 0, f, bb);
+        AsmMove asmMove = new AsmMove(result, base);
+        asmBlock.addInstrTail(asmMove);
 
 
     }
