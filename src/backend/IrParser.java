@@ -246,8 +246,7 @@ public class IrParser {
         else if (instr instanceof CallInstr)
             parseCall((CallInstr) instr, bb, f);
         else if (instr instanceof GEPInstr)
-            assert true;
-            //parseGEP((GEPInstr) instr, bb, f);
+            parseGEP((GEPInstr) instr, bb, f);
             /*else if(instr instanceof Move)*/
         else if (instr instanceof ConversionOperation)
             parseConv((ConversionOperation) instr, bb, f);
@@ -319,13 +318,23 @@ public class IrParser {
             }
         } else if (instr.getPointerLevel() != 0) {
             AsmOperand dst = parseOperand(instr, 0, f, bb);
-            AsmOperand src = parseOperand(addr.getAllocValue(), 0, f, bb);
+            AsmOperand src;
+            if (instr.getPtr() != null) {
+                src = parseOperand(instr.getPtr(), 0, f, bb);
+            } else {
+                src = parseOperand(addr.getAllocValue(), 0, f, bb);
+            }
             AsmOperand offset = new AsmImm12(0);
             AsmLd asmLd = new AsmLd(dst, src, offset);
             asmBlock.addInstrTail(asmLd);
         } else {
             AsmOperand dst = parseOperand(instr, 0, f, bb);
-            AsmOperand src = parseOperand(addr.getAllocValue(), 0, f, bb);
+            AsmOperand src;
+            if (instr.getPtr() != null) {
+                src = parseOperand(instr.getPtr(), 0, f, bb);
+            } else {
+                src = parseOperand(addr.getAllocValue(), 0, f, bb);
+            }
             AsmOperand offset = new AsmImm12(0);
             if (dst instanceof AsmVirReg) {
                 AsmLw asmLw = new AsmLw(dst, src, offset);
@@ -358,13 +367,23 @@ public class IrParser {
             }
         } else if (instr.getPointerLevel() != 0) {
             AsmOperand src = parseOperand(instr.getValue(), 0, f, bb);
-            AsmOperand dst = parseOperand(addr.getAllocValue(), 0, f, bb);
+            AsmOperand dst;
+            if (instr.getPtr() != null) {
+                dst = parseOperand(instr.getPtr(), 0, f, bb);
+            } else {
+                dst = parseOperand(addr.getAllocValue(), 0, f, bb);
+            }
             AsmOperand offset = new AsmImm12(0);
             AsmSd asmSd = new AsmSd(src, dst, offset);
             asmBlock.addInstrTail(asmSd);
         } else {
             AsmOperand src = parseOperand(instr.getValue(), 0, f, bb);
-            AsmOperand dst = parseOperand(addr.getAllocValue(), 0, f, bb);
+            AsmOperand dst;
+            if (instr.getPtr() != null) {
+                dst = parseOperand(instr.getPtr(), 0, f, bb);
+            } else {
+                dst = parseOperand(addr.getAllocValue(), 0, f, bb);
+            }
             AsmOperand offset = new AsmImm12(0);
             if (src instanceof AsmVirReg) {
                 AsmSw asmSw = new AsmSw(src, dst, offset);
@@ -920,7 +939,6 @@ public class IrParser {
     }
 
     private void parseGEP(GEPInstr instr, BasicBlock bb, Function f) {
-        //TODO:result的value形式
         AsmFunction asmFunction = funcMap.get(f);
         AsmBlock asmBlock = blockMap.get(bb);
         List<Value> indexList = instr.getIndexList();
@@ -928,8 +946,24 @@ public class IrParser {
         AsmOperand result = parseOperand(instr, 0, f, bb);
         AsmMove asmMove = new AsmMove(result, base);
         asmBlock.addInstrTail(asmMove);
-
-
+        List<Integer> sizeList = instr.getSizeList();
+        int offset = 0;
+        for (int i = 0; i < sizeList.size(); i++) {
+            if (indexList.get(i) instanceof ConstInt) {
+                int index = ((ConstInt) indexList.get(i)).getNumber();
+                offset = index * sizeList.get(i) * 4;
+                if (offset != 0) {
+                    AsmAdd asmAdd = new AsmAdd(result, result, parseConstIntOperand(offset, 12, f, bb));
+                    asmBlock.addInstrTail(asmAdd);
+                }
+            } else {
+                AsmOperand index = parseOperand(indexList.get(i), 0, f, bb);
+                AsmMul asmMul = new AsmMul(index, index, parseConstIntOperand(sizeList.get(i) * 4, 12, f, bb));
+                asmBlock.addInstrTail(asmMul);
+                AsmAdd asmAdd = new AsmAdd(result, result, index);
+                asmBlock.addInstrTail(asmAdd);
+            }
+        }
     }
 
     private AsmOperand parseOperand(Value irValue, int maxImm, Function irFunction, BasicBlock bb) {

@@ -18,7 +18,7 @@ public class GEPInstr extends MemoryOperation {
     private final List<Value> indexList;
     private final String arrayTypeName;
     private final Value ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
-    
+
     public GEPInstr(int result, List<Value> indexList, Symbol symbol) {
         super(symbol);
         if (indexList == null) {
@@ -34,7 +34,7 @@ public class GEPInstr extends MemoryOperation {
             setUse(value);
         }
     }
-    
+
     public GEPInstr(int result, GEPInstr base) {
         super(base.symbol);
         this.result = result;
@@ -45,7 +45,7 @@ public class GEPInstr extends MemoryOperation {
         this.ptrVal = base;
         setUse(base);
     }
-    
+
     public GEPInstr(int result, LoadInstr base, List<Value> indexList) {
         super(base.symbol);
         this.result = result;
@@ -56,12 +56,12 @@ public class GEPInstr extends MemoryOperation {
         this.ptrVal = base;
         setUse(base);
     }
-    
+
     @Override
     public String type2string() {
         return this.printBaseType() + "*";
     }
-    
+
     @Override
     public String printBaseType() {
         if (this.pointerLevel > 1) {
@@ -81,16 +81,27 @@ public class GEPInstr extends MemoryOperation {
             return this.symbol.getType().toString();
         }
     }
-    
+
+    public List<Integer> getSizeList() {
+        List<Integer> sizeList = new ArrayList<>();
+        sizeList.add(1);
+        int size = symbol.getLimitList().size();
+        for (int i = size - 1; i >= 0; i--) {
+            sizeList.add(0, sizeList.get(0) * symbol.getLimitList().get(i));
+        }
+        sizeList.remove(0);
+        return sizeList;
+    }
+
     public Value getPtrVal() {
         return ptrVal;
     }
-    
+
     @Override
     public Number getNumber() {
         return result;
     }
-    
+
     @Override
     public String print() {
         StringBuilder stringBuilder = new StringBuilder();
@@ -106,7 +117,7 @@ public class GEPInstr extends MemoryOperation {
         }
         return stringBuilder.toString();
     }
-    
+
     @Override
     public void modifyValue(Value from, Value to) {
         throw new RuntimeException("没有可以置换的 value");

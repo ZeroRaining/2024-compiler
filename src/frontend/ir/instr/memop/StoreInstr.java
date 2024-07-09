@@ -67,4 +67,8 @@ public class StoreInstr extends MemoryOperation {
     public Symbol getSymbol() {
         return symbol;
     }
+
+    public Value getPtr() {
+        return ptr;
+    }
 }

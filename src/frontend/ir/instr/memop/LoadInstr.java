@@ -58,4 +58,8 @@ public class LoadInstr extends MemoryOperation {
     public Symbol getSymbol() {
         return symbol;
     }
+
+    public Value getPtr() {
+        return ptr;
+    }
 }

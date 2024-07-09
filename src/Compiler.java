@@ -35,10 +35,10 @@ public class Compiler {
 //        }
 
         // IR生成测试
-        IRTest();
+        //IRTest();
 
         //后端代码生成测试
-        //CodeGenTest();
+        CodeGenTest();
     }
 
     public static void LexerTest() throws IOException {
@@ -85,7 +85,7 @@ public class Compiler {
         Program program = new Program(ast);
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
         DFG.doDFG(functions);
-        Mem2Reg.doMem2Reg(functions);
+        //Mem2Reg.doMem2Reg(functions);
         BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
         program.printIR(writer);
         writer.close();
