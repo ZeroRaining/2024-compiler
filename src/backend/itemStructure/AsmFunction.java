@@ -44,4 +44,8 @@ public class AsmFunction {
     public void addUsedVirReg(AsmReg reg) {
         usedVirRegs.add(reg);
     }
+
+    public CustomList getBlocks() {
+        return blocks;
+    }
 }

@@ -18,4 +18,12 @@ public class AsmLS extends AsmInstr {
         addUseReg(this.offset, offset);
         this.offset = offset;
     }
+
+    public AsmOperand getDst() {
+        return dst;
+    }
+
+    public AsmOperand getSrc() {
+        return src;
+    }
 }
