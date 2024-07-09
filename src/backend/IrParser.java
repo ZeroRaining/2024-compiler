@@ -919,6 +919,16 @@ public class IrParser {
         }
     }
 
+    private void parseGEP(GEPInstr instr, BasicBlock bb, Function f) {
+        //TODO:result的value形式
+        AsmFunction asmFunction = funcMap.get(f);
+        AsmBlock asmBlock = blockMap.get(bb);
+        List<Value> indexList = instr.getIndexList();
+        AsmOperand base;
+
+
+    }
+
     private AsmOperand parseOperand(Value irValue, int maxImm, Function irFunction, BasicBlock bb) {
         if (operandMap.containsKey(irValue)) {
             AsmOperand asmOperand = operandMap.get(irValue);
