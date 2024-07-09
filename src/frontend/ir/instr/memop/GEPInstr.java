@@ -17,7 +17,7 @@ public class GEPInstr extends MemoryOperation {
     private final int result;
     private final List<Value> indexList;
     private final String arrayTypeName;
-    private final String ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
+    private final Value ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
     
     public GEPInstr(int result, List<Value> indexList, Symbol symbol) {
         super(symbol);
@@ -28,11 +28,7 @@ public class GEPInstr extends MemoryOperation {
         this.indexList = indexList;
         this.pointerLevel = symbol.getDim() + 1 - indexList.size();
         this.arrayTypeName = symbol.printArrayTypeName();
-        if (symbol.isGlobal()) {
-            this.ptrVal = "@" + symbol.getName();
-        } else {
-            this.ptrVal = symbol.getAllocValue().value2string();
-        }
+        this.ptrVal = symbol.getAllocValue();
         setUse(symbol.getAllocValue());
         for (Value value : indexList) {
             setUse(value);
@@ -46,7 +42,7 @@ public class GEPInstr extends MemoryOperation {
         indexList.add(new ConstInt(0));
         this.pointerLevel = base.pointerLevel - 1;
         this.arrayTypeName = base.printBaseType();
-        this.ptrVal = base.value2string();
+        this.ptrVal = base;
         setUse(base);
     }
     
@@ -57,7 +53,7 @@ public class GEPInstr extends MemoryOperation {
         this.pointerLevel = symbol.getDim() + 1 - indexList.size();
         String superType = base.printBaseType();
         this.arrayTypeName = superType.substring(0, superType.length() - 1);
-        this.ptrVal = base.value2string();
+        this.ptrVal = base;
         setUse(base);
     }
     
@@ -86,6 +82,10 @@ public class GEPInstr extends MemoryOperation {
         }
     }
     
+    public Value getPtrVal() {
+        return ptrVal;
+    }
+    
     @Override
     public Number getNumber() {
         return result;
@@ -97,7 +97,7 @@ public class GEPInstr extends MemoryOperation {
         stringBuilder.append("%reg_").append(result).append(" = getelementptr ");
         stringBuilder.append(arrayTypeName).append(", ");
         stringBuilder.append(arrayTypeName).append("* ");
-        stringBuilder.append(ptrVal);
+        stringBuilder.append(ptrVal.value2string());
         if (!symbol.isArrayFParam()) {
             stringBuilder.append(", i64 0");
         }
