@@ -10,8 +10,7 @@ public class BranchInstr extends Instruction {
     private BasicBlock thenTarget;
     private BasicBlock elseTarget;
 
-    public BranchInstr(Value cond, BasicBlock thenTarget, BasicBlock elseTarget, BasicBlock parent) {
-        super(parent);
+    public BranchInstr(Value cond, BasicBlock thenTarget, BasicBlock elseTarget) {
         this.condition = cond;
         this.thenTarget = thenTarget;
         this.elseTarget = elseTarget;
@@ -33,8 +32,8 @@ public class BranchInstr extends Instruction {
     }
 
     @Override
-    public Number getValue() {
-        return -1;
+    public Number getNumber() {
+        throw new RuntimeException("no value in branch");
     }
 
     @Override
@@ -45,7 +44,12 @@ public class BranchInstr extends Instruction {
     @Override
     public String print() {
         return "br " + getCond().getDataType() + " " + condition.value2string() +
-                ", label %blk_" + getThenTarget().getLabelCnt() + ", label %blk_" + getElseTarget().getLabelCnt();
+                ", label %" + getThenTarget().value2string() + ", label %" + getElseTarget().value2string();
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        throw new RuntimeException("没有可以置换的 value");
     }
 }
 

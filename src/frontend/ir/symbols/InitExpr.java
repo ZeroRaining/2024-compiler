@@ -17,7 +17,7 @@ public class InitExpr extends Value {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         throw new RuntimeException("占位类，该方法不应该被调用");
     }
     

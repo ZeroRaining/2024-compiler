@@ -10,10 +10,14 @@ import frontend.ir.structure.BasicBlock;
 
 import java.util.HashSet;
 
-public class AsmBlock extends Node{
-    private int index = 0;
-    private CustomList instrs=new CustomList();
+public class AsmBlock extends Node {
+    private String name;
+    private int index;
 
+    private CustomList instrs = new CustomList();
+    public AsmBlock(String name) {
+        this.name = name;
+    }
     public HashSet<AsmBlock> sucs = new HashSet<>();
     public HashSet<AsmBlock> pres = new HashSet<>();
     public HashSet<AsmBlock> doms = new HashSet<>();
@@ -23,7 +27,6 @@ public class AsmBlock extends Node{
 
     public HashSet<AsmReg> LiveIn = new HashSet<>();
     public HashSet<AsmReg> LiveOut = new HashSet<>();
-
     public HashSet<AsmReg> getDef() {
         return def;
     }
@@ -35,6 +38,7 @@ public class AsmBlock extends Node{
     public AsmBlock(int index) {
         this.index = index;
     }
+
     public void addInstrHead(AsmInstr instr) {
         instrs.addToHead(instr);
     }

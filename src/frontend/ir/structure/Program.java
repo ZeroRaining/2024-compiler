@@ -30,10 +30,7 @@ public class Program {
                 }
                 functions.put(funcName, new Function((Ast.FuncDef) compUnit, globalSymTab));
             } else if (compUnit instanceof Ast.Decl) {
-                List<Symbol> newSymList = globalSymTab.parseNewSymbols((Ast.Decl) compUnit);
-                for (Symbol symbol : newSymList) {
-                    globalSymTab.addSym(symbol);
-                }
+                globalSymTab.parseNewSymbols((Ast.Decl) compUnit);
             } else {
                 throw new RuntimeException("未定义的编译单元");
             }
@@ -56,8 +53,8 @@ public class Program {
         }
     }
 
-    public HashSet<Symbol> getGlobalVars() {
-        return globalSymTab.getSymbolSet();
+    public List<Symbol> getGlobalVars() {
+        return globalSymTab.getSymbolList();
     }
     public HashMap<String, Function> getFunctions(){
         return functions;
@@ -72,7 +69,12 @@ public class Program {
         }
         for (Symbol symbol : globalSymTab.getAllSym()) {
             writer.append("@").append(symbol.getName()).append(" = global ");
-            writer.append(symbol.getType().toString()).append(" ");
+            if (symbol.isArray()) {
+                writer.append(symbol.printArrayTypeName());
+            } else {
+                writer.append(symbol.getType().toString());
+            }
+            writer.append(" ");
             writer.append(symbol.getInitVal().value2string()).append("\n");
         }
         writer.append("\n");

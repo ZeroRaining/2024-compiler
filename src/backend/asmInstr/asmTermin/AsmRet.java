@@ -1,4 +1,4 @@
-package backend.asmInstr.asmRet;
+package backend.asmInstr.asmTermin;
 
 import backend.asmInstr.AsmInstr;
 

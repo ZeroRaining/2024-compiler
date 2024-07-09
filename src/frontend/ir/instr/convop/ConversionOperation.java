@@ -7,15 +7,14 @@ import frontend.ir.instr.Instruction;
 
 public abstract class ConversionOperation extends Instruction {
     private final int result;
-    private final DataType form;
+    private final DataType from;
     private final DataType to;
-    private final Value value;
+    private Value value;
     private final String opName;
     
-    public ConversionOperation(int result, DataType form, DataType to, Value value, String name, BasicBlock parentBB) {
-        super(parentBB);
+    public ConversionOperation(int result, DataType from, DataType to, Value value, String name) {
         this.result = result;
-        this.form   = form;
+        this.from = from;
         this.to     = to;
         this.value  = value;
         this.opName = name;
@@ -23,7 +22,7 @@ public abstract class ConversionOperation extends Instruction {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         return result;
     }
     
@@ -34,8 +33,25 @@ public abstract class ConversionOperation extends Instruction {
     
     @Override
     public String print() {
-        return "%" + result + " = " +
-                opName + " " + form + " " +
+        return "%reg_" + result + " = " +
+                opName + " " + from + " " +
                 value.value2string() + " to " + to;
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        if (value == from) {
+            value = to;
+        } else {
+            throw new RuntimeException();
+        }
+    }
+
+    public Value getValue() {
+        return value;
+    }
+
+    public String getOpName() {
+        return opName;
     }
 }

@@ -6,8 +6,7 @@ import frontend.ir.Value;
 import java.util.List;
 
 public class FuncGetch extends LibFunc{
-    public FuncGetch(List<Value> rParams) {
-        super(rParams);
+    public FuncGetch() {
     }
     
     @Override

@@ -6,4 +6,5 @@ public enum AsmType {
     FLOAT,
     VOID,
     ARRAY,
+    POINTER,
 }

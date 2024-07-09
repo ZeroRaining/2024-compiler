@@ -4,10 +4,9 @@ package frontend.syntax;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
+import frontend.ir.symbols.ArrayInitVal;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
-import frontend.ir.constvalue.ConstFloat;
-import frontend.ir.symbols.InitVal;
 import frontend.ir.constvalue.ConstInt;
 import frontend.lexer.Token;
 import frontend.lexer.TokenType;
@@ -103,6 +102,10 @@ public class Ast {
             this.initList = initList;
             assert initList != null;
         }
+        
+        public List<Init> getInitList() {
+            return initList;
+        }
     }
     
     // FuncDef -> FuncType Ident '(' [FuncFParams] ')' Block
@@ -149,6 +152,16 @@ public class Ast {
         private final Token ident;
         private final boolean array; // whether it is an array
         private final ArrayList<Exp> arrayItemList; // array sizes of each dim
+        public static final FuncFParam INT_PARAM = new FuncFParam(
+                new Token(TokenType.INT, "0"),
+                new Token(TokenType.IDENT, ""),
+                false, null
+        );
+        public static final FuncFParam FLOAT_PARAM = new FuncFParam(
+                new Token(TokenType.FLOAT, "0"),
+                new Token(TokenType.IDENT, ""),
+                false, null
+        );
         
         public FuncFParam(Token type, Token ident, boolean array, ArrayList<Exp> arrayItemList) {
             this.type = type;
@@ -457,6 +470,11 @@ public class Ast {
                 return DataType.VOID;
             } else if (primary instanceof LVal) {
                 Symbol symbol = symTab.getSym(((LVal) primary).getName());
+                for (Exp index : ((LVal) primary).getIndexList()) {
+                    if (index.checkConstType(symTab) != DataType.INT) {
+                        return DataType.VOID;
+                    }
+                }
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     return symbol.getType();
                 } else {
@@ -482,24 +500,41 @@ public class Ast {
             if (primary instanceof Exp) {
                 ret = ((Exp) primary).getConstInt(symTab) * sign;
             } else if (primary instanceof Call) {
-                return null;
+                throw new RuntimeException();
             } else if (primary instanceof LVal) {
                 Symbol symbol = symTab.getSym(((LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     Value initVal = symbol.getInitVal();
-                    if (initVal instanceof ConstInt) {
-                        ret = initVal.getValue().intValue() * sign;
+                    if (symbol.isArray()) {
+                        ArrayList<Integer> indexList = new ArrayList<>();
+                        for (Exp index : ((LVal) primary).getIndexList()) {
+                            indexList.add(index.getConstInt(symTab));
+                        }
+                        if (initVal instanceof ArrayInitVal) {
+                            Value val = ((ArrayInitVal) initVal).getValueWithIndex(indexList);
+                            if (val instanceof ConstInt) {
+                                ret = ((ConstInt) val).getNumber() * sign;
+                            } else {
+                                throw new RuntimeException();
+                            }
+                        } else {
+                            throw new RuntimeException();
+                        }
                     } else {
-                        return null;
+                        if (initVal instanceof ConstInt) {
+                            ret = initVal.getNumber().intValue() * sign;
+                        } else {
+                            throw new RuntimeException();
+                        }
                     }
                 } else {
-                    return null;
+                    throw new RuntimeException();
                 }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
                     ret = ((Number) primary).getIntConstValue() * sign;
                 } else if (((Number) primary).isFloatConst) {
-                    return null;
+                    throw new RuntimeException();
                 } else {
                     throw new RuntimeException("出现了未定义的数值常量类型");
                 }
@@ -519,18 +554,35 @@ public class Ast {
             if (primary instanceof Exp) {
                 ret = ((Exp) primary).getConstFloat(symTab) * sign;
             } else if (primary instanceof Call) {
-                return null;
+                throw new RuntimeException();
             } else if (primary instanceof LVal) {
                 Symbol symbol = symTab.getSym(((LVal) primary).getName());
                 if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
                     Value initVal = symbol.getInitVal();
-                    if (initVal instanceof ConstValue) {
-                        ret = initVal.getValue().floatValue() * sign;
+                    if (symbol.isArray()) {
+                        ArrayList<Integer> indexList = new ArrayList<>();
+                        for (Exp index : ((LVal) primary).getIndexList()) {
+                            indexList.add(index.getConstInt(symTab));
+                        }
+                        if (initVal instanceof ArrayInitVal) {
+                            Value val = ((ArrayInitVal) initVal).getValueWithIndex(indexList);
+                            if (val instanceof ConstValue) {
+                                ret = val.getNumber().floatValue() * sign;
+                            } else {
+                                throw new RuntimeException();
+                            }
+                        } else {
+                            throw new RuntimeException();
+                        }
                     } else {
-                        return null;
+                        if (initVal instanceof ConstValue) {
+                            ret = initVal.getNumber().floatValue() * sign;
+                        } else {
+                            throw new RuntimeException();
+                        }
                     }
                 } else {
-                    return null;
+                    throw new RuntimeException();
                 }
             } else if (primary instanceof Number) {
                 if (((Number) primary).isIntConst) {
@@ -557,8 +609,8 @@ public class Ast {
     // LVal -> Ident {'[' Exp ']'}
     public static class LVal implements PrimaryExp {
         
-        private Token ident;
-        private ArrayList<Exp> indexList;
+        private final Token ident;
+        private final ArrayList<Exp> indexList;
         
         public LVal(Token ident, ArrayList<Exp> indexList) {
             this.ident = ident;

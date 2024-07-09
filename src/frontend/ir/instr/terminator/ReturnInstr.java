@@ -7,10 +7,9 @@ import frontend.ir.instr.Instruction;
 
 public class ReturnInstr extends Instruction {
     private final DataType returnType;
-    private final Value returnValue;
+    private Value returnValue;
     
-    public ReturnInstr(DataType returnType, BasicBlock parentBB) {
-        super(parentBB);
+    public ReturnInstr(DataType returnType) {
         if (returnType != DataType.VOID) {
             throw new RuntimeException("在应该返回值的函数中没有返回值");
         }
@@ -21,17 +20,17 @@ public class ReturnInstr extends Instruction {
     /**
      * 保证了传入的 Value 的数据类型与要求的返回值类型一致
      */
-    public ReturnInstr(DataType returnType, Value returnValue, BasicBlock parentBB) {
-        super(parentBB);
+    public ReturnInstr(DataType returnType, Value returnValue) {
         if (returnType == DataType.VOID) {
             throw new RuntimeException("在不该返回值的函数中返回值了");
         }
         this.returnType = returnType;
         this.returnValue = returnValue;
+        setUse(returnValue);
     }
     
     @Override
-    public Integer getValue() {
+    public Integer getNumber() {
         return -1;
     }
     
@@ -55,5 +54,14 @@ public class ReturnInstr extends Instruction {
 
     public Value getReturnValue() {
         return returnValue;
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        if (returnValue == from) {
+            returnValue = to;
+        } else {
+            throw new RuntimeException();
+        }
     }
 }

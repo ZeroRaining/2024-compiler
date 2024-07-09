@@ -6,10 +6,7 @@ import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.syntax.Ast;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class SymTab {
     private final HashMap<String, Symbol> symbolMap = new HashMap<>();
@@ -32,7 +29,7 @@ public class SymTab {
             return symbolMap.get(sym);
         }
         if (parent == null) {
-            return null;
+            throw new RuntimeException("No such symbol");
         }
         return parent.getSym(sym);
     }
@@ -74,7 +71,9 @@ public class SymTab {
             Value initVal;
             Ast.Init init = def.getInit();
             if (init != null) {
-                initVal = InitVal.createInitVal(dataType, init, this);
+                initVal = createInitVal(dataType, init, limList);
+            } else if (!limList.isEmpty()) {
+                initVal = new ArrayInitVal(dataType, limList);
             } else if (isGlobal()) {
                 initVal = dataType == DataType.FLOAT ? new ConstFloat(0.0f) :
                                                        new ConstInt(0);
@@ -83,16 +82,100 @@ public class SymTab {
             }
             Symbol symbol = new Symbol(name, dataType, limList, constant, parent == null, initVal);
             newSymList.add(symbol);
+            if (isGlobal() || constant) {
+                // 对于全局对象和不可变对象，定义过程中可以直接算出结果，而且不涉及局部对全局的覆盖，故可以直接解析一个把一个加到表里
+                this.addSym(symbol);
+            }
         }
         return newSymList;
+    }
+    
+    private Value createInitVal(DataType type, Ast.Init init, List<Integer> limList) {
+        if (init instanceof Ast.Exp) {
+            return dealNonArrayInit(type, (Ast.Exp) init);
+        } else if (init instanceof Ast.InitArray) {
+            return dealArrayInit(type, ((Ast.InitArray) init).getInitList(), limList);
+        } else {
+            throw new RuntimeException("奇怪的定义类型");
+        }
+    }
+    
+    private Value dealNonArrayInit(DataType type, Ast.Exp init) {
+        if (type == null || init == null) {
+            throw new NullPointerException();
+        }
+        switch (init.checkConstType(this)) {
+            case INT:
+                if (type == DataType.INT) {
+                    return new ConstInt(init.getConstInt(this));
+                } else if (type == DataType.FLOAT) {
+                    return new ConstFloat(init.getConstInt(this).floatValue());
+                }
+                else {
+                    throw new RuntimeException("你给我传了个什么鬼类型啊");
+                }
+            case FLOAT:
+                if (type == DataType.INT) {
+                    return new ConstInt(init.getConstFloat(this).intValue());
+                } else if (type == DataType.FLOAT) {
+                    return new ConstFloat(init.getConstFloat(this));
+                } else {
+                    throw new RuntimeException("你给我传了个什么鬼类型啊");
+                }
+            default:
+                if (this.isGlobal()) {
+                    throw new RuntimeException("全局变量初始值似乎不是确定值");
+                }
+                return new InitExpr(init);
+        }
+    }
+    
+    private Value dealArrayInit(DataType type, List<Ast.Init> initList, List<Integer> limList) {
+        if (type == null || initList == null) {
+            throw new NullPointerException();
+        }
+        int dim = limList.size();
+        if (dim < 1) {
+            throw new RuntimeException("不是，哥们，你这数组连一个维度都没有的吗？");
+        }
+        
+        ArrayInitVal myInitVal = new ArrayInitVal(type, limList);
+        Iterator<Ast.Init> it = initList.iterator();
+        
+        if (dim == 1) {
+            while (it.hasNext() && !myInitVal.isFull()) {
+                Ast.Init init = it.next();
+                if (init instanceof Ast.Exp) {
+                    myInitVal.addInitValue(dealNonArrayInit(type, (Ast.Exp) init));
+                } else {
+                    throw new RuntimeException("一维数组的初始化元素必须是表达式");
+                }
+                it.remove();
+            }
+        } else {
+            List<Integer> nextLimList = limList.subList(1, limList.size());
+            while (it.hasNext() && !myInitVal.isFull()) {
+                Ast.Init init = it.next();
+                if (init instanceof Ast.InitArray) {
+                    List<Ast.Init> nextInitList = ((Ast.InitArray) init).getInitList();
+                    myInitVal.addInitValue(dealArrayInit(type, nextInitList, nextLimList));
+                    it.remove();
+                } else {
+                    myInitVal.addInitValue(dealArrayInit(type, initList, nextLimList));
+                    it = initList.iterator();
+                }
+            }
+        }
+        
+        return myInitVal;
     }
     
     public boolean isGlobal() {
         return parent == null;
     }
 
-    public HashSet<Symbol> getSymbolSet() {
-        return new HashSet<>(symbolMap.values());
+    public List<Symbol> getSymbolList() {
+        return new ArrayList<>(symbolMap.values());
     }
 
     public List<Symbol> getAllSym() {

@@ -4,7 +4,7 @@ import backend.asmInstr.AsmInstr;
 import backend.itemStructure.AsmOperand;
 
 public class AsmBinary extends AsmInstr {
-    private AsmOperand dst, src1, src2;
+    protected AsmOperand dst, src1, src2;
 
     public AsmBinary(AsmOperand dst, AsmOperand src1, AsmOperand src2) {
         changeDef(dst);

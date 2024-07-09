@@ -9,7 +9,7 @@ public class ConstInt extends ConstValue {
     }
     
     @Override
-    public Integer getValue() {
+    public Integer getNumber() {
         return value;
     }
     

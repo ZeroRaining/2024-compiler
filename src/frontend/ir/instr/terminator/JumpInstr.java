@@ -1,16 +1,14 @@
 package frontend.ir.instr.terminator;
 
+import frontend.ir.Value;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
-import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
-import frontend.ir.symbols.SymTab;
 
 public class JumpInstr extends Instruction {
     private BasicBlock Target;
 
-    public JumpInstr(BasicBlock Target, BasicBlock parent) {
-        super(parent);
+    public JumpInstr(BasicBlock Target) {
         this.Target = Target;
         setUse(Target);
     }
@@ -20,7 +18,7 @@ public class JumpInstr extends Instruction {
     }
 
     @Override
-    public Integer getValue() {
+    public Integer getNumber() {
         return -1;
     }
 
@@ -31,6 +29,11 @@ public class JumpInstr extends Instruction {
 
     @Override
     public String print() {
-        return "br label %blk_" + Target.getLabelCnt();
+        return "br label %" + Target.value2string();
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        throw new RuntimeException("没有可以置换的 value");
     }
 }

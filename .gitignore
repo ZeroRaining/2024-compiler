@@ -3,3 +3,5 @@
 /out
 /out.ll
 /*.iml
+/*.s
+/src/META-INF/

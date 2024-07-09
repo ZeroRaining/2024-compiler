@@ -11,81 +11,136 @@ import frontend.ir.structure.Function;
 import java.util.*;
 
 public class DFG {
-    private Queue<Integer> worklist;
-    private HashMap<Integer, Boolean> visited;
-    private HashMap<Integer, Boolean> placed;
-    private ArrayList<Function> functions;
-    public DFG(ArrayList<Function> functions) {
-        worklist = new LinkedList<Integer>();
-        visited = new HashMap<>();
-        placed = new HashMap<>();
-        this.functions = functions;
+    public static void doDFG(HashSet<Function> functions) {
         for (Function function : functions) {
             removeBlk(function);
             makeDoms(function);
             makeIDoms(function);
+            makeDF(function);
         }
     }
-    //b1 -> b2 -> b3
-    private void makeIDoms(Function function) {
+
+    private static void makeDF(Function function) {
         for (CustomList.Node item : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) item;
-            for (BasicBlock dom1 : block.getDoms()) {
-                for (BasicBlock dom2 : dom1.getDoms()) {
-                    if (!block.getDoms().contains(dom2)) {
-                        block.getIDoms().add(dom2);
+            HashSet<BasicBlock> DF = new HashSet<>();
+            for (CustomList.Node item2 : function.getBasicBlocks()) {
+                BasicBlock other = (BasicBlock) item2;
+                for (BasicBlock tmp : other.getPres()) {
+                    if (block.getDoms().contains(tmp) &&
+                            (block.equals(other) || !block.getDoms().contains(other))){
+                        DF.add(other);
+                        break;
                     }
                 }
             }
+            block.setDF(DF);
         }
     }
 
-    private void makeDoms(Function function) {
+
+    //b1 -> b2 -> b3
+    private static void makeIDoms(Function function) {
         for (CustomList.Node item : function.getBasicBlocks()) {
-            HashSet<BasicBlock> independent = new HashSet<>();
             BasicBlock block = (BasicBlock) item;
-            for (CustomList.Node node : function.getBasicBlocks()) {
-                BasicBlock otherBlk = (BasicBlock) node;
-                dfs4dom(block, otherBlk, independent);
+            HashSet<BasicBlock> iDoms = new HashSet<>();
+            for (BasicBlock dom1 : block.getDoms()) {
+                boolean flag = block.getDoms().contains(dom1);
+                if (block == dom1) {
+                    flag = false;
+                }
+                for (BasicBlock temp: block.getDoms()) {
+                    if (!temp.equals(block) && !temp.equals(dom1)) {
+                        if (temp.getDoms().contains(dom1)) {
+                            flag = false;
+                        }
+                    }
+                }
+                if (flag) {
+                    iDoms.add(dom1);
+                }
             }
+            block.setIDoms(iDoms);
+        }
+    }
+
+    private static void makeDoms(Function function) {
+        BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
+        for (CustomList.Node item : function.getBasicBlocks()) {
+            BasicBlock block = (BasicBlock) item;
+            HashSet<BasicBlock> independent = new HashSet<>();
+            dfs4dom(firstBlk, block, independent);
+
+            HashSet<BasicBlock> doms = new HashSet<>();
             for (CustomList.Node node : function.getBasicBlocks()) {
                 BasicBlock otherBlk = (BasicBlock) node;
                 if (!independent.contains(otherBlk)) {
-                    block.getDoms().add(otherBlk);
+                    doms.add(otherBlk);
                 }
             }
+            block.setDoms(doms);
         }
     }
 
-    private void dfs4dom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> independent) {
-        if (block == otherBlk) {
+    private static void dfs4dom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> independent) {
+        if (block.equals(otherBlk)) {
             return;
         }
         if (independent.contains(otherBlk)) {
             return;
         }
-        independent.add(otherBlk);
-        for (BasicBlock block1 : block.getSucs()) {
-            dfs4dom(block, block1, independent);
+        independent.add(block);
+        for (BasicBlock next : block.getSucs()) {
+            if (!independent.contains(next) && next != otherBlk){
+                dfs4dom(next, otherBlk, independent);
+            }
         }
     }
 
+    private static void dfs4remove(BasicBlock block) {
+        if (block.getBeginUse() == null) {
+            Instruction instr = block.getEndInstr();
+            block.removeFromList();
+            if (instr instanceof JumpInstr) {
+                dfs4remove(((JumpInstr) instr).getTarget());
+            } else if (instr instanceof BranchInstr) {
+                dfs4remove(((BranchInstr) instr).getThenTarget());
+                dfs4remove(((BranchInstr) instr).getElseTarget());
+            }
+        }
+    }
 
+    private static void removeBlk(Function function) {
+        BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
+        HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
+        HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
+//        while (firstBlk != null) {
+//            dfs4remove(firstBlk);
+//            firstBlk = (BasicBlock) firstBlk.getNext();
+//        }
+        BasicBlock tmpBlk = (BasicBlock) function.getBasicBlocks().getHead();
+        while (tmpBlk != null) {
+            pres.put(tmpBlk, new HashSet<>());
+            sucs.put(tmpBlk, new HashSet<>());
+            tmpBlk = (BasicBlock) tmpBlk.getNext();
+        }
 
-    private void removeBlk(Function function) {
         Iterator<CustomList.Node> blks = function.getBasicBlocks().iterator();
         while (blks.hasNext()) {
             BasicBlock block = (BasicBlock) blks.next();
             Use use = block.getBeginUse();
-            if (use == null) {
-                blks.remove();
-                continue;
-            }
-            for (;use != block.getEndUse(); use = (Use) use.getNext()) {
+            for (;use != null; use = (Use) use.getNext()) {
                 BasicBlock user = use.getUser().getParentBB();
-                block.getPres().add(user);
-                user.getSucs().add(block);
+                pres.get(block).add(user);
+                sucs.get(user).add(block);
             }
+        }
+
+        blks = function.getBasicBlocks().iterator();
+        while (blks.hasNext()) {
+            BasicBlock block = (BasicBlock) blks.next();
+            block.setPres(pres.get(block));
+            block.setSucs(sucs.get(block));
         }
     }
 

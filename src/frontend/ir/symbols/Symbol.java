@@ -55,9 +55,12 @@ public class Symbol {
         this.allocValue = allocValue;
     }
 
-
     public List<Integer> getLimitList() {
         return limitList;
+    }
+
+    public boolean isArray() {
+        return !limitList.isEmpty();
     }
 
     public AsmType getAsmType() {
@@ -74,7 +77,7 @@ public class Symbol {
     }
 
     public Number getValue() {
-        return initVal.getValue();
+        return initVal.getNumber();
     }
 
     public Value getAllocValue() {
@@ -82,5 +85,27 @@ public class Symbol {
             throw new RuntimeException("还没有定义");
         }
         return allocValue;
+    }
+    public int getDim() {
+        return limitList.size();
+    }
+
+    public String printArrayTypeName() {
+        if (initVal instanceof ArrayInitVal) {
+            return ((ArrayInitVal) initVal).printArrayTypeName();
+        }
+        throw new RuntimeException("这是数组吗？");
+    }
+
+    public int getLimSize() {
+        int size = 1;
+        for(int i : limitList) {
+            size *= i;
+        }
+        return size;
+    }
+    
+    public boolean isArrayFParam() {
+        return !limitList.isEmpty() && limitList.get(0) == -1;
     }
 }

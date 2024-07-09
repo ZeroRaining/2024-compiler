@@ -9,7 +9,7 @@ public class ConstFloat extends ConstValue {
     }
     
     @Override
-    public Float getValue() {
+    public Float getNumber() {
         return value;
     }
     

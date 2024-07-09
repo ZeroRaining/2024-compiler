@@ -8,11 +8,10 @@ import frontend.ir.structure.BasicBlock;
 public abstract class Cmp extends Instruction {
     protected final int result;
     protected final CmpCond cond;
-    protected final Value op1;
-    protected final Value op2;
+    protected Value op1;
+    protected Value op2;
     
-    public Cmp(int result, CmpCond cond, Value op1, Value op2, BasicBlock parentBB) {
-        super(parentBB);
+    public Cmp(int result, CmpCond cond, Value op1, Value op2) {
         this.result = result;
         this.cond = cond;
         this.op1 = op1;
@@ -22,12 +21,38 @@ public abstract class Cmp extends Instruction {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         return result;
     }
     
     @Override
     public DataType getDataType() {
         return DataType.BOOL;
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        boolean notOk = true;
+        if (op1 == from) {
+            op1 = to;
+            notOk = false;
+        }
+        if (op2 == from) {
+            op2 = to;
+            notOk = false;
+        }
+        if (notOk) {
+            throw new RuntimeException();
+        }
+    }
+
+    public CmpCond getCond() {
+        return cond;
+    }
+    public Value getOp1() {
+        return op1;
+    }
+    public Value getOp2() {
+        return op2;
     }
 }

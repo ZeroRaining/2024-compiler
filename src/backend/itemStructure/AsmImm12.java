@@ -8,4 +8,7 @@ public class AsmImm12 extends AsmOperand{
     public int getValue() {
         return value;
     }
+    public String toString() {
+        return String.valueOf(value);
+    }
 }

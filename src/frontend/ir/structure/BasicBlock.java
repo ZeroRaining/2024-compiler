@@ -1,7 +1,9 @@
 package frontend.ir.structure;
 
 import Utils.CustomList;
+import debug.DEBUG;
 import frontend.ir.DataType;
+import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.terminator.ReturnInstr;
@@ -19,6 +21,8 @@ public class BasicBlock extends Value {
     private HashSet<BasicBlock> sucs;
     private HashSet<BasicBlock> doms;
     private HashSet<BasicBlock> iDoms;
+    private HashSet<BasicBlock> DF;
+    
     public BasicBlock(int depth) {
         super();
         isRet = false;
@@ -27,6 +31,7 @@ public class BasicBlock extends Value {
         sucs = new HashSet<>();
         doms = new HashSet<>();
         iDoms = new HashSet<>();
+        DF = new HashSet<>();
     }
 
     public void setDepth(int depth) {
@@ -35,6 +40,14 @@ public class BasicBlock extends Value {
 
     public Instruction getEndInstr() {
         return (Instruction) instructions.getTail();
+    }
+
+    public void setDF(HashSet<BasicBlock> DF) {
+        this.DF = DF;
+    }
+
+    public void setIDoms(HashSet<BasicBlock> iDoms) {
+        this.iDoms = iDoms;
     }
 
     public void setPres(HashSet<BasicBlock> pres) {
@@ -51,6 +64,11 @@ public class BasicBlock extends Value {
     public HashSet<BasicBlock> getIDoms() {
         return iDoms;
     }
+
+    public HashSet<BasicBlock> getDF() {
+        return DF;
+    }
+
     public HashSet<BasicBlock> getPres() {
         return pres;
     }
@@ -78,6 +96,7 @@ public class BasicBlock extends Value {
         if (instr instanceof ReturnInstr) {
             isRet = true;
         }
+        instr.setParentBB(this);
         instructions.addToTail(instr);
     }
     
@@ -93,7 +112,7 @@ public class BasicBlock extends Value {
     }
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         throw new RuntimeException("基本块暂时没有值");
     }
     
@@ -104,10 +123,36 @@ public class BasicBlock extends Value {
     
     @Override
     public String value2string() {
-        throw new RuntimeException("基本块暂时没有值");
+        return "blk_" + labelCnt;
     }
 
     public CustomList getInstructions() {
         return instructions;
+    }
+
+    public void printHashset(HashSet<BasicBlock> hashSet, String s) {
+        StringBuilder str = new StringBuilder(s);
+        str.append(": ");
+        for(BasicBlock b : hashSet) {
+            str.append(b.value2string()).append(" ");
+        }
+        DEBUG.dbgPrint2(String.valueOf(str));
+    }
+
+    public void printDBG() {
+        StringBuilder str = new StringBuilder();
+        DEBUG.dbgPrint("used: ");
+        Use use = this.getBeginUse();
+        if (use == null) {
+            DEBUG.dbgPrint1("chao???");
+        } else {
+            DEBUG.dbgPrint1((use.getUser()).getParentBB().value2string());
+        }
+        printHashset(sucs, "sucs");
+        printHashset(pres, "pres");
+        printHashset(doms, "doms");
+        printHashset(iDoms, "iDoms");
+        printHashset(DF, "DF");
+        DEBUG.dbgPrint1("");
     }
 }

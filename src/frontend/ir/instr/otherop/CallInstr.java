@@ -17,8 +17,7 @@ public class CallInstr extends Instruction {
     private final List<Value> rParams;
     private final FuncDef funcDef;
     
-    public CallInstr(Integer result, DataType returnType, FuncDef funcDef, List<Value> rParams ,BasicBlock parentBB) {
-        super(parentBB);
+    public CallInstr(Integer result, DataType returnType, FuncDef funcDef, List<Value> rParams) {
         assert (returnType == DataType.VOID && result == null) || (returnType != DataType.VOID && result != null);
         if (rParams == null) {
             throw new NullPointerException();
@@ -35,7 +34,7 @@ public class CallInstr extends Instruction {
     
     
     @Override
-    public Number getValue() {
+    public Number getNumber() {
         return result;
     }
     
@@ -48,19 +47,40 @@ public class CallInstr extends Instruction {
     public String print() {
         StringBuilder stringBuilder = new StringBuilder();
         if (result != null) {
-            stringBuilder.append("%").append(result).append(" = ");
+            stringBuilder.append("%reg_").append(result).append(" = ");
         }
         stringBuilder.append("call ").append(returnType);
         stringBuilder.append(" @").append(funcDef.getName()).append("(");
         int size = rParams.size();
         for (int i = 0; i < size; i++) {
             Value value = rParams.get(i);
-            stringBuilder.append(value.getDataType()).append(" ").append(value.value2string());
+            stringBuilder.append(value.type2string());
+            stringBuilder.append(" ").append(value.value2string());
             if (i < size - 1) {
                 stringBuilder.append(", ");
             }
         }
         stringBuilder.append(")");
         return stringBuilder.toString();
+    }
+
+    @Override
+    public void modifyValue(Value from, Value to) {
+        for (int i = 0; i < rParams.size(); i++) {
+            Value value = rParams.get(i);
+            if (value == from) {
+                rParams.set(i, to);
+                return;
+            }
+        }
+        throw new RuntimeException("No such value");
+    }
+
+    public List<Value> getRParams() {
+        return rParams;
+    }
+
+    public FuncDef getFuncDef() {
+        return funcDef;
     }
 }

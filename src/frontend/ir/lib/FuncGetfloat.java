@@ -6,8 +6,7 @@ import frontend.ir.Value;
 import java.util.List;
 
 public class FuncGetfloat extends LibFunc{
-    public FuncGetfloat(List<Value> rParams) {
-        super(rParams);
+    public FuncGetfloat() {
     }
     
     @Override

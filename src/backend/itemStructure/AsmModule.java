@@ -18,4 +18,10 @@ public class AsmModule {
     public void addFunction(AsmFunction function) {
         this.functions.add(function);
     }
+    public ArrayList<AsmGlobalVar> getGlobalVars() {
+        return globalVar;
+    }
+    public ArrayList<AsmFunction> getFunctions() {
+        return functions;
+    }
 }
