@@ -1,7 +1,6 @@
 package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
-import frontend.ir.structure.BasicBlock;
 import frontend.ir.symbols.Symbol;
 
 public class LoadInstr extends MemoryOperation {
@@ -64,11 +63,7 @@ public class LoadInstr extends MemoryOperation {
     public void modifyValue(Value from, Value to) {
         throw new RuntimeException("没有可以置换的 value");
     }
-
-    public Symbol getSymbol() {
-        return symbol;
-    }
-
+    
     public Value getPtr() {
         return ptr;
     }

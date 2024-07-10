@@ -278,7 +278,9 @@ public class Procedure {
                 value = new Si2Fp(curRegIndex++, value);
                 curBlock.addInstruction((Instruction) value);
             }
-            curBlock.addInstruction(new StoreInstr(value, symTab.getSym("")));
+            Symbol retSym = symTab.getSym("");
+            value = toSameType(value, retSym);
+            curBlock.addInstruction(new StoreInstr(value, retSym));
             curBlock.addInstruction(new JumpInstr(retBlock));
         }
     }
@@ -290,14 +292,7 @@ public class Procedure {
         Ast.LVal lVal = item.getLVal();
         Symbol left = symTab.getSym(lVal.getName());
         Value right = calculateExpr(item.getExp(), symTab, false);
-        if (left.getType() == DataType.FLOAT && right.getDataType() == DataType.INT) {
-            right = new Si2Fp(curRegIndex++, right);
-            curBlock.addInstruction((Instruction) right);
-        }
-        if (left.getType() == DataType.INT && right.getDataType() == DataType.FLOAT) {
-            right = new Fp2Si(curRegIndex++, right);
-            curBlock.addInstruction((Instruction) right);
-        }
+        right = toSameType(right, left);
         if (left.isArray()) {
             List<Value> indexList = getIndexList(lVal, symTab);
             Instruction ptr = getPtr(left, indexList);
@@ -319,9 +314,11 @@ public class Procedure {
             Value initVal = symbol.getInitVal();
             if (initVal != null) {
                 if (initVal instanceof ConstValue) {
+                    initVal = toSameType(initVal, symbol);
                     curBlock.addInstruction(new StoreInstr(initVal, symbol));
                 } else if (initVal instanceof InitExpr) {
                     Value init = calculateExpr(((InitExpr) initVal).getExp(), symTab, false);
+                    init = toSameType(init, symbol);
                     curBlock.addInstruction(new StoreInstr(init, symbol));
                 } else if (initVal instanceof ArrayInitVal) {
                     ArrayList<Value> baseIndexList = new ArrayList<>();
@@ -351,11 +348,13 @@ public class Procedure {
                         if (valToInit instanceof ConstValue) {
                             Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
                             curBlock.addInstruction(ptr);
+                            valToInit = toSameType(valToInit, symbol);
                             curBlock.addInstruction(new StoreInstr(valToInit, symbol, ptr));
                         } else if (valToInit instanceof InitExpr) {
                             Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
                             curBlock.addInstruction(ptr);
                             Value init = calculateExpr(((InitExpr) valToInit).getExp(), symTab, false);
+                            init = toSameType(init, symbol);
                             curBlock.addInstruction(new StoreInstr(init, symbol, ptr));
                         } else {
                             throw new RuntimeException("最后一层了只能是常数或者表达式了吧");
@@ -370,6 +369,31 @@ public class Procedure {
                 symTab.addSym(symbol);
             }
         }
+    }
+    
+    /**
+     *  用于 store 之前，检测一下存储类型对不对的上，对不上就改一下
+     */
+    private Value toSameType(Value value, Symbol symbol) {
+        if (value == null || symbol == null) {
+            throw new NullPointerException();
+        }
+        DataType valueType = value.getDataType();
+        DataType symbolType = symbol.getType();
+        if (symbolType == valueType) {
+            return value;
+        }
+        if (symbolType == DataType.FLOAT && valueType == DataType.INT) {
+            value = new Si2Fp(curRegIndex++, value);
+            curBlock.addInstruction((Instruction) value);
+            return value;
+        }
+        if (symbolType == DataType.INT && valueType == DataType.FLOAT) {
+            value = new Fp2Si(curRegIndex++, value);
+            curBlock.addInstruction((Instruction) value);
+            return value;
+        }
+        throw new RuntimeException("symbol, value出现了意料之外的组合：" + symbolType + valueType);
     }
 
     private Value transform2i1(Value value) {

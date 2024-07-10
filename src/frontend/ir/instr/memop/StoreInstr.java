@@ -1,6 +1,5 @@
 package frontend.ir.instr.memop;
 
-import frontend.ir.structure.BasicBlock;
 import frontend.ir.Value;
 import frontend.ir.symbols.Symbol;
 
@@ -63,11 +62,7 @@ public class StoreInstr extends MemoryOperation {
             throw new RuntimeException();
         }
     }
-
-    public Symbol getSymbol() {
-        return symbol;
-    }
-
+    
     public Value getPtr() {
         return ptr;
     }
