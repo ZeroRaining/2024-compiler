@@ -590,7 +590,7 @@ public class Procedure {
                     List<Value> indexList = getIndexList((Ast.LVal) primary, symTab);
                     MemoryOperation ptr = getPtr(symbol, indexList);
                     curBlock.addInstruction(ptr);
-                    if (ptr.getPointerLevel() == 1) {
+                    if (ptr.getPointerLevel() == 1 && ptr instanceof GEPInstr) {
                         Instruction load = new LoadInstr(curRegIndex++, symbol, ptr);
                         curBlock.addInstruction(load);
                         res = load;

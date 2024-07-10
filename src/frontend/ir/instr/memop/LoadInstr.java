@@ -49,6 +49,16 @@ public class LoadInstr extends MemoryOperation {
         }
         return stringBuilder.toString();
     }
+    
+    @Override
+    public String type2string() {
+        System.out.println("hello" + pointerLevel);
+        if (this.pointerLevel > 0) {
+            return this.printBaseType();
+        } else {
+            return this.getDataType().toString();
+        }
+    }
 
     @Override
     public void modifyValue(Value from, Value to) {
