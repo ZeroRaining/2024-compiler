@@ -76,7 +76,7 @@ public class Procedure {
             curBlock.addInstruction(instr);
             curBlock.addInstruction(new ReturnInstr(returnType, instr));
         } else {
-            curBlock.addInstruction(new ReturnInstr(returnType, curBlock));
+            curBlock.addInstruction(new ReturnInstr(returnType));
         }
     }
 
