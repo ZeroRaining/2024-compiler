@@ -29,7 +29,7 @@ public class Compiler {
         //IR生成
         Program program = new Program(ast);
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
-        DFG.doDFG(functions);
+//        DFG.doDFG(functions);
 
         // 开启优化
         if (arg.getOptLevel() == 1) {
