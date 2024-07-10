@@ -67,11 +67,11 @@ public class Procedure {
         if (returnType == null) {
             throw new RuntimeException("会不会写函数啊，小老弟？！");
         }
+        curBlock = retBlock;
+        curBlock.setLabelCnt(curBlkIndex++);
+        basicBlocks.addToTail(curBlock);
         if (returnType != DataType.VOID) {
             //空串表示用于存返回值的变量
-            curBlock = retBlock;
-            curBlock.setLabelCnt(curBlkIndex++);
-            basicBlocks.addToTail(curBlock);
             Instruction instr = new LoadInstr(curRegIndex++,funcSymTab.getSym(""));
             curBlock.addInstruction(instr);
             curBlock.addInstruction(new ReturnInstr(returnType, instr));

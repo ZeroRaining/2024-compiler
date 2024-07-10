@@ -6,8 +6,11 @@ import frontend.ir.DataType;
 import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.terminator.BranchInstr;
+import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 
+import javax.tools.JavaCompiler;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashSet;
@@ -90,14 +93,16 @@ public class BasicBlock extends Value {
     }
 
     public void addInstruction(Instruction instr) {
+        //removeFromList销毁所有setUse
+        instructions.addToTail(instr);
         if (isRet) {
+            instr.removeFromList();
             return;
         }
-        if (instr instanceof ReturnInstr) {
+        if (instr instanceof ReturnInstr || instr instanceof JumpInstr || instr instanceof BranchInstr) {
             isRet = true;
         }
         instr.setParentBB(this);
-        instructions.addToTail(instr);
     }
     
     public void printIR(Writer writer) throws IOException {
@@ -146,7 +151,9 @@ public class BasicBlock extends Value {
         if (use == null) {
             DEBUG.dbgPrint1("chao???");
         } else {
-            DEBUG.dbgPrint1((use.getUser()).getParentBB().value2string());
+           Instruction instruction =  use.getUser();
+            BasicBlock block = instruction.getParentBB();
+            DEBUG.dbgPrint1(block.value2string());
         }
         printHashset(sucs, "sucs");
         printHashset(pres, "pres");
