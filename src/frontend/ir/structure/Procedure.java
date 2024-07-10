@@ -10,10 +10,7 @@ import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.*;
-import frontend.ir.instr.memop.AllocaInstr;
-import frontend.ir.instr.memop.GEPInstr;
-import frontend.ir.instr.memop.LoadInstr;
-import frontend.ir.instr.memop.StoreInstr;
+import frontend.ir.instr.memop.*;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.otherop.cmp.FCmpInstr;
@@ -587,16 +584,20 @@ public class Procedure {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
                 if (symbol.isArray()) {
                     List<Value> indexList = getIndexList((Ast.LVal) primary, symTab);
-                    GEPInstr ptr = getPtr(symbol, indexList);
+                    MemoryOperation ptr = getPtr(symbol, indexList);
                     curBlock.addInstruction(ptr);
                     if (ptr.getPointerLevel() == 1) {
                         Instruction load = new LoadInstr(curRegIndex++, symbol, ptr);
                         curBlock.addInstruction(load);
                         res = load;
                     } else {
-                        Instruction newPtr = new GEPInstr(curRegIndex++, ptr);
-                        curBlock.addInstruction(newPtr);
-                        res = newPtr;
+                        if (ptr instanceof GEPInstr) {
+                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr);
+                            curBlock.addInstruction(newPtr);
+                            res = newPtr;
+                        } else {
+                            res = ptr;
+                        }
                     }
                 } else {
                     if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
@@ -651,10 +652,14 @@ public class Procedure {
         }
     }
     
-    private GEPInstr getPtr(Symbol symbol, List<Value> indexList){
+    private MemoryOperation getPtr(Symbol symbol, List<Value> indexList){
         GEPInstr ptr;
         if (symbol.isArrayFParam()) {
             LoadInstr load = new LoadInstr(curRegIndex++, symbol);
+            // 对于函数中将传进来的数组指针直接传出的情况，load 出来就可以了，不用再进一步 GEP
+            if (indexList.isEmpty()) {
+                return load;
+            }
             curBlock.addInstruction(load);
             ptr = new GEPInstr(curRegIndex++, load, indexList);
         } else {
