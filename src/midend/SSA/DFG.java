@@ -8,6 +8,7 @@ import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
+import java.lang.annotation.Target;
 import java.util.*;
 
 public class DFG {
@@ -101,6 +102,7 @@ public class DFG {
         if (block.getBeginUse() == null) {
             Instruction instr = block.getEndInstr();
             block.removeFromList();
+            //把我用到的所有block的use信息删掉
             if (instr instanceof JumpInstr) {
                 dfs4remove(((JumpInstr) instr).getTarget());
             } else if (instr instanceof BranchInstr) {
@@ -110,14 +112,27 @@ public class DFG {
         }
     }
 
+    private static void removeUseBlock(Instruction instr, BasicBlock usedBlk) {
+        Use use = usedBlk.getBeginUse();
+        assert use != null;
+        assert instr instanceof JumpInstr || instr instanceof BranchInstr;
+        while (use != null) {
+            if (use.getUser() == instr) {
+                use.removeFromList();
+            }
+            use = (Use) use.getNext();
+        }
+    }
+
     private static void removeBlk(Function function) {
-        BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
+        BasicBlock secondBlk = (BasicBlock) function.getBasicBlocks().getHead().getNext();
         HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
         HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
-//        while (firstBlk != null) {
-//            dfs4remove(firstBlk);
-//            firstBlk = (BasicBlock) firstBlk.getNext();
-//        }
+
+        while (secondBlk != null) {
+            dfs4remove(secondBlk);
+            secondBlk = (BasicBlock) secondBlk.getNext();
+        }
         BasicBlock tmpBlk = (BasicBlock) function.getBasicBlocks().getHead();
         while (tmpBlk != null) {
             pres.put(tmpBlk, new HashSet<>());

@@ -5,6 +5,7 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.Value;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public abstract class Instruction extends Value {
     private BasicBlock parentBB;
@@ -52,4 +53,11 @@ public abstract class Instruction extends Value {
         }
     }
     public abstract void modifyValue(Value from, Value to);
+
+    public void removeFromList() {
+        super.removeFromList();
+        for (Use use : useList) {
+            use.removeFromList();
+        }
+    }
 }
