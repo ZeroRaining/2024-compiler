@@ -216,11 +216,11 @@ public class Ast {
             Return returnStmt;
             switch (returnType) {
                 case INT:
-                    Number returnInt = new Number(new Token(TokenType.INT, "0"));
+                    Number returnInt = new Number(new Token(TokenType.DEC_INT, "0"));
                     returnStmt = new Return(new UnaryExp(new ArrayList<>(), returnInt));
                     break;
                 case FLOAT:
-                    Number returnFloat = new Number(new Token(TokenType.FLOAT, "0.0"));
+                    Number returnFloat = new Number(new Token(TokenType.DEC_FLOAT, "0.0"));
                     returnStmt = new Return(new UnaryExp(new ArrayList<>(), returnFloat));
                     break;
                 case VOID:
