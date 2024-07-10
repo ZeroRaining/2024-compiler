@@ -76,7 +76,7 @@ public class Procedure {
             curBlock.addInstruction(instr);
             curBlock.addInstruction(new ReturnInstr(returnType, instr));
         } else {
-            curBlock.addInstruction(new ReturnInstr(returnType,curBlock));
+            curBlock.addInstruction(new ReturnInstr(returnType));
         }
     }
 
@@ -326,8 +326,10 @@ public class Procedure {
                     }
                     GEPInstr toBase = new GEPInstr(curRegIndex++, baseIndexList, symbol);
                     curBlock.addInstruction(toBase);
+                    Bitcast toI8 = new Bitcast(curRegIndex++, toBase);
+                    curBlock.addInstruction(toI8);
                     ArrayList<Value> rParams = new ArrayList<>();
-                    rParams.add(toBase);
+                    rParams.add(toI8);
                     rParams.add(new ConstInt(0));
                     rParams.add(new ConstInt(((ArrayInitVal) initVal).getSize()));
                     LibFunc libFunc = Lib.getInstance().getLibFunc("memset");
@@ -695,6 +697,7 @@ public class Procedure {
         CallInstr callInstr;
         LibFunc libFunc = Lib.getInstance().getLibFunc(name);
         // todo: 数组（指针）类型可能会转换吗？反正现在是不能处理的。。。
+        // 现在有 bitcast 指令了，但是暂时没有处理一般化的转换，只做了 memset
         if (libFunc != null) {
             List<Ast.FuncFParam> libFParams = libFunc.getFParams();
             funcParamConv(libFParams, rParams);
