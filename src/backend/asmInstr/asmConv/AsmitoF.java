@@ -10,4 +10,13 @@ public class AsmitoF extends AsmInstr {
         this.src = src;
         this.dst = dst;
     }
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("fcvt.s.w");
+        sb.append("\t");
+        sb.append(dst);
+        sb.append(",\t");
+        sb.append(src);
+        return sb.toString();
+    }
 }

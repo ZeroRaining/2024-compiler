@@ -10,4 +10,14 @@ public class AsmFtoi extends AsmInstr {
         this.src = src;
         this.dst = dst;
     }
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("fcvt.w.s");
+        sb.append("\t");
+        sb.append(dst);
+        sb.append(",\t");
+        sb.append(src);
+        sb.append(",\trtz");
+        return sb.toString();
+    }
 }

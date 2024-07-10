@@ -1,18 +1,18 @@
 package backend;
 
-import backend.asmBr.AsmBeqz;
-import backend.asmBr.AsmJ;
+import backend.asmInstr.asmBr.AsmBeqz;
+import backend.asmInstr.asmBr.AsmJ;
 import backend.asmInstr.asmBinary.*;
 import backend.asmInstr.asmConv.AsmFtoi;
 import backend.asmInstr.asmConv.AsmZext;
 import backend.asmInstr.asmConv.AsmitoF;
 import backend.asmInstr.asmLS.*;
-import backend.asmInstr.asmRet.AsmRet;
+import backend.asmInstr.asmTermin.AsmCall;
+import backend.asmInstr.asmTermin.AsmRet;
 import backend.itemStructure.*;
 import backend.regs.AsmFVirReg;
 import backend.regs.AsmVirReg;
 import backend.regs.RegGeter;
-import frontend.ir.FuncDef;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.convop.ConversionOperation;
@@ -33,16 +33,14 @@ import Utils.CustomList.Node;
 import java.util.*;
 
 import static backend.regs.RegGeter.ZERO;
-import static frontend.ir.DataType.FLOAT;
-import static frontend.ir.DataType.INT;
+import static frontend.ir.DataType.*;
 
 public class IrParser {
     private Program program;
     private AsmModule asmModule = new AsmModule();
     //全局变量的c表示映射到全局变量的asm表示。全局变量的llvm表示是标签，对于asm来说没有意义
     private HashMap<Symbol, AsmGlobalVar> gvMap = new HashMap<>();
-    //TODO:Function直接就是自定义函数，注意修改。
-    private HashMap<FuncDef, AsmFunction> funcMap = new HashMap<>();
+    private HashMap<Function, AsmFunction> funcMap = new HashMap<>();
     private HashMap<BasicBlock, AsmBlock> blockMap = new HashMap<>();
     //llvm的虚拟寄存器或立即数映射到asm的物理寄存器或立即数
     private HashMap<Value, AsmOperand> operandMap = new HashMap<>();
@@ -56,10 +54,10 @@ public class IrParser {
     }
 
 
-    public AsmModule parse(Program program) {
+    public AsmModule parse() {
         parseGlobalVars();
         parseFunctions();
-        return null;//待删
+        return asmModule;
     }
 
     private void parseGlobalVars() {
@@ -72,57 +70,48 @@ public class IrParser {
     }
 
     private AsmGlobalVar parseGlobalVar(Symbol globalVar) {
-        //TODO: 依赖于指针类型的实现
         AsmType type = globalVar.getAsmType();
-        ArrayList<Integer> items = new ArrayList<>();
         if (type == AsmType.INT) {
+            boolean isInit = (globalVar.getInitVal() == null) ? false : true;
+            if (!isInit)
+                return new AsmGlobalVar(globalVar.getName());
             Number initVal = globalVar.getValue();
-            if (initVal != null) {
-                int intVal = initVal.intValue();
-                items.add(intVal);
-            }
-        } else if (type == AsmType.FLOAT) {
-            Number initVal = globalVar.getValue();
-            if (initVal != null) {
-                float floatVal = initVal.floatValue();
-                int intVal = Float.floatToRawIntBits(floatVal);
-                items.add(intVal);
-            }
-        } else if (type == AsmType.ARRAY) {
-            //TODO:依赖于数组类型的实现
+            return new AsmGlobalVar(globalVar.getName(), initVal);
         }
-        if (items.isEmpty()) {
-            //TODO:依赖于数组类型的实现
-            /*int offsetSize = (type == AsmType.ARRAY) ? 4 * globalVar.getArraySize() : 4;
-            return new AsmGlobalVar(globalVar.getName(), offsetSize);*/
-            return null;//待删
-        } else {
-            return new AsmGlobalVar(globalVar.getName(), items);
+        if (type == AsmType.FLOAT) {
+            boolean isInit = (globalVar.getInitVal() == null) ? false : true;
+            if (!isInit)
+                return new AsmGlobalVar(globalVar.getName());
+            Number floatVal = globalVar.getValue();
+            Number initVal = Float.floatToRawIntBits(floatVal.floatValue());
+            return new AsmGlobalVar(globalVar.getName(), initVal);
         }
+        if (type == AsmType.ARRAY) {
+            boolean isInit = (globalVar.getInitVal() == null) ? false : true;
+            if (!isInit)
+                return new AsmGlobalVar(globalVar.getName(), globalVar.getLimSize() * 4);
+            return new AsmGlobalVar(globalVar);
+        }
+        throw new RuntimeException("全局变量类型错误");
     }
+
 
     private void parseFunctions() {
         createMaps();
         for (Function f : program.getFunctions().values()) {
-            //TODO:依赖于库函数的实现
-            /*
-            if (!f.isLib()) {
-                parseFunction(f);
-            }*/
+            parseFunction(f);
         }
     }
 
     private void createMaps() {
         for (Function f : program.getFunctions().values()) {
-            //TODO:依赖于库函数的实现
-            /*AsmFunction asmFunction = new AsmFunction(f.getName(), f.isLib());*/
-            AsmFunction asmFunction = null;//待删
+            AsmFunction asmFunction = new AsmFunction(f.getName());
             asmModule.addFunction(asmFunction);
             funcMap.put(f, asmFunction);
             int blockIndex = 0;
             for (Node bb : f.getBasicBlocks()) {
                 //基于新的块编号策略
-                AsmBlock asmBlock = new AsmBlock(blockIndex++);
+                AsmBlock asmBlock = new AsmBlock(f.getName() + "_" + ((BasicBlock) bb).value2string());
                 asmFunction.addBlock(asmBlock);
                 blockMap.put((BasicBlock) bb, asmBlock);
             }
@@ -157,53 +146,51 @@ public class IrParser {
             parseBlock((BasicBlock) bb, f);
         }
 
-        //TODO:需要函数退出块。为什么需要？好像是寄存器分配部分要。
-        /*
-        asmFunction.setExit(blockMap.get(f.getExit()));
-        asmFunction.setIsTail(f.isTail());*/
-
         BasicBlock bb = (BasicBlock) f.getBasicBlocks().getHead();
-        List<Symbol> args = f.getArgs();
-        List<Symbol> iargs = new ArrayList<>();
-        List<Symbol> fargs = new ArrayList<>();
-        for (Symbol arg : args) {
-            if (arg.getAsmType() == AsmType.INT) {
+        List<Value> args = f.getFParamValueList();
+        List<Value> iargs = new ArrayList<>();
+        List<Value> fargs = new ArrayList<>();
+        for (int i = 0; i < args.size(); i++) {
+            Value arg = args.get(i);
+            if (arg.getPointerLevel() != 0) {
                 iargs.add(arg);
-            } else {
+            } else if (arg.getDataType() == FLOAT) {
                 fargs.add(arg);
+            } else {
+                iargs.add(arg);
             }
         }
         int iargnum = Math.min(iargs.size(), 8);
         int fargnum = Math.min(fargs.size(), 8);
         for (int i = 0; i < iargnum; i++) {
-            Value arg = iargs.get(i).getAllocValue();
+            Value arg = iargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
             AsmMove asmMove = new AsmMove(asmOperand, RegGeter.AregsInt.get(i));
             blockMap.get(bb).addInstrHead(asmMove);
         }
         for (int i = 0; i < fargnum; i++) {
-            Value arg = fargs.get(i).getAllocValue();
+            Value arg = fargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
             AsmMove asmMove = new AsmMove(asmOperand, RegGeter.AregsFloat.get(i));
             blockMap.get(bb).addInstrHead(asmMove);
         }
         int offset = asmFunction.getWholeSize();
         for (int i = 8; i < iargs.size(); i++) {
-            Value arg = iargs.get(i).getAllocValue();
+            Value arg = iargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
-            if (arg.getDataType() == INT) {
+            if (arg.getPointerLevel() != 0) {
                 //TODO:暂时不处理栈大小超过2048字节的情况
                 AsmLw asmLw = new AsmLw(asmOperand, RegGeter.SP, new AsmImm12(offset));
                 blockMap.get(bb).addInstrHead(asmLw);
-                offset += 4;
+                offset += 8;
             } else {
                 AsmLd asmLd = new AsmLd(asmOperand, RegGeter.SP, new AsmImm12(offset));
                 blockMap.get(bb).addInstrHead(asmLd);
-                offset += 8;
+                offset += 4;
             }
         }
         for (int i = 8; i < fargs.size(); i++) {
-            Value arg = fargs.get(i).getAllocValue();
+            Value arg = fargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
             AsmFlw asmflw = new AsmFlw(asmOperand, RegGeter.SP, new AsmImm12(offset));
             blockMap.get(bb).addInstrHead(asmflw);
@@ -212,14 +199,9 @@ public class IrParser {
         if (asmFunction.getRaSize() != 0) {
             AsmSd asmSd = new AsmSd(RegGeter.RA, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize() - 8));
             blockMap.get(bb).addInstrHead(asmSd);
-            AsmLd asmLd = new AsmLd(RegGeter.RA, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize() - 8));
-            //TODO:依赖于exit块的实现
-            //asmFunction.getExit().addInstrTail(asmLd);
         }
         AsmSub asmSub = new AsmSub(RegGeter.SP, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize()));
         blockMap.get(bb).addInstrHead(asmSub);
-        AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize()));
-        //插入出口块尾部
     }
 
     private void parseBlock(BasicBlock bb, Function f) {
@@ -229,8 +211,6 @@ public class IrParser {
     }
 
     private void parseInstr(Instruction instr, Function f, BasicBlock bb) {
-        //TODO:还有很多指令没有写qaq
-        /*
         if (instr instanceof ReturnInstr)
             parseRet((ReturnInstr) instr, bb, f);
         else if (instr instanceof AllocaInstr)
@@ -257,18 +237,25 @@ public class IrParser {
             parseSDiv((SDivInstr) instr, bb, f);
         else if (instr instanceof FDivInstr)
             parseFDiv((FDivInstr) instr, bb, f);
-        else if(instr instanceof SRemInstr)
+        else if (instr instanceof SRemInstr)
             parseMod((SRemInstr) instr, bb, f);
-        //TODO:有FRem?
-        /*else if(instr instanceof FRemInstr)*/
-        /* else if(instr instanceof And)*/
+        else if (instr instanceof BranchInstr)
+            parseBr((BranchInstr) instr, bb, f);
+        else if (instr instanceof JumpInstr)
+            parseJump((JumpInstr) instr, bb, f);
+        else if (instr instanceof CallInstr)
+            parseCall((CallInstr) instr, bb, f);
+        else if (instr instanceof GEPInstr)
+            parseGEP((GEPInstr) instr, bb, f);
+            /*else if(instr instanceof Move)*/
+        else if (instr instanceof ConversionOperation)
+            parseConv((ConversionOperation) instr, bb, f);
     }
 
     private void parseRet(ReturnInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
         Value retValue = instr.getReturnValue();
         if (retValue != null) {
-            //TODO:依赖于move指令的实现
             if (f.getDataType() == INT) {
                 AsmOperand asmOperand = parseOperand(retValue, 32, f, bb);
                 AsmMove asmMove = new AsmMove(RegGeter.AregsInt.get(0), asmOperand);
@@ -279,20 +266,29 @@ public class IrParser {
                 asmBlock.addInstrTail(asmMove);
             }
         }
+        AsmFunction asmFunction = funcMap.get(f);
+        AsmLd asmLd = new AsmLd(RegGeter.RA, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize() - 8));
+        asmBlock.addInstrTail(asmLd);
+        AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, new AsmImm12(asmFunction.getWholeSize()));
+        asmBlock.addInstrTail(asmAdd);
         asmBlock.addInstrTail(new AsmRet());
     }
 
     private void parseAlloca(AllocaInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmFunction asmFunction = funcMap.get(f);
-        /*DataType type = instr.getDataType();*/
-        //动帧指针
+        AsmType type;
+        if (instr.getPointerLevel() != 1) {
+            type = AsmType.POINTER;
+        } else {
+            type = instr.getSymbol().getAsmType();
+        }
         int offset = asmFunction.getArgsSize() + asmFunction.getAllocaSize();
         AsmOperand offOp = parseConstIntOperand(offset, 12, f, bb);
-        if (true/*TODO:数组类型*/) {
-            assert true;
-        } else if (true/*TODO:指针类型,可能会在分配高维数组的时候出现？*/) {
-            assert true;
+        if (type == AsmType.ARRAY) {
+            asmFunction.addAllocaSize(4 * instr.getSymbol().getLimSize());
+        } else if (type == AsmType.POINTER) {
+            asmFunction.addAllocaSize(8);
         } else {
             asmFunction.addAllocaSize(4);
         }
@@ -320,11 +316,25 @@ public class IrParser {
                 AsmFlw asmFLw = new AsmFlw(dst, laReg, offset);
                 asmBlock.addInstrTail(asmFLw);
             }
-        } else if (true/*TODO:指针类型*/) {
-            assert true;
+        } else if (instr.getPointerLevel() != 0) {
+            AsmOperand dst = parseOperand(instr, 0, f, bb);
+            AsmOperand src;
+            if (instr.getPtr() != null) {
+                src = parseOperand(instr.getPtr(), 0, f, bb);
+            } else {
+                src = parseOperand(addr.getAllocValue(), 0, f, bb);
+            }
+            AsmOperand offset = new AsmImm12(0);
+            AsmLd asmLd = new AsmLd(dst, src, offset);
+            asmBlock.addInstrTail(asmLd);
         } else {
             AsmOperand dst = parseOperand(instr, 0, f, bb);
-            AsmOperand src = parseOperand(addr.getAllocValue(), 0, f, bb);
+            AsmOperand src;
+            if (instr.getPtr() != null) {
+                src = parseOperand(instr.getPtr(), 0, f, bb);
+            } else {
+                src = parseOperand(addr.getAllocValue(), 0, f, bb);
+            }
             AsmOperand offset = new AsmImm12(0);
             if (dst instanceof AsmVirReg) {
                 AsmLw asmLw = new AsmLw(dst, src, offset);
@@ -355,11 +365,25 @@ public class IrParser {
                 AsmFsw asmFsw = new AsmFsw(src, laReg, offset);
                 asmBlock.addInstrTail(asmFsw);
             }
-        } else if (true/*TODO:指针类型*/) {
-            assert true;
+        } else if (instr.getPointerLevel() != 0) {
+            AsmOperand src = parseOperand(instr.getValue(), 0, f, bb);
+            AsmOperand dst;
+            if (instr.getPtr() != null) {
+                dst = parseOperand(instr.getPtr(), 0, f, bb);
+            } else {
+                dst = parseOperand(addr.getAllocValue(), 0, f, bb);
+            }
+            AsmOperand offset = new AsmImm12(0);
+            AsmSd asmSd = new AsmSd(src, dst, offset);
+            asmBlock.addInstrTail(asmSd);
         } else {
             AsmOperand src = parseOperand(instr.getValue(), 0, f, bb);
-            AsmOperand dst = parseOperand(addr.getAllocValue(), 0, f, bb);
+            AsmOperand dst;
+            if (instr.getPtr() != null) {
+                dst = parseOperand(instr.getPtr(), 0, f, bb);
+            } else {
+                dst = parseOperand(addr.getAllocValue(), 0, f, bb);
+            }
             AsmOperand offset = new AsmImm12(0);
             if (src instanceof AsmVirReg) {
                 AsmSw asmSw = new AsmSw(src, dst, offset);
@@ -400,7 +424,7 @@ public class IrParser {
         } else if (cond == CmpCond.EQ) {
             if (!isFloat) {
                 AsmOperand left = parseOperand(op1, 0, f, bb);
-                AsmOperand right = parseOperand(op2, 0, f, bb);
+                AsmOperand right = parseOperand(op2, 12, f, bb);
                 AsmOperand tmp = genTmpReg(f);
                 AsmXor asmXor = new AsmXor(tmp, left, right);
                 asmBlock.addInstrTail(asmXor);
@@ -418,9 +442,14 @@ public class IrParser {
         } else if (cond == CmpCond.LT) {
             if (!isFloat) {
                 AsmOperand left = parseOperand(op1, 0, f, bb);
-                AsmOperand right = parseOperand(op2, 0, f, bb);
-                AsmSlti asmStli = new AsmSlti(dst, left, right);
-                asmBlock.addInstrTail(asmStli);
+                AsmOperand right = parseOperand(op2, 12, f, bb);
+                if (right instanceof AsmImm12) {
+                    AsmSlti asmSlti = new AsmSlti(dst, left, right);
+                    asmBlock.addInstrTail(asmSlti);
+                } else {
+                    AsmSlt asmSlt = new AsmSlt(dst, left, right);
+                    asmBlock.addInstrTail(asmSlt);
+                }
             } else {
                 AsmOperand left = parseOperand(op1, 0, f, bb);
                 AsmOperand right = parseOperand(op2, 0, f, bb);
@@ -429,7 +458,7 @@ public class IrParser {
             }
         } else if (cond == CmpCond.LE) {
             if (!isFloat) {
-                AsmOperand left = parseOperand(op1, 0, f, bb);
+                AsmOperand left = parseOperand(op1, 12, f, bb);
                 AsmOperand right = parseOperand(op2, 0, f, bb);
                 AsmOperand tmp = genTmpReg(f);
                 if (left instanceof AsmImm12) {
@@ -449,7 +478,7 @@ public class IrParser {
             }
         } else if (cond == CmpCond.GT) {
             if (!isFloat) {
-                AsmOperand left = parseOperand(op1, 0, f, bb);
+                AsmOperand left = parseOperand(op1, 12, f, bb);
                 AsmOperand right = parseOperand(op2, 0, f, bb);
                 if (left instanceof AsmImm12) {
                     AsmSlti asmSlti = new AsmSlti(dst, right, left);
@@ -467,7 +496,7 @@ public class IrParser {
         } else if (cond == CmpCond.GE) {
             if (!isFloat) {
                 AsmOperand left = parseOperand(op1, 0, f, bb);
-                AsmOperand right = parseOperand(op2, 0, f, bb);
+                AsmOperand right = parseOperand(op2, 12, f, bb);
                 AsmOperand tmp = genTmpReg(f);
                 if (left instanceof AsmImm12) {
                     AsmSlti asmSlti = new AsmSlti(tmp, left, right);
@@ -489,7 +518,6 @@ public class IrParser {
 
     //注意add等指令包括加i加w的各类加，打印的时候不一样
     //TODO:isword的理解
-    //TODO:讨论一下constInt和Imm12
     private void parseAdd(AddInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmOperand dst = parseOperand(instr, 0, f, bb);
@@ -511,7 +539,7 @@ public class IrParser {
             asmBlock.addInstrTail(asmAdd);
         } else {
             AsmOperand left = parseOperand(src1, 0, f, bb);
-            AsmOperand right = parseOperand(src2, 0, f, bb);
+            AsmOperand right = parseOperand(src2, 12, f, bb);
             AsmAdd asmAdd = new AsmAdd(dst, left, right);
             asmAdd.isWord = true;
             asmBlock.addInstrTail(asmAdd);
@@ -521,18 +549,23 @@ public class IrParser {
     //乘法指令比较慢，因此考虑了各种情况下的优化方式
     private void parseMul(MulInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
-        AsmOperand dst = parseOperand(instr, 0, f, bb);
-        AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
         //src2为特定常数时可以进行相应的优化
-        //TODO:src1为特定常数时应该也可以优化？
         if (instr.is64) {
+            AsmOperand dst = parseOperand(instr, 0, f, bb);
+            AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
             AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
             AsmMul asmMul = new AsmMul(dst, src1, src2);
             asmBlock.addInstrTail(asmMul);
             return;
         }
+        boolean isSrc1Const = instr.getOp1() instanceof ConstInt;
         boolean isSrc2Const = instr.getOp2() instanceof ConstInt;
-        if (isSrc2Const) {
+        if (isSrc1Const || isSrc2Const) {
+            if (isSrc1Const && !isSrc2Const) {
+                instr.swapOp();
+            }
+            AsmOperand dst = parseOperand(instr, 0, f, bb);
+            AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
             int value = ((ConstInt) instr.getOp2()).getNumber();
             if (value == 1) {
                 AsmMove asmMove = new AsmMove(dst, src1);
@@ -576,7 +609,7 @@ public class IrParser {
                     asmSub2.isWord = true;
                     asmBlock.addInstrTail(asmSub2);
                 }
-            } else if (true/*TODO:先这样吧，不想再优化了*/) {
+            } else if (false/*TODO:先这样吧，不想再优化了*/) {
                 assert true;
             } else {
                 //TODO:我认为maxImm是12
@@ -587,6 +620,8 @@ public class IrParser {
             }
         } else {
             AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
+            AsmOperand dst = parseOperand(instr, 0, f, bb);
+            AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
             AsmMul asmMul = new AsmMul(dst, src1, src2);
             asmMul.isWord = true;
             asmBlock.addInstrTail(asmMul);
@@ -734,6 +769,316 @@ public class IrParser {
         asmBlock.addInstrTail(asmMod);
     }
 
+    private void parseBr(BranchInstr instr, BasicBlock bb, Function f) {
+        AsmBlock asmBlock = blockMap.get(bb);
+        Value cond = instr.getCond();
+        BasicBlock trueBB = instr.getThenTarget();
+        BasicBlock falseBB = instr.getElseTarget();
+        if (cond instanceof ConstInt) {
+            int value = ((ConstInt) cond).getNumber();
+            if (value != 0) {
+                AsmJ asmJ = new AsmJ(blockMap.get(trueBB));
+                asmBlock.addInstrTail(asmJ);
+            } else {
+                AsmJ asmJ = new AsmJ(blockMap.get(falseBB));
+                asmBlock.addInstrTail(asmJ);
+            }
+        } else {
+            //TODO:为什么需要区分CmpInstr?
+            AsmOperand cmp = parseOperand(cond, 0, f, bb);
+            AsmBlock trueAsmBlock = blockMap.get(trueBB);
+            AsmBlock falseAsmBlock = blockMap.get(falseBB);
+            AsmBeqz asmBeqz = new AsmBeqz(cmp, trueAsmBlock);
+            asmBlock.addInstrTail(asmBeqz);
+            AsmJ asmJ = new AsmJ(falseAsmBlock);
+            asmBlock.addInstrTail(asmJ);
+            //TODO:感觉不需要setTrueBlock和setFalseBlock?
+        }
+    }
+
+    private void parseJump(JumpInstr instr, BasicBlock bb, Function f) {
+        AsmBlock asmBlock = blockMap.get(bb);
+        BasicBlock target = instr.getTarget();
+        AsmJ asmJ = new AsmJ(blockMap.get(target));
+        asmBlock.addInstrTail(asmJ);
+        //TODO:感觉不需要setTrueBlock和setFalseBlock?
+    }
+
+    private void parseCall(CallInstr instr, BasicBlock bb, Function f) {
+        AsmFunction asmFunction = funcMap.get(f);
+        AsmBlock asmBlock = blockMap.get(bb);
+        //TODO:库函数的处理
+        List<Value> args = instr.getRParams();
+        List<Value> floatArgs = new ArrayList<>();
+        List<Value> intArgs = new ArrayList<>();
+        for (Value arg : args) {
+            if (arg.getDataType() == FLOAT) {
+                floatArgs.add(arg);
+            } else {
+                intArgs.add(arg);
+            }
+        }
+        int intArgNum = intArgs.size();
+        int floatArgNum = floatArgs.size();
+        int intArgRegNum = Math.min(intArgNum, 8);
+        int floatArgRegNum = Math.min(floatArgNum, 8);
+        for (int i = 0; i < intArgRegNum; i++) {
+            AsmOperand argReg = parseOperand(intArgs.get(i), 12, f, bb);
+            AsmMove asmMove = new AsmMove(RegGeter.AregsInt.get(i), argReg);
+            asmBlock.addInstrTail(asmMove);
+        }
+        for (int i = 0; i < floatArgRegNum; i++) {
+            AsmOperand argReg = parseOperand(floatArgs.get(i), 12, f, bb);
+            AsmMove asmMove = new AsmMove(RegGeter.AllRegsFloat.get(i), argReg);
+            asmBlock.addInstrTail(asmMove);
+        }
+        if (false/*TODO:尾递归*/) {
+            assert true;
+        } else {
+            int offset = 0;
+            for (int i = 8; i < intArgs.size(); i++) {
+                Value arg = intArgs.get(i);
+                AsmOperand argReg = parseOperand(arg, 12, f, bb);
+                if (argReg instanceof AsmImm12) {
+                    AsmOperand tmpReg = genTmpReg(f);
+                    AsmMove asmMove = new AsmMove(tmpReg, argReg);
+                    asmBlock.addInstrTail(asmMove);
+                    argReg = tmpReg;
+                }
+                //TODO:偏移量大于2048
+                if (arg.getDataType() == INT) {
+                    AsmSw asmSw = new AsmSw(argReg, RegGeter.SP, new AsmImm12(offset));
+                    asmBlock.addInstrTail(asmSw);
+                    offset += 4;
+                } else {
+                    AsmSd asmSd = new AsmSd(argReg, RegGeter.SP, new AsmImm12(offset));
+                    asmBlock.addInstrTail(asmSd);
+                    offset += 8;
+                }
+            }
+            for (int i = 8; i < floatArgs.size(); i++) {
+                AsmOperand argReg = parseOperand(intArgs.get(i), 12, f, bb);
+                if (argReg instanceof AsmImm12) {
+                    AsmOperand tmpReg = genFloatTmpReg(f);
+                    AsmMove asmMove = new AsmMove(tmpReg, argReg);
+                    asmBlock.addInstrTail(asmMove);
+                    argReg = tmpReg;
+                }
+                AsmFsw asmFsw = new AsmFsw(argReg, RegGeter.SP, new AsmImm12(offset));
+                asmBlock.addInstrTail(asmFsw);
+                offset += 4;
+            }
+        }
+        AsmCall asmCall = new AsmCall(instr.getFuncDef().getName());
+        asmBlock.addInstrTail(asmCall);
+        if (instr.getDataType() != VOID) {
+            AsmOperand dst = parseOperand(instr, 0, f, bb);
+            if (instr.getDataType() == INT) {
+                AsmMove asmMove = new AsmMove(dst, RegGeter.AregsInt.get(0));
+                asmBlock.addInstrTail(asmMove);
+            } else {
+                AsmMove asmMove = new AsmMove(dst, RegGeter.AllRegsFloat.get(0));
+                asmBlock.addInstrTail(asmMove);
+            }
+        }
+    }
+
+
+    //TODO:parseGep
+    /*private void parseGep(GEPInstr instr, BasicBlock bb, Function f) {
+        AsmBlock asmBlock = blockMap.get(bb);
+        AsmOperand dst = parseOperand(instr, 0, f, bb);
+        Value ptr = instr.getPtr();
+        List<Value> indices = instr.getIndices();
+        AsmOperand base = parseOperand(ptr, 0, f, bb);
+        int offset = 0;
+        for (int i = 0; i < indices.size(); i++) {
+            Value index = indices.get(i);
+            AsmOperand indexReg = parseOperand(index, 12, f, bb);
+            if (indexReg instanceof AsmImm12) {
+                AsmOperand tmpReg = genTmpReg(f);
+                AsmMove asmMove = new AsmMove(tmpReg, indexReg);
+                asmBlock.addInstrTail(asmMove);
+                indexReg = tmpReg;
+            }
+            AsmSlli asmSlli = new AsmSlli(indexReg, indexReg, new AsmImm12(2));
+            asmBlock.addInstrTail(asmSlli);
+            AsmAdd asmAdd = new AsmAdd(base, base, indexReg);
+            asmAdd.isWord = true;
+            asmBlock.addInstrTail(asmAdd);
+        }
+        AsmMove asmMove = new AsmMove(dst, base);
+        asmBlock.addInstrTail(asmMove);
+    }*/
+
+    //TODO:parseMove
+    /*private void parseMove(MoveInstr instr, BasicBlock bb, Function f) {
+        AsmBlock asmBlock = blockMap.get(bb);
+        AsmOperand dst = parseOperand(instr, 0, f, bb);
+        AsmOperand src = parseOperand(instr.getOp(), 0, f, bb);
+        AsmMove asmMove = new AsmMove(dst, src);
+        asmBlock.addInstrTail(asmMove);
+    }*/
+
+    private void parseConv(ConversionOperation instr, BasicBlock bb, Function f) {
+        AsmBlock asmBlock = blockMap.get(bb);
+        AsmOperand dst = parseOperand(instr, 0, f, bb);
+        AsmOperand src = parseOperand(instr.getValue(), 0, f, bb);
+        if (instr.getOpName().equals("fptosi")) {
+            AsmFtoi asmFtoi = new AsmFtoi(dst, src);
+            asmBlock.addInstrTail(asmFtoi);
+        } else if (instr.getOpName().equals("sitofp")) {
+            AsmitoF asmitoF = new AsmitoF(dst, src);
+            asmBlock.addInstrTail(asmitoF);
+        } else if (instr.getOpName().equals("zext")) {
+            AsmZext asmZext = new AsmZext(dst, src);
+            asmBlock.addInstrTail(asmZext);
+        } else {
+            //TODO:bitcast的实现
+        }
+    }
+
+    private void parseGEP(GEPInstr instr, BasicBlock bb, Function f) {
+        AsmFunction asmFunction = funcMap.get(f);
+        AsmBlock asmBlock = blockMap.get(bb);
+        List<Value> indexList = instr.getIndexList();
+        AsmOperand base = parseOperand(instr.getPtrVal(), 0, f, bb);
+        AsmOperand result = parseOperand(instr, 0, f, bb);
+        AsmMove asmMove = new AsmMove(result, base);
+        asmBlock.addInstrTail(asmMove);
+        List<Integer> sizeList = instr.getSizeList();
+        int offset = 0;
+        for (int i = 0; i < sizeList.size(); i++) {
+            if (indexList.get(i) instanceof ConstInt) {
+                int index = ((ConstInt) indexList.get(i)).getNumber();
+                offset = index * sizeList.get(i) * 4;
+                if (offset != 0) {
+                    AsmAdd asmAdd = new AsmAdd(result, result, parseConstIntOperand(offset, 12, f, bb));
+                    asmBlock.addInstrTail(asmAdd);
+                }
+            } else {
+                AsmOperand index = parseOperand(indexList.get(i), 0, f, bb);
+                AsmMul asmMul = new AsmMul(index, index, parseConstIntOperand(sizeList.get(i) * 4, 12, f, bb));
+                asmBlock.addInstrTail(asmMul);
+                AsmAdd asmAdd = new AsmAdd(result, result, index);
+                asmBlock.addInstrTail(asmAdd);
+            }
+        }
+    }
+
+    private AsmOperand parseOperand(Value irValue, int maxImm, Function irFunction, BasicBlock bb) {
+        if (operandMap.containsKey(irValue)) {
+            AsmOperand asmOperand = operandMap.get(irValue);
+            if (((asmOperand instanceof AsmImm32) && maxImm < 32) ||
+                    ((asmOperand instanceof AsmImm12) && maxImm < 12)) {
+                if ((asmOperand instanceof AsmImm32) && (((AsmImm32) asmOperand).getValue() == 0)) {
+                    return ZERO;
+                }
+                if ((asmOperand instanceof AsmImm12) && (((AsmImm12) asmOperand).getValue() == 0)) {
+                    return ZERO;
+                }
+                AsmOperand tmpReg = genTmpReg(irFunction);
+                AsmMove asmMove = new AsmMove(tmpReg, asmOperand);
+                blockMap.get(bb).addInstrTail(asmMove);
+                return tmpReg;
+            }
+            return asmOperand;
+        }
+
+        //TODO:关于move指令的到时候再写吧
+
+        if (irValue instanceof ConstInt) {
+            return parseConstIntOperand(((ConstInt) irValue).getNumber(), maxImm, irFunction, bb);
+        }
+        if (irValue instanceof ConstFloat) {
+            return parseConstFloatOperand(((ConstFloat) irValue).getNumber(), maxImm, irFunction, bb);
+        }
+        //全局变量的解析应该只会在load和store指令中出现,单独完成吧
+        AsmFunction asmFunction = funcMap.get(irFunction);
+        if (irValue.getDataType() == FLOAT) {
+            AsmFVirReg tmpReg = new AsmFVirReg();
+            //TODO:这里是addUsedVirReg还是addUsedFVirReg
+            asmFunction.addUsedVirReg(tmpReg);
+            if (!(irValue instanceof ConstFloat)) {
+                //TODO:operandMap1也要加入键值对？
+                operandMap.put(irValue, tmpReg);
+            }
+            return tmpReg;
+        }
+        AsmVirReg tmpReg = genTmpReg(irFunction);
+        if (!(irValue instanceof ConstInt)) {
+            //TODO:operandMap1也要加入键值对？
+            operandMap.put(irValue, tmpReg);
+        }
+        return tmpReg;
+    }
+
+    private AsmOperand parseConstIntOperand(int value, int maxImm, Function irFunction, BasicBlock bb) {
+        AsmImm32 asmImm32 = new AsmImm32(value);
+        AsmImm12 asmImm12 = new AsmImm12(value);
+        if (maxImm == 32) {
+            return asmImm32;
+        }
+        if (maxImm == 12 && (value >= -2048 && value <= 2047)) {
+            return asmImm12;
+        }
+        AsmBlock asmBlock = blockMap.get(bb);
+        AsmVirReg tmpReg = genTmpReg(irFunction);
+        AsmMove asmMove = new AsmMove(tmpReg, asmImm32);
+        asmBlock.addInstrTail(asmMove);
+        return tmpReg;
+    }
+
+    private AsmVirReg genTmpReg(Function irFunction) {
+        AsmFunction asmFunction = funcMap.get(irFunction);
+        AsmVirReg tmpReg = new AsmVirReg();
+        asmFunction.addUsedVirReg(tmpReg);
+        return tmpReg;
+    }
+
+    private AsmFVirReg genFloatTmpReg(Function irFunction) {
+        AsmFunction asmFunction = funcMap.get(irFunction);
+        AsmFVirReg tmpReg = new AsmFVirReg();
+        asmFunction.addUsedVirReg(tmpReg);
+        return tmpReg;
+    }
+
+    private AsmOperand parseConstFloatOperand(float value, int maxImm, Function irFunction, BasicBlock bb) {
+        float floatVal = value;
+        int intVal = Float.floatToRawIntBits(floatVal);
+        AsmFunction asmFunction = funcMap.get(irFunction);
+        AsmFVirReg tmpReg = new AsmFVirReg();
+        //TODO:这里是addUsedVirReg还是addUsedFVirReg
+        asmFunction.addUsedVirReg(tmpReg);
+        AsmOperand label = getFloatLabel(intVal);
+        AsmOperand tmpIntReg = genTmpReg(irFunction);
+        //TODO:全局变量怎么加载局部地址？
+        AsmLa asmLa = new AsmLa(tmpIntReg, label);
+        blockMap.get(bb).addInstrTail(asmLa);
+        AsmFlw asmFlw = new AsmFlw(tmpReg, tmpIntReg, new AsmImm12(0));
+        blockMap.get(bb).addInstrTail(asmFlw);
+        return tmpReg;
+    }
+
+    private AsmOperand getFloatLabel(int value) {
+        if (floatLabelMap.containsKey(value)) {
+            return floatLabelMap.get(value);
+        }
+        AsmGlobalVar asmGlobalVar = new AsmGlobalVar(value);
+        asmModule.addGlobalVar(asmGlobalVar);
+        AsmLabel asmLabel = new AsmLabel(asmGlobalVar.name);
+        floatLabelMap.put(value, asmLabel);
+        return asmLabel;
+    }
+
+    private AsmOperand parseGlobalToOperand(Symbol symbol, BasicBlock bb) {
+        AsmBlock asmBlock = blockMap.get(bb);
+        AsmGlobalVar asmGlobalVar = gvMap.get(symbol);
+        AsmLabel asmLabel = new AsmLabel(asmGlobalVar.name);
+        return asmLabel;
+    }
+
+
     private void parseAnd(AddInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmOperand dst = parseOperand(instr, 0, f, bb);
@@ -839,258 +1184,4 @@ public class IrParser {
             asmBlock.addInstrTail(asmSrl);
         }
     }
-
-    private void parseBr(BranchInstr instr, BasicBlock bb, Function f) {
-        AsmBlock asmBlock = blockMap.get(bb);
-        Value cond = instr.getCond();
-        BasicBlock trueBB = instr.getThenTarget();
-        BasicBlock falseBB = instr.getElseTarget();
-        if (cond instanceof ConstInt) {
-            int value = ((ConstInt) cond).getNumber();
-            if (value != 0) {
-                AsmJ asmJ = new AsmJ(blockMap.get(trueBB));
-                asmBlock.addInstrTail(asmJ);
-            } else {
-                AsmJ asmJ = new AsmJ(blockMap.get(falseBB));
-                asmBlock.addInstrTail(asmJ);
-            }
-        } else {
-            //TODO:为什么需要区分CmpInstr?
-            AsmOperand cmp = parseOperand(cond, 0, f, bb);
-            AsmBlock trueAsmBlock = blockMap.get(trueBB);
-            AsmBlock falseAsmBlock = blockMap.get(falseBB);
-            AsmBeqz asmBeqz = new AsmBeqz(cmp, trueAsmBlock);
-            asmBlock.addInstrTail(asmBeqz);
-            AsmJ asmJ = new AsmJ(falseAsmBlock);
-            asmBlock.addInstrTail(asmJ);
-            //TODO:感觉不需要setTrueBlock和setFalseBlock?
-        }
-    }
-
-    private void parseJump(JumpInstr instr, BasicBlock bb, Function f) {
-        AsmBlock asmBlock = blockMap.get(bb);
-        BasicBlock target = instr.getTarget();
-        AsmJ asmJ = new AsmJ(blockMap.get(target));
-        asmBlock.addInstrTail(asmJ);
-        //TODO:感觉不需要setTrueBlock和setFalseBlock?
-    }
-
-    private void parseCall(CallInstr instr, BasicBlock bb, Function f) {
-        AsmFunction asmFunction = funcMap.get(f);
-        AsmBlock asmBlock = blockMap.get(bb);
-        //TODO:拿tarFunction
-        /*AsmFunction callee = funcMap.get(instr.getFunction());*/
-        List<Value> args = instr.getRParams();
-        List<Value> floatArgs = new ArrayList<>();
-        List<Value> intArgs = new ArrayList<>();
-        for (Value arg : args) {
-            if (arg.getDataType() == FLOAT) {
-                floatArgs.add(arg);
-            } else {
-                intArgs.add(arg);
-            }
-        }
-        int intArgNum = intArgs.size();
-        int floatArgNum = floatArgs.size();
-        int intArgRegNum = Math.min(intArgNum, 8);
-        int floatArgRegNum = Math.min(floatArgNum, 8);
-        for (int i = 0; i < intArgRegNum; i++) {
-            AsmOperand argReg = parseOperand(intArgs.get(i), 12, f, bb);
-            AsmMove asmMove = new AsmMove(RegGeter.AregsInt.get(i), argReg);
-            asmBlock.addInstrTail(asmMove);
-        }
-        for (int i = 0; i < floatArgRegNum; i++) {
-            AsmOperand argReg = parseOperand(floatArgs.get(i), 12, f, bb);
-            AsmMove asmMove = new AsmMove(RegGeter.AllRegsFloat.get(i), argReg);
-            asmBlock.addInstrTail(asmMove);
-        }
-        if (true/*TODO:尾递归*/) {
-            assert true;
-        } else {
-            int offset = 0;
-            for (int i = 8; i < intArgs.size(); i++) {
-                Value arg = intArgs.get(i);
-                AsmOperand argReg = parseOperand(arg, 12, f, bb);
-                if (argReg instanceof AsmImm12) {
-                    AsmOperand tmpReg = genTmpReg(f);
-                    AsmMove asmMove = new AsmMove(tmpReg, argReg);
-                    asmBlock.addInstrTail(asmMove);
-                    argReg = tmpReg;
-                }
-                if (arg.getDataType() == INT) {
-                    AsmSw asmSw = new AsmSw(argReg, RegGeter.SP, new AsmImm12(offset));
-                    asmBlock.addInstrTail(asmSw);
-                    offset += 4;
-                } else {
-                    AsmSd asmSd = new AsmSd(argReg, RegGeter.SP, new AsmImm12(offset));
-                    asmBlock.addInstrTail(asmSd);
-                    offset += 8;
-                }
-            }
-            for (int i = 8; i < floatArgs.size(); i++) {
-                AsmOperand argReg = parseOperand(intArgs.get(i), 12, f, bb);
-                if (argReg instanceof AsmImm12) {
-                    AsmOperand tmpReg = genFloatTmpReg(f);
-                    AsmMove asmMove = new AsmMove(tmpReg, argReg);
-                    asmBlock.addInstrTail(asmMove);
-                    argReg = tmpReg;
-                }
-                AsmFsw asmFsw = new AsmFsw(argReg, RegGeter.SP, new AsmImm12(offset));
-                asmBlock.addInstrTail(asmFsw);
-                offset += 4;
-            }
-        }
-        //TODO:call指令的生成,先解决callee的问题
-    }
-
-
-    //TODO:parseGep
-
-    //TODO:parseMove
-    /*private void parseMove(MoveInstr instr, BasicBlock bb, Function f) {
-        AsmBlock asmBlock = blockMap.get(bb);
-        AsmOperand dst = parseOperand(instr, 0, f, bb);
-        AsmOperand src = parseOperand(instr.getOp(), 0, f, bb);
-        AsmMove asmMove = new AsmMove(dst, src);
-        asmBlock.addInstrTail(asmMove);
-    }*/
-
-    private void parseConv(ConversionOperation instr, BasicBlock bb, Function f) {
-        AsmBlock asmBlock = blockMap.get(bb);
-        AsmOperand dst = parseOperand(instr, 0, f, bb);
-        AsmOperand src = parseOperand(instr.getValue(), 0, f, bb);
-        if (instr.getOpName().equals("fptosi")) {
-            AsmFtoi asmFtoi = new AsmFtoi(dst, src);
-            asmBlock.addInstrTail(asmFtoi);
-        } else if (instr.getOpName().equals("sitofp")) {
-            AsmitoF asmitoF = new AsmitoF(dst, src);
-            asmBlock.addInstrTail(asmitoF);
-        } else if (instr.getOpName().equals("zext")) {
-            AsmZext asmZext = new AsmZext(dst, src);
-            asmBlock.addInstrTail(asmZext);
-        } else {
-            //TODO:bitcast的实现
-        }
-    }
-
-    private AsmOperand parseOperand(Value irValue, int maxImm, Function irFunction, BasicBlock bb) {
-        if (operandMap.containsKey(irValue)) {
-            AsmOperand asmOperand = operandMap.get(irValue);
-            if (((asmOperand instanceof AsmImm32) && maxImm < 32) ||
-                    ((asmOperand instanceof AsmImm12) && maxImm < 12)) {
-                if ((asmOperand instanceof AsmImm32) && (((AsmImm32) asmOperand).getValue() == 0)) {
-                    return ZERO;
-                }
-                if ((asmOperand instanceof AsmImm12) && (((AsmImm12) asmOperand).getValue() == 0)) {
-                    return ZERO;
-                }
-                //TODO:生成临时寄存器
-                AsmOperand tmpReg = genTmpReg(irFunction);
-                AsmMove asmMove = new AsmMove(tmpReg, asmOperand);
-                blockMap.get(bb).addInstrTail(asmMove);
-                return tmpReg;
-            }
-            return asmOperand;
-        }
-
-        //TODO:关于move指令的到时候再写吧
-
-        if (irValue instanceof ConstInt) {
-            return parseConstIntOperand(((ConstInt) irValue).getNumber(), maxImm, irFunction, bb);
-        }
-        if (irValue instanceof ConstFloat) {
-            return parseConstFloatOperand(((ConstFloat) irValue).getNumber(), maxImm, irFunction, bb);
-        }
-        //全局变量的解析应该只会在load和store指令中出现,单独完成吧
-        AsmFunction asmFunction = funcMap.get(irFunction);
-        if (irValue.getDataType() == FLOAT) {
-            AsmFVirReg tmpReg = new AsmFVirReg();
-            //TODO:这里是addUsedVirReg还是addUsedFVirReg
-            asmFunction.addUsedVirReg(tmpReg);
-            if (!(irValue instanceof ConstFloat)) {
-                //TODO:operandMap1也要加入键值对？
-                operandMap.put(irValue, tmpReg);
-            }
-            return tmpReg;
-        }
-        AsmVirReg tmpReg = new AsmVirReg();
-        asmFunction.addUsedVirReg(tmpReg);
-        if (!(irValue instanceof ConstInt)) {
-            //TODO:operandMap1也要加入键值对？
-            operandMap.put(irValue, tmpReg);
-        }
-        return tmpReg;
-    }
-
-    private AsmOperand parseConstIntOperand(int value, int maxImm, Function irFunction, BasicBlock bb) {
-        AsmImm32 asmImm32 = new AsmImm32(value);
-        AsmImm12 asmImm12 = new AsmImm12(value);
-        if (maxImm == 32) {
-            return asmImm32;
-        }
-        if (maxImm == 12 && (value >= -2048 && value <= 2047)) {
-            return asmImm12;
-        }
-        AsmBlock asmBlock = blockMap.get(bb);
-        AsmVirReg tmpReg = genTmpReg(irFunction);
-        AsmMove asmMove = new AsmMove(tmpReg, asmImm32);
-        asmBlock.addInstrTail(asmMove);
-        return tmpReg;
-    }
-
-    private AsmVirReg genTmpReg(Function irFunction) {
-        AsmFunction asmFunction = funcMap.get(irFunction);
-        AsmVirReg tmpReg = new AsmVirReg();
-        asmFunction.addUsedVirReg(tmpReg);
-        return tmpReg;
-    }
-
-    private AsmFVirReg genFloatTmpReg(Function irFunction) {
-        AsmFunction asmFunction = funcMap.get(irFunction);
-        AsmFVirReg tmpReg = new AsmFVirReg();
-        asmFunction.addUsedVirReg(tmpReg);
-        return tmpReg;
-    }
-
-    private AsmOperand parseConstFloatOperand(float value, int maxImm, Function irFunction, BasicBlock bb) {
-        float floatVal = value;
-        int intVal = Float.floatToRawIntBits(floatVal);
-        AsmFunction asmFunction = funcMap.get(irFunction);
-        AsmFVirReg tmpReg = new AsmFVirReg();
-        //TODO:这里是addUsedVirReg还是addUsedFVirReg
-        asmFunction.addUsedVirReg(tmpReg);
-        AsmOperand label = getFloatLabel(intVal);
-        AsmOperand tmpIntReg = genTmpReg(irFunction);
-        //TODO:全局变量怎么加载局部地址？
-        AsmLa asmLa = new AsmLa(tmpIntReg, label);
-        blockMap.get(bb).addInstrTail(asmLa);
-        AsmFlw asmFlw = new AsmFlw(tmpReg, tmpIntReg, new AsmImm12(0));
-        blockMap.get(bb).addInstrTail(asmFlw);
-        return tmpReg;
-    }
-
-    private AsmOperand getFloatLabel(int value) {
-        if (floatLabelMap.containsKey(value)) {
-            return floatLabelMap.get(value);
-        }
-        AsmGlobalVar asmGlobalVar = new AsmGlobalVar(value);
-        asmModule.addGlobalVar(asmGlobalVar);
-        AsmLabel asmLabel = new AsmLabel(asmGlobalVar.name);
-        floatLabelMap.put(value, asmLabel);
-        return asmLabel;
-    }
-
-    private AsmOperand parseGlobalToOperand(Symbol symbol, BasicBlock bb) {
-        AsmBlock asmBlock = blockMap.get(bb);
-        AsmGlobalVar asmGlobalVar = gvMap.get(symbol);
-        AsmLabel asmLabel = new AsmLabel(asmGlobalVar.name);
-        return asmLabel;
-    }
-
-
-    private void setLibFunctions() {
-        //TODO:设置库函数
-    }
-
-
 }

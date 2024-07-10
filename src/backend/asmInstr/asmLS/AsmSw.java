@@ -8,4 +8,16 @@ public class AsmSw extends AsmS{
         changeAddr(addr);
         changeOffset(offset);
     }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("sw\t");
+        sb.append(src);
+        sb.append(",\t");
+        sb.append(offset);
+        sb.append("(");
+        sb.append(addr);
+        sb.append(")");
+        return sb.toString();
+    }
 }

@@ -8,4 +8,12 @@ public class AsmLa extends AsmL {
         changeSrc(src);
     }
 
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("la\t");
+        sb.append(dst);
+        sb.append(",\t");
+        sb.append(src);
+        return sb.toString();
+    }
 }

@@ -79,4 +79,8 @@ public class CallInstr extends Instruction {
     public List<Value> getRParams() {
         return rParams;
     }
+
+    public FuncDef getFuncDef() {
+        return funcDef;
+    }
 }

@@ -5,13 +5,14 @@ import Utils.CustomList.Node;
 import backend.asmInstr.AsmInstr;
 import frontend.ir.instr.binop.AddInstr;
 
-public class AsmBlock extends Node{
-    private int index = 0;
-    private CustomList instrs=new CustomList();
+public class AsmBlock extends Node {
+    private String name;
+    private CustomList instrs = new CustomList();
 
-    public AsmBlock(int index) {
-        this.index = index;
+    public AsmBlock(String name) {
+        this.name = name;
     }
+
     public void addInstrHead(AsmInstr instr) {
         instrs.addToHead(instr);
     }
@@ -19,12 +20,17 @@ public class AsmBlock extends Node{
     public void addInstrTail(AsmInstr instr) {
         instrs.addToTail(instr);
     }
-    public int getIndex() {
-        return index;
-    }
 
     public CustomList getInstrs() {
         return instrs;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String toString() {
+        return name;
     }
 
 }

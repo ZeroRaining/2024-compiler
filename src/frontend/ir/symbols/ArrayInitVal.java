@@ -226,4 +226,23 @@ public class ArrayInitVal extends Value {
         }
         return size;
     }
+
+    public ArrayList<Value> getInitList() {
+        return initList;
+    }
+
+    public int getLimSize() {
+        int limSize = 1;
+        for (int i = 0; i < limList.size(); i++) {
+            limSize *= limList.get(i);
+        }
+        return limSize;
+    }
+    public int getDimSize(int dim) {
+        return limList.get(dim);
+    }
+
+    public List<Integer> getlimLst() {
+        return limList;
+    }
 }
