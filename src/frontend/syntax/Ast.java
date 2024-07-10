@@ -126,6 +126,8 @@ public class Ast {
             assert ident != null;
             assert params != null;
             assert body != null;
+            // 为了保证函数的最后有一条 return 语句
+            body.ensureReturn(type.getType());
         }
         
         public Token getIdent() {
@@ -202,6 +204,32 @@ public class Ast {
         
         public ArrayList<BlockItem> getItems() {
             return items;
+        }
+        
+        public void ensureReturn(TokenType returnType) {
+            if (returnType == null) {
+                throw new NullPointerException();
+            }
+            if (this.items.get(items.size() - 1) instanceof Return) {
+                return;
+            }
+            Return returnStmt;
+            switch (returnType) {
+                case INT:
+                    Number returnInt = new Number(new Token(TokenType.INT, "0"));
+                    returnStmt = new Return(new UnaryExp(new ArrayList<>(), returnInt));
+                    break;
+                case FLOAT:
+                    Number returnFloat = new Number(new Token(TokenType.FLOAT, "0.0"));
+                    returnStmt = new Return(new UnaryExp(new ArrayList<>(), returnFloat));
+                    break;
+                case VOID:
+                    returnStmt = new Return(null);
+                    break;
+                default:
+                    throw new RuntimeException("出现了意想不到的返回值类型");
+            }
+            this.items.add(returnStmt);
         }
     }
     
