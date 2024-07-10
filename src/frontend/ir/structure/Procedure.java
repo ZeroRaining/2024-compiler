@@ -89,7 +89,11 @@ public class Procedure {
             Symbol symbol = new Symbol("", returnType, new ArrayList<>(), false, false, null);
             funcSymTab.addSym(symbol);
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol));
-            curBlock.addInstruction(new StoreInstr(new ConstInt(0), funcSymTab.getSym("")));
+            if (returnType == DataType.INT) {
+                curBlock.addInstruction(new StoreInstr(new ConstInt(0), funcSymTab.getSym("")));
+            } else {
+                curBlock.addInstruction(new StoreInstr(new ConstFloat(0), funcSymTab.getSym("")));
+            }
         }
     }
 
