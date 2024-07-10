@@ -20,7 +20,7 @@ public class FuncMemset extends LibFunc {
     
     @Override
     public String printDeclaration() {
-        return "declare void @memset(i32*, i32, i32)";
+        return "declare void @memset(i8*, i32, i32)";
     }
     
     @Override
@@ -42,9 +42,6 @@ public class FuncMemset extends LibFunc {
         if (rParams.get(0).getPointerLevel() != 1) {
             return false;
         }
-        if (type0 != DataType.INT && type0 != DataType.FLOAT) {
-            return false;
-        }
-        return type1 == DataType.INT && type2 == DataType.INT;
+        return type0 == DataType.VOID_ && type1 == DataType.INT && type2 == DataType.INT;
     }
 }

@@ -18,6 +18,7 @@ public abstract class ConversionOperation extends Instruction {
         this.to     = to;
         this.value  = value;
         this.opName = name;
+        this.pointerLevel = value.getPointerLevel();
         setUse(value);
     }
     
@@ -33,8 +34,14 @@ public abstract class ConversionOperation extends Instruction {
     
     @Override
     public String print() {
+        String fromType;
+        if (this.pointerLevel == 0) {
+            fromType = from.toString();
+        } else {
+            fromType = value.type2string();
+        }
         return "%reg_" + result + " = " +
-                opName + " " + from + " " +
+                opName + " " + fromType + " " +
                 value.value2string() + " to " + to;
     }
 

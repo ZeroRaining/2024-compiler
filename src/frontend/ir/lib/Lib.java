@@ -29,7 +29,7 @@ public class Lib {
         allFunctions.put("stoptime",    FuncStoptime.class);    // void stoptime()
         // MEM
         allFunctions.put("memset", FuncMemset.class);
-        // void *memset(void *str, int c, size_t n)     简化： void memset(int*, int, int)
+        // void *memset(void *str, int c, size_t n)     简化： void memset(void*, int, int)
     }
     
     public static Lib getInstance() {
