@@ -10,7 +10,10 @@ import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.*;
-import frontend.ir.instr.memop.*;
+import frontend.ir.instr.memop.AllocaInstr;
+import frontend.ir.instr.memop.GEPInstr;
+import frontend.ir.instr.memop.LoadInstr;
+import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.otherop.cmp.FCmpInstr;
@@ -125,18 +128,18 @@ public class Procedure {
             fParamValueList.add(fParam);
         }
     }
-    
+
     private void storeParams(HashMap<Symbol, FParam> symbol2FParam) {
         for (Symbol symbol : symbol2FParam.keySet()) {
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol));
             curBlock.addInstruction(new StoreInstr(symbol2FParam.get(symbol), symbol));
         }
     }
-    
+
     public List<Value> getFParamSymbolList() {
         return this.fParamValueList;
     }
-    
+
     public void parseCodeBlock(Ast.Block block, DataType returnType, SymTab symTab) {
         if (block == null || returnType == null || curBlock == null || symTab == null) {
             throw new NullPointerException();
@@ -428,7 +431,7 @@ public class Procedure {
             curBlock = nextBlk;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
-            condValue = calculateExpr(nextExp, symTab, false);
+            condValue = transform2i1(calculateExpr(nextExp, symTab, false));
         }
         return condValue;
     }
@@ -659,7 +662,7 @@ public class Procedure {
         }
         return ptr;
     }
-    
+
     private List<Value> getIndexList(Ast.LVal lVal, SymTab symTab) {
         if (lVal == null) {
             throw new NullPointerException();
@@ -717,7 +720,7 @@ public class Procedure {
         curBlock.addInstruction(callInstr);
         return callInstr;
     }
-    
+
     private void funcParamConv(List<Ast.FuncFParam> fParams, List<Value> rParams) {
         for (int i = 0; i < fParams.size(); i++) {
             Value curRParam = rParams.get(i);
