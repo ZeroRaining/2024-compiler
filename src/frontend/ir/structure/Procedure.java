@@ -420,12 +420,21 @@ public class Procedure {
             return transform2i1(calculateExpr(exp, symTab, false));
         }
         Ast.BinaryExp bin = (Ast.BinaryExp) exp;
-        BasicBlock nextBlk = falseBlk;
+        BasicBlock nextBlk;
+        boolean flag = true;
+        if (bin.getOps().isEmpty()) {
+            nextBlk = falseBlk;
+        } else {
+            nextBlk = new BasicBlock(curDepth);
+            flag = false;
+        }
         Value condValue = transform2i1(calculateLAnd(bin.getFirstExp(), nextBlk, symTab));
 
 
         for (int i = 0; i < bin.getOps().size(); i++) {
-            nextBlk = new BasicBlock(curDepth);
+            if (flag) {
+                nextBlk = new BasicBlock(curDepth);
+            }
             Token op = bin.getOps().get(i);
             Ast.Exp nextExp = bin.getRestExps().get(i);
             assert op.getType() == TokenType.LOR;
@@ -434,6 +443,7 @@ public class Procedure {
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
             condValue = transform2i1(calculateLAnd(nextExp, falseBlk, symTab));
+            flag = true;
         }
 
         return condValue;
