@@ -39,6 +39,7 @@ public class Compiler {
 
         // 打印 IR
         if (arg.toPrintIR()) {
+            //  -S -o testcase.s in.sy -O0 -ll out.ll
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
             program.printIR(irWriter);
             irWriter.close();
@@ -48,10 +49,10 @@ public class Compiler {
 //        IRTest();
 
         //后端代码生成测试
-//        CodeGenTest();
+        // CodeGenTest();
 
         //寄存器分配测试
-//        RegAllocTest();
+        //RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {
