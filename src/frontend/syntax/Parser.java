@@ -133,8 +133,8 @@ public class Parser {
                 args.add(parseBinaryExp(BinaryExpType.ADD));
             }
         }
-        tokenList.getCharWithJudge(TokenType.RPARENT);
-        return new Ast.Call(ident, args);
+        int lineno = tokenList.getCharWithJudge(TokenType.RPARENT).getLineno();
+        return new Ast.Call(ident, args, lineno);
     }
 
     private Ast.LVal parseLVal() {

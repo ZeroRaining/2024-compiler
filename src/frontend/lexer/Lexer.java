@@ -9,6 +9,7 @@ public class Lexer {
     public static final Lexer lexer = new Lexer();
     private static final boolean[] constChar = new boolean[128];
     private static final boolean[] floatChar = new boolean[128];
+    private static int lineno = 1;
     private TokenList tokenList = new TokenList();
 
     static {
@@ -148,6 +149,9 @@ public class Lexer {
 
     public int ignoreWhiteSpace(BufferedInputStream bis, int c) throws IOException {
         while (isWhiteSpace((char) c) || isEnter((char) c)) {
+            if (isEnter((char) c)) {
+                lineno++;
+            }
             c = readChar(bis);
         }
         return c;
@@ -387,7 +391,8 @@ public class Lexer {
                 return c;
             }
             case ')': {
-                Token tk = new Token(RPARENT, ")");
+                Token tk = new Token(RPARENT, ")", lineno);
+                System.out.println(tk.getLineno());
                 tokenList.append(tk);
                 c = readChar(bis);
                 return c;
