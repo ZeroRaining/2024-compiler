@@ -6,6 +6,7 @@ import frontend.ir.DataType;
 import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
@@ -13,7 +14,9 @@ import frontend.ir.instr.terminator.ReturnInstr;
 import javax.tools.JavaCompiler;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 public class BasicBlock extends Value {
     private final CustomList instructions = new CustomList();
@@ -90,6 +93,28 @@ public class BasicBlock extends Value {
 
     public int getLabelCnt() {
         return labelCnt;
+    }
+    
+    public List<AllocaInstr> popAllAlloca() {
+        Instruction instr = (Instruction) instructions.getHead();
+        ArrayList<AllocaInstr> allocaList = new ArrayList<>();
+        while (instr != null) {
+            if (instr instanceof AllocaInstr) {
+                allocaList.add((AllocaInstr) instr);
+                instr.removeFromList();
+            }
+            instr = (Instruction) instr.getNext();
+        }
+        return allocaList;
+    }
+    
+    public void reAddAllAlloca(List<AllocaInstr> allocaInstrList) {
+        if (allocaInstrList == null) {
+            throw new NullPointerException();
+        }
+        for (int i = allocaInstrList.size() - 1; i >= 0; i--) {
+            instructions.addToHead(allocaInstrList.get(i));
+        }
     }
 
     public void addInstruction(Instruction instr) {

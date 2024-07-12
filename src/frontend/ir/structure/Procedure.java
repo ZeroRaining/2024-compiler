@@ -61,6 +61,18 @@ public class Procedure {
         storeParams(symbol2FParam);
         parseCodeBlock(block, returnType, funcSymTab);
         finalize(returnType, funcSymTab);
+        
+        allocaRearrangement();
+    }
+    
+    private void allocaRearrangement() {
+        BasicBlock blk = (BasicBlock) basicBlocks.getHead();
+        ArrayList<AllocaInstr> allocaList = new ArrayList<>();
+        while (blk != null) {
+            allocaList.addAll(blk.popAllAlloca());
+            blk = (BasicBlock) blk.getNext();
+        }
+        ((BasicBlock) basicBlocks.getHead()).reAddAllAlloca(allocaList);
     }
 
     private void finalize(DataType returnType, SymTab funcSymTab) {
