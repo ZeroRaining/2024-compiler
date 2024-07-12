@@ -123,7 +123,12 @@ public class GEPInstr extends MemoryOperation {
         throw new RuntimeException("没有可以置换的 value");
     }
 
-    public List<Value> getIndexList() {
-        return indexList;
+    public List<Value> getWholeIndexList() {
+        List<Value> wholeIndexList = new ArrayList<>();
+        for (int i = 0; i < symbol.getLimitList().size() - indexList.size(); i++) {
+            wholeIndexList.add(new ConstInt(0));
+        }
+        wholeIndexList.addAll(indexList);
+        return wholeIndexList;
     }
 }

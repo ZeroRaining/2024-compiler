@@ -10,9 +10,9 @@ public class AsmDiv extends AsmBinary{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("div");
-        if(isWord){
-            sb.append("w");
-        }
+//        if(isWord){
+//            sb.append("w");
+//        }
         sb.append("\t");
         sb.append(dst);
         sb.append(",\t");
