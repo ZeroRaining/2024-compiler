@@ -81,9 +81,9 @@ public class Mem2Reg {
 //        }
         //to be improved
         if (useBlks.isEmpty()) {
-            for (Instruction ins : defIns) {
-                ins.removeFromList();
-            }
+//            for (Instruction ins : defIns) {
+//                ins.removeFromList();
+//            }
         } else if (defIns.size() == 1 && defBlks.get(0).getDoms().containsAll(useBlks)) {
             //不处理，未定义的初始值
             Instruction store = defIns.get(0);//store指令
@@ -95,12 +95,11 @@ public class Mem2Reg {
         } else {
             ArrayList<BasicBlock> toPuts = new ArrayList<>();
             Queue<BasicBlock> W = new LinkedList<>(defBlks);
-            System.out.println("toPuts: ");
             while (!W.isEmpty()) {
                 BasicBlock X = W.poll();
                 for (BasicBlock Y : X.getDF()) {
                     if (!toPuts.contains(Y)) {
-                        System.out.println(Y);
+//                        System.out.println(Y);
                         toPuts.add(Y);
                         if (!defBlks.contains(Y)) {
                             W.add(Y);
@@ -108,11 +107,10 @@ public class Mem2Reg {
                     }
                 }
             }
-            System.out.println();
+//            System.out.println();
 
 
             for (BasicBlock block : toPuts) {
-
                 ArrayList<Value> values = new ArrayList<>();
                 ArrayList<BasicBlock> prtBlks = new ArrayList<>();
                 for (BasicBlock blk : block.getPres()) {

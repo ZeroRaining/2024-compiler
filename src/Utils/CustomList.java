@@ -59,6 +59,7 @@ public class CustomList implements Iterable<CustomList.Node> {
             this.tail.next = node;
             node.prev = this.tail;
             this.tail = node;
+            node.next = null;
         }
         node.parent = this;
         incrementSize();
@@ -71,6 +72,7 @@ public class CustomList implements Iterable<CustomList.Node> {
             this.head.prev = node;
             node.next = this.head;
             this.head = node;
+            node.prev = null;
         }
         node.parent = this;
         incrementSize();
