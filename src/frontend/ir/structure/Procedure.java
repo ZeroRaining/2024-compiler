@@ -67,11 +67,11 @@ public class Procedure {
         if (returnType == null) {
             throw new RuntimeException("会不会写函数啊，小老弟？！");
         }
+        curBlock = retBlock;
+        curBlock.setLabelCnt(curBlkIndex++);
+        basicBlocks.addToTail(curBlock);
         if (returnType != DataType.VOID) {
             //空串表示用于存返回值的变量
-            curBlock = retBlock;
-            curBlock.setLabelCnt(curBlkIndex++);
-            basicBlocks.addToTail(curBlock);
             Instruction instr = new LoadInstr(curRegIndex++,funcSymTab.getSym(""));
             curBlock.addInstruction(instr);
             curBlock.addInstruction(new ReturnInstr(returnType, instr));
@@ -89,7 +89,11 @@ public class Procedure {
             Symbol symbol = new Symbol("", returnType, new ArrayList<>(), false, false, null);
             funcSymTab.addSym(symbol);
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol));
-            curBlock.addInstruction(new StoreInstr(new ConstInt(0), funcSymTab.getSym("")));
+            if (returnType == DataType.INT) {
+                curBlock.addInstruction(new StoreInstr(new ConstInt(0), funcSymTab.getSym("")));
+            } else {
+                curBlock.addInstruction(new StoreInstr(new ConstFloat(0), funcSymTab.getSym("")));
+            }
         }
     }
 
@@ -125,18 +129,18 @@ public class Procedure {
             fParamValueList.add(fParam);
         }
     }
-    
+
     private void storeParams(HashMap<Symbol, FParam> symbol2FParam) {
         for (Symbol symbol : symbol2FParam.keySet()) {
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol));
             curBlock.addInstruction(new StoreInstr(symbol2FParam.get(symbol), symbol));
         }
     }
-    
+
     public List<Value> getFParamSymbolList() {
         return this.fParamValueList;
     }
-    
+
     public void parseCodeBlock(Ast.Block block, DataType returnType, SymTab symTab) {
         if (block == null || returnType == null || curBlock == null || symTab == null) {
             throw new NullPointerException();
@@ -274,7 +278,9 @@ public class Procedure {
                 value = new Si2Fp(curRegIndex++, value);
                 curBlock.addInstruction((Instruction) value);
             }
-            curBlock.addInstruction(new StoreInstr(value, symTab.getSym("")));
+            Symbol retSym = symTab.getSym("");
+            value = toSameType(value, retSym);
+            curBlock.addInstruction(new StoreInstr(value, retSym));
             curBlock.addInstruction(new JumpInstr(retBlock));
         }
     }
@@ -286,14 +292,7 @@ public class Procedure {
         Ast.LVal lVal = item.getLVal();
         Symbol left = symTab.getSym(lVal.getName());
         Value right = calculateExpr(item.getExp(), symTab, false);
-        if (left.getType() == DataType.FLOAT && right.getDataType() == DataType.INT) {
-            right = new Si2Fp(curRegIndex++, right);
-            curBlock.addInstruction((Instruction) right);
-        }
-        if (left.getType() == DataType.INT && right.getDataType() == DataType.FLOAT) {
-            right = new Fp2Si(curRegIndex++, right);
-            curBlock.addInstruction((Instruction) right);
-        }
+        right = toSameType(right, left);
         if (left.isArray()) {
             List<Value> indexList = getIndexList(lVal, symTab);
             Instruction ptr = getPtr(left, indexList);
@@ -315,9 +314,11 @@ public class Procedure {
             Value initVal = symbol.getInitVal();
             if (initVal != null) {
                 if (initVal instanceof ConstValue) {
+                    initVal = toSameType(initVal, symbol);
                     curBlock.addInstruction(new StoreInstr(initVal, symbol));
                 } else if (initVal instanceof InitExpr) {
                     Value init = calculateExpr(((InitExpr) initVal).getExp(), symTab, false);
+                    init = toSameType(init, symbol);
                     curBlock.addInstruction(new StoreInstr(init, symbol));
                 } else if (initVal instanceof ArrayInitVal) {
                     ArrayList<Value> baseIndexList = new ArrayList<>();
@@ -347,11 +348,13 @@ public class Procedure {
                         if (valToInit instanceof ConstValue) {
                             Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
                             curBlock.addInstruction(ptr);
+                            valToInit = toSameType(valToInit, symbol);
                             curBlock.addInstruction(new StoreInstr(valToInit, symbol, ptr));
                         } else if (valToInit instanceof InitExpr) {
                             Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
                             curBlock.addInstruction(ptr);
                             Value init = calculateExpr(((InitExpr) valToInit).getExp(), symTab, false);
+                            init = toSameType(init, symbol);
                             curBlock.addInstruction(new StoreInstr(init, symbol, ptr));
                         } else {
                             throw new RuntimeException("最后一层了只能是常数或者表达式了吧");
@@ -366,6 +369,31 @@ public class Procedure {
                 symTab.addSym(symbol);
             }
         }
+    }
+    
+    /**
+     *  用于 store 之前，检测一下存储类型对不对的上，对不上就改一下
+     */
+    private Value toSameType(Value value, Symbol symbol) {
+        if (value == null || symbol == null) {
+            throw new NullPointerException();
+        }
+        DataType valueType = value.getDataType();
+        DataType symbolType = symbol.getType();
+        if (symbolType == valueType) {
+            return value;
+        }
+        if (symbolType == DataType.FLOAT && valueType == DataType.INT) {
+            value = new Si2Fp(curRegIndex++, value);
+            curBlock.addInstruction((Instruction) value);
+            return value;
+        }
+        if (symbolType == DataType.INT && valueType == DataType.FLOAT) {
+            value = new Fp2Si(curRegIndex++, value);
+            curBlock.addInstruction((Instruction) value);
+            return value;
+        }
+        throw new RuntimeException("symbol, value出现了意料之外的组合：" + symbolType + valueType);
     }
 
     private Value transform2i1(Value value) {
@@ -392,12 +420,21 @@ public class Procedure {
             return transform2i1(calculateExpr(exp, symTab, false));
         }
         Ast.BinaryExp bin = (Ast.BinaryExp) exp;
-        BasicBlock nextBlk = falseBlk;
+        BasicBlock nextBlk;
+        boolean flag = true;
+        if (bin.getOps().isEmpty()) {
+            nextBlk = falseBlk;
+        } else {
+            nextBlk = new BasicBlock(curDepth);
+            flag = false;
+        }
         Value condValue = transform2i1(calculateLAnd(bin.getFirstExp(), nextBlk, symTab));
 
 
         for (int i = 0; i < bin.getOps().size(); i++) {
-            nextBlk = new BasicBlock(curDepth);
+            if (flag) {
+                nextBlk = new BasicBlock(curDepth);
+            }
             Token op = bin.getOps().get(i);
             Ast.Exp nextExp = bin.getRestExps().get(i);
             assert op.getType() == TokenType.LOR;
@@ -406,6 +443,7 @@ public class Procedure {
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
             condValue = transform2i1(calculateLAnd(nextExp, falseBlk, symTab));
+            flag = true;
         }
 
         return condValue;
@@ -428,7 +466,7 @@ public class Procedure {
             curBlock = nextBlk;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
-            condValue = calculateExpr(nextExp, symTab, false);
+            condValue = transform2i1(calculateExpr(nextExp, symTab, false));
         }
         return condValue;
     }
@@ -584,16 +622,20 @@ public class Procedure {
                 Symbol symbol = symTab.getSym(((Ast.LVal) primary).getName());
                 if (symbol.isArray()) {
                     List<Value> indexList = getIndexList((Ast.LVal) primary, symTab);
-                    GEPInstr ptr = getPtr(symbol, indexList);
+                    MemoryOperation ptr = getPtr(symbol, indexList);
                     curBlock.addInstruction(ptr);
-                    if (ptr.getPointerLevel() == 1) {
+                    if (ptr.getPointerLevel() == 1 && ptr instanceof GEPInstr) {
                         Instruction load = new LoadInstr(curRegIndex++, symbol, ptr);
                         curBlock.addInstruction(load);
                         res = load;
                     } else {
-                        Instruction newPtr = new GEPInstr(curRegIndex++, ptr);
-                        curBlock.addInstruction(newPtr);
-                        res = newPtr;
+                        if (ptr instanceof GEPInstr) {
+                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr);
+                            curBlock.addInstruction(newPtr);
+                            res = newPtr;
+                        } else {
+                            res = ptr;
+                        }
                     }
                 } else {
                     if (symbol.isConstant() || symTab.isGlobal() && symbol.isGlobal()) {
@@ -648,10 +690,14 @@ public class Procedure {
         }
     }
     
-    private GEPInstr getPtr(Symbol symbol, List<Value> indexList){
+    private MemoryOperation getPtr(Symbol symbol, List<Value> indexList){
         GEPInstr ptr;
         if (symbol.isArrayFParam()) {
             LoadInstr load = new LoadInstr(curRegIndex++, symbol);
+            // 对于函数中将传进来的数组指针直接传出的情况，load 出来就可以了，不用再进一步 GEP
+            if (indexList.isEmpty()) {
+                return load;
+            }
             curBlock.addInstruction(load);
             ptr = new GEPInstr(curRegIndex++, load, indexList);
         } else {
@@ -659,7 +705,7 @@ public class Procedure {
         }
         return ptr;
     }
-    
+
     private List<Value> getIndexList(Ast.LVal lVal, SymTab symTab) {
         if (lVal == null) {
             throw new NullPointerException();
@@ -717,7 +763,7 @@ public class Procedure {
         curBlock.addInstruction(callInstr);
         return callInstr;
     }
-    
+
     private void funcParamConv(List<Ast.FuncFParam> fParams, List<Value> rParams) {
         for (int i = 0; i < fParams.size(); i++) {
             Value curRParam = rParams.get(i);

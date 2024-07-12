@@ -1,7 +1,6 @@
 package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
-import frontend.ir.structure.BasicBlock;
 import frontend.ir.symbols.Symbol;
 
 public class LoadInstr extends MemoryOperation {
@@ -49,16 +48,22 @@ public class LoadInstr extends MemoryOperation {
         }
         return stringBuilder.toString();
     }
+    
+    @Override
+    public String type2string() {
+        System.out.println("hello" + pointerLevel);
+        if (this.pointerLevel > 0) {
+            return this.printBaseType();
+        } else {
+            return this.getDataType().toString();
+        }
+    }
 
     @Override
     public void modifyValue(Value from, Value to) {
         throw new RuntimeException("没有可以置换的 value");
     }
-
-    public Symbol getSymbol() {
-        return symbol;
-    }
-
+    
     public Value getPtr() {
         return ptr;
     }

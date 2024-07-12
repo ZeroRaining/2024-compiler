@@ -28,10 +28,11 @@ public class Compiler {
         Ast ast = new Parser(tokenList).parseAst();
         //IR生成
         Program program = new Program(ast);
+        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
+//        DFG.doDFG(functions);
+
         // 开启优化
         if (arg.getOptLevel() == 1) {
-            HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
-            DFG.doDFG(functions);
             Mem2Reg.doMem2Reg(functions);
         }
         
