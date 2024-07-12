@@ -1,6 +1,9 @@
 package backend.asmInstr;
 
 import Utils.CustomList;
+import backend.asmInstr.asmBinary.AsmBinary;
+import backend.asmInstr.asmLS.AsmL;
+import backend.asmInstr.asmLS.AsmS;
 import backend.itemStructure.AsmOperand;
 import backend.regs.AsmReg;
 
@@ -18,6 +21,7 @@ public class AsmInstr extends CustomList.Node {
     public ArrayList<AsmReg> regUse = new ArrayList<>();
 
     private String type;
+
     public AsmInstr(String type) {
         this.type = type;
     }
@@ -35,5 +39,43 @@ public class AsmInstr extends CustomList.Node {
         if (newReg instanceof AsmReg)
             regUse.add((AsmReg) newReg);
     }
+
+    public void changeUseReg(int index ,AsmReg oldReg, AsmReg newReg) {
+        if (type == "AsmL") {
+            if (this.regUse.get(index) == oldReg) {
+                this.regUse.set(index, newReg);
+                AsmL asmL = (AsmL) this;
+                asmL.ReSetSrc(newReg);
+            }
+        } else if (type == "AsmS") {
+            if (this.regUse.get(index) == oldReg) {
+                this.regUse.set(index, newReg);
+                AsmS asmS = (AsmS) this;
+                asmS.ReSetSrc(newReg);
+            }
+        } else if (type == "AsmBinary") {
+            if (this.regUse.get(index) == oldReg) {
+                this.regUse.set(index, newReg);
+                AsmBinary asmBinary = (AsmBinary) this;
+                asmBinary.ReSetSrc(index, newReg);
+            }
+        }
+    }
+    public void changeDstReg(int index ,AsmReg oldReg, AsmReg newReg) {
+        if (type == "AsmL") {
+            if (this.regDef.get(index) == oldReg) {
+                this.regDef.set(index, newReg);
+                AsmL asmL = (AsmL) this;
+                asmL.ReSetDst(newReg);
+            }
+        } else if (type == "AsmBinary") {
+            if (this.regDef.get(index) == oldReg) {
+                this.regDef.set(index, newReg);
+                AsmBinary asmBinary = (AsmBinary) this;
+                asmBinary.ReSetDst(newReg);
+            }
+        }
+    }
+
 
 }

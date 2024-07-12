@@ -31,4 +31,11 @@ public class AsmL extends AsmInstr {
     public AsmOperand getSrc() {
         return src;
     }
+
+    public void ReSetSrc(AsmOperand src) {
+        this.src = src;
+    }
+    public void ReSetDst(AsmOperand dst) {
+        this.dst = dst;
+    }
 }

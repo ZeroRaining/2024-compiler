@@ -27,4 +27,15 @@ public class AsmBinary extends AsmInstr {
         addUseReg(this.src2, src2);
         this.src2 = src2;
     }
+    public void ReSetSrc(int index,AsmOperand src) {
+        if (index == 0) {
+            this.src1 = src;
+        } else if (index == 1) {
+            this.src2 = src;
+        }
+    }
+
+    public void ReSetDst(AsmOperand dst) {
+        this.dst = dst;
+    }
 }

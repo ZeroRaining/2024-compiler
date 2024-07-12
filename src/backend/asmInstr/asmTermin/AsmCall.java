@@ -6,6 +6,7 @@ public class AsmCall extends AsmInstr {
     public String funcName;
 
     public AsmCall(String funcName) {
+        super("AsmCall");
         this.funcName = funcName;
     }
 

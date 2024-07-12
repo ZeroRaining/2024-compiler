@@ -112,13 +112,13 @@ public class RegAlloc {
                 for (int i = 0; i < instrHead.regUse.size(); i++) {
                     if (instrHead.regUse.get(i) instanceof AsmVirReg) {
                         int nowColor = color.get(instrHead.regUse.get(i));
-                        instrHead.addUseReg(instrHead.regUse.get(i), RegGeter.AllRegsInt.get(nowColor));
+                        instrHead.changeUseReg(i,instrHead.regUse.get(i), RegGeter.AllRegsInt.get(nowColor));
                     }
                 }
                 for (int i = 0; i < instrHead.regDef.size(); i++) {
                     if (instrHead.regDef.get(i) instanceof AsmVirReg) {
                         int nowColor = color.get(instrHead.regDef.get(i));
-                        instrHead.addDefReg(instrHead.regDef.get(i), RegGeter.AllRegsInt.get(nowColor));
+                        instrHead.changeDstReg(i, instrHead.regDef.get(i), RegGeter.AllRegsInt.get(nowColor));
                     }
                 }
                 instrHead = (AsmInstr) instrHead.getNext();
@@ -499,7 +499,7 @@ public class RegAlloc {
                         AsmVirReg v1 = new AsmVirReg();
                         for (int i = 0; i< instrHead.regUse.size();i++) {
                             if (instrHead.regUse.get(i) == v) {
-                                instrHead.addUseReg(instrHead.regUse.get(i), v1);
+                                instrHead.changeUseReg(i,instrHead.regUse.get(i), v1);
                             }
                         }
                         AsmImm12 place = new AsmImm12(spillPlace);
@@ -511,7 +511,7 @@ public class RegAlloc {
                         AsmVirReg v2 = new AsmVirReg();
                         for (int i = 0; i < instrHead.regDef.size(); i++) {
                             if (instrHead.regDef.get(i) == v) {
-                                instrHead.addDefReg(instrHead.regUse.get(i), v2);
+                                instrHead.changeDstReg(i,instrHead.regUse.get(i), v2);
                             }
                         }
                         AsmImm12 place = new AsmImm12(spillPlace);
