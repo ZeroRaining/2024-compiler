@@ -14,15 +14,16 @@ public class PhiInstr extends Instruction {
     private ArrayList<Value> values;
     private ArrayList<BasicBlock> prtBlks;
 
-    public PhiInstr(int result, ArrayList<Value> values, ArrayList<BasicBlock> prtBlks) {
+    public PhiInstr(int result, DataType type, ArrayList<Value> values, ArrayList<BasicBlock> prtBlks) {
         this.result = result;
-        this.type = values.get(0).getDataType();
+        this.type = type;
         this.values = values;
         this.prtBlks = prtBlks;
         for (Value value : values) {
             setUse(value);
         }
-        //TODO : to set or not to set, is a question
+        //TODO: to set or not to set, is a question
+        //TODO：刪除块时我的phi怎么办
 //        for (BasicBlock block : prtBlks) {
 //            setUse(block);
 //        }
@@ -50,7 +51,7 @@ public class PhiInstr extends Instruction {
         for (int i = 0; i < len; i++) {
             Value value = values.get(i);
             //TODO：maybe异常处理？
-            ret.append("[ ").append(((StoreInstr)value).getValue().value2string()).append(", ").append(prtBlks.get(i).value2string()).append(" ]");
+            ret.append("[ ").append(value.value2string()).append(", ").append("%").append(prtBlks.get(i).value2string()).append(" ]");
             if (i < len - 1) {
                 ret.append(", ");
             }

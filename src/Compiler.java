@@ -28,30 +28,30 @@ public class Compiler {
         //语法分析，得到AST
         Ast ast = new Parser(tokenList).parseAst();
         //IR生成
-//        Program program = new Program(ast);
-//        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
-//        DFG.doDFG(functions);
-//
-//        // 开启优化
-//        if (arg.getOptLevel() == 1) {
-//            Mem2Reg.doMem2Reg(functions);
-//        }
-//
-//        // 打印 IR
-//        if (arg.toPrintIR()) {
-//            BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
-//            program.printIR(irWriter);
-//            irWriter.close();
-//        }
+        Program program = new Program(ast);
+        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
+        DFG.doDFG(functions);
+
+        // 开启优化
+        if (arg.getOptLevel() == 1) {
+            Mem2Reg.doMem2Reg(functions);
+        }
+
+        // 打印 IR
+        if (arg.toPrintIR()) {
+            BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
+            program.printIR(irWriter);
+            irWriter.close();
+        }
 
         // IR生成测试
-        IRTest();
+//        IRTest();
 
         //后端代码生成测试
-        CodeGenTest();
+//        CodeGenTest();
 
         //寄存器分配测试
-        RegAllocTest();
+//        RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {
