@@ -167,6 +167,9 @@ public class BasicBlock extends Value {
     public void removeFromList() {
         super.removeFromList();
         Instruction instr = (Instruction) instructions.getTail();
+        if (instr == null) {
+            return;
+        }
         instr.removeFromList();
     }
 }
