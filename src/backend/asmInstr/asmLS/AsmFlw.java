@@ -4,6 +4,7 @@ import backend.itemStructure.AsmOperand;
 
 public class AsmFlw extends AsmL {
     public AsmFlw(AsmOperand dst, AsmOperand src, AsmOperand offset) {
+        super();
         changeDst(dst);
         changeSrc(src);
         changeOffset(offset);

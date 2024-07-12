@@ -112,6 +112,22 @@ public class IrParser {
                 blockMap.put((BasicBlock) bb, asmBlock);
             }
             //TODO:依赖于BasicBlock前驱后继的实现。此外，什么是loopDepth？
+            //实现BasicBlock的前驱后继
+            for (Node bb : f.getBasicBlocks()) {
+                AsmBlock asmBlock = blockMap.get(bb);
+                for (BasicBlock anotherBb: ((BasicBlock) bb).getSucs()) {
+                    asmBlock.sucs.add(blockMap.get(anotherBb));
+                }
+                for (BasicBlock anotherBb: ((BasicBlock) bb).getPres()) {
+                    asmBlock.pres.add(blockMap.get(anotherBb));
+                }
+                for (BasicBlock anotherBb: ((BasicBlock) bb).getDoms()) {
+                    asmBlock.doms.add(blockMap.get(anotherBb));
+                }
+                for (BasicBlock anotherBb: ((BasicBlock) bb).getIDoms()) {
+                    asmBlock.iDoms.add(blockMap.get(anotherBb));
+                }
+            }
         }
     }
 

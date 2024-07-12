@@ -4,6 +4,11 @@ import backend.asmInstr.AsmInstr;
 import backend.itemStructure.AsmOperand;
 public class AsmS extends AsmLS {
     protected AsmOperand src, addr, offset;
+
+    public AsmS() {
+        super("AsmS");
+    }
+
     public void changeSrc(AsmOperand src) {
         addUseReg(this.src, src);
         this.src = src;
@@ -15,5 +20,8 @@ public class AsmS extends AsmLS {
     public void changeOffset(AsmOperand offset) {
         addUseReg(this.offset, offset);
         this.offset = offset;
+    }
+    public void ReSetSrc(AsmOperand src) {
+        this.src = src;
     }
 }

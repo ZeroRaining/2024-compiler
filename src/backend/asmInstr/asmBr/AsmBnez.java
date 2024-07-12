@@ -8,6 +8,7 @@ public class AsmBnez extends AsmInstr {
     private AsmOperand cond;
     private AsmBlock target;
     public AsmBnez(AsmOperand cond, AsmBlock target) {
+        super("AsmBnez");
         this.cond = cond;
         this.target = target;
     }

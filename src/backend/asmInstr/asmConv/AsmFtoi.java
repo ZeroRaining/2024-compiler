@@ -7,6 +7,7 @@ public class AsmFtoi extends AsmInstr {
     private AsmOperand src;
     private AsmOperand dst;
     public AsmFtoi(AsmOperand src, AsmOperand dst){
+        super("AsmFtoi");
         this.src = src;
         this.dst = dst;
     }

@@ -10,6 +10,7 @@ public class AsmFunction {
     String name;
     private CustomList blocks = new CustomList();
     private HashSet<AsmReg> usedVirRegs = new HashSet<>();
+
     private int allocaSize = 0;
     private int raSize = 0;
     private int argsSize = 0;
@@ -74,4 +75,5 @@ public class AsmFunction {
         //应该无法用到
         return null;
     }
+
 }
