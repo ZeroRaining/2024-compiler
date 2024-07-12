@@ -454,14 +454,18 @@ public class Ast {
     // UnaryExp -> {UnaryOp} PrimaryExp
     public static class UnaryExp implements Exp {
         
-        private ArrayList<Token> ops;
-        private PrimaryExp primary;
+        private final ArrayList<Token> ops;
+        private final PrimaryExp primary;
+        private final int sign;
+        private final boolean not;
         
         public UnaryExp(ArrayList<Token> ops, PrimaryExp primary) {
             this.ops = ops;
             this.primary = primary;
             assert ops != null;
             assert primary != null;
+            sign = getMySign();
+            not = checkMyNot();
         }
         public List<Token> getUnaryOps() {
             return ops;
@@ -471,16 +475,29 @@ public class Ast {
         }
         
         public int getSign() {
+            return sign;
+        }
+        
+        public boolean checkNot() {
+            return not;
+        }
+        
+        private int getMySign() {
             int sign = 1;
+            TokenType type;
             for (Token op : ops) {
-                if (op.getType() == TokenType.SUB) {
+                type = op.getType();
+                if (type == TokenType.NOT) {
+                    break;
+                }
+                if (type == TokenType.SUB) {
                     sign *= -1;
                 }
             }
             return sign;
         }
         
-        public boolean checkNot() {
+        private boolean checkMyNot() {
             boolean not = false;
             for (Token op : ops) {
                 if (op.getType() == TokenType.NOT) {
@@ -570,7 +587,11 @@ public class Ast {
                 throw new RuntimeException("出现了未定义的基本表达式");
             }
             if (checkNot()) {
-                ret = ret != 0 ? 0 : 1;
+                if (getSign() > 0) {
+                    ret = ret != 0 ? 0 : 1;
+                } else {
+                    ret = ret != 0 ? 0 : -1;
+                }
             }
             return ret;
         }
@@ -624,7 +645,11 @@ public class Ast {
                 throw new RuntimeException("出现了未定义的基本表达式");
             }
             if (checkNot()) {
-                ret = ret != 0 ? 0 : 1;
+                if (getSign() > 0) {
+                    ret = ret != 0 ? 0 : 1;
+                } else {
+                    ret = ret != 0 ? 0 : -1;
+                }
             }
             return ret;
         }

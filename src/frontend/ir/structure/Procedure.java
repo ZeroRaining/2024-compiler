@@ -683,6 +683,12 @@ public class Procedure {
                     throw new RuntimeException("!后面返回的应该只能是整数或者浮点数");
                 }
                 curBlock.addInstruction((Instruction) res);
+                if (((Ast.UnaryExp) exp).getSign() < 0) {
+                    res = new Zext(curRegIndex++, res);
+                    curBlock.addInstruction((Instruction) res);
+                    res = new MulInstr(curRegIndex++, res, new ConstInt(-1));
+                    curBlock.addInstruction((Instruction) res);
+                }
             }
             return res;
         } else {
