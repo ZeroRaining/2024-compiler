@@ -279,7 +279,7 @@ public class RegAlloc {
         }
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
-            AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getHead();
+            AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
             HashSet<AsmOperand> live  = new HashSet<>();
             live.addAll(blockHead.LiveOut);
             while (instrTail != null) {
@@ -537,7 +537,7 @@ public class RegAlloc {
     }
 
     private boolean OK(AsmOperand t, AsmOperand r) {
-        if (degree.get(t) < K || preColored.containsKey(t) || (adjSet.containsKey(t) && adjSet.get(t).equals(r))) {
+        if ((degree.containsKey(t) && degree.get(t) < K )|| preColored.containsKey(t) || (adjSet.containsKey(t) && adjSet.get(t).equals(r))) {
             return true;
         } else {
             return false;
@@ -556,6 +556,9 @@ public class RegAlloc {
         return n;
     }
     private void DecrementDegree(AsmOperand m) {
+        if (!degree.containsKey(m)) {
+            return;
+        }
         int d = degree.get(m);
         degree.put(m, d-1);
         if (d == K) {
