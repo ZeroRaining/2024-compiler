@@ -210,7 +210,7 @@ public class Ast {
             if (returnType == null) {
                 throw new NullPointerException();
             }
-            if (this.items.get(items.size() - 1) instanceof Return) {
+            if (!this.items.isEmpty() && this.items.get(items.size() - 1) instanceof Return) {
                 return;
             }
             Return returnStmt;

@@ -10,10 +10,7 @@ import backend.regs.*;
 import com.sun.corba.se.spi.protocol.InitialServerRequestDispatcher;
 import frontend.ir.Value;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Stack;
+import java.util.*;
 /*todo*/ //load指令偏移量超过32位
 
 public class RegAlloc {
@@ -41,7 +38,7 @@ public class RegAlloc {
     private HashMap<AsmReg, Integer> preColored = new HashMap<>();
 
     private HashMap<AsmOperand, HashSet<AsmOperand>> adjList = new HashMap<>();
-    private HashMap<AsmOperand, AsmOperand> adjSet = new HashMap<>();
+    private HashMap<AsmOperand, HashSet<AsmOperand>> adjSet = new HashMap<>();
     private HashMap<AsmOperand, Integer> degree = new HashMap<>();
     private HashMap<AsmOperand, HashSet<AsmInstr>> moveList = new HashMap<>();//与该结点相关的传送指令集合
 
@@ -323,6 +320,13 @@ public class RegAlloc {
                         }
                     }
                 }
+                //live.addAll(instrTail.regUse);
+                for (AsmOperand U: instrTail.regUse) {
+                    if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) { //不确定是否要要算上预着色的，但应该要算，所以先按算的来/todo
+                        live.add(U);
+                    }
+                }
+                live.removeAll(instrTail.regDef);//删除无所谓
                 instrTail = (AsmInstr) instrTail.getPrev();
             }
             blockHead = (AsmBlock) blockHead.getNext();
@@ -367,7 +371,7 @@ public class RegAlloc {
         if (u == v) {
             coalescedMoves.add(m);
             AddWorkList(u);
-        }else if (preColored.containsKey(v) || (adjSet.containsKey(u) && adjSet.get(u) == v)) {//uv冲突或者uv都是预着色点
+        }else if (preColored.containsKey(v) || (adjSet.containsKey(u) && adjSet.get(u).contains(v))) {//uv冲突或者uv都是预着色点
             constrainedMoves.add(m);
             AddWorkList(u);
             AddWorkList(v);
@@ -537,7 +541,7 @@ public class RegAlloc {
     }
 
     private boolean OK(AsmOperand t, AsmOperand r) {
-        if ((degree.containsKey(t) && degree.get(t) < K )|| preColored.containsKey(t) || (adjSet.containsKey(t) && adjSet.get(t).equals(r))) {
+        if ((degree.containsKey(t) && degree.get(t) < K )|| preColored.containsKey(t) || (adjSet.containsKey(t) && adjSet.get(t).contains(r))) {
             return true;
         } else {
             return false;
@@ -608,17 +612,23 @@ public class RegAlloc {
     }
 
     private void AddEdge(AsmOperand b, AsmOperand l){ //未按照书中所给实现
-        if( !(adjSet.containsKey(b) && adjSet.get(b) == l) && b != l) {
-            adjSet.put(b,l);
-            adjSet.put(l,b);
-        }
-        if (!preColored.containsKey(b)) {
-            adjList.get(b).add(l);
-            degree.put(b,degree.get(b) + 1);
-        }
-        if (!preColored.containsKey(l)) {
-            adjList.get(l).add(b);
-            degree.put(l,degree.get(l) + 1);
+        if( !(adjSet.containsKey(b) && adjSet.get(b).contains(l)) && b != l) {
+            if (!adjSet.containsKey(b)) {
+                adjSet.put(b,new HashSet<>());
+            }
+            if (!adjSet.containsKey(l)) {
+                adjSet.put(l,new HashSet<>());
+            }
+            adjSet.get(b).add(l);
+            adjSet.get(l).add(b);
+            if (!preColored.containsKey(b)) {
+                adjList.get(b).add(l);
+                degree.put(b, degree.get(b) + 1);
+            }
+            if (!preColored.containsKey(l)) {
+                adjList.get(l).add(b);
+                degree.put(l, degree.get(l) + 1);
+            }
         }
     }
 
