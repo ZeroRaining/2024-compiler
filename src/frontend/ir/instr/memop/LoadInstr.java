@@ -51,7 +51,6 @@ public class LoadInstr extends MemoryOperation {
     
     @Override
     public String type2string() {
-        System.out.println("hello" + pointerLevel);
         if (this.pointerLevel > 0) {
             return this.printBaseType();
         } else {
