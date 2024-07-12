@@ -46,9 +46,12 @@ public class AsmGlobalVar {
         this.size = size;
     }
 
+    //浮点数
     public AsmGlobalVar(int floatvar) {
         this.name = ".LC" + lcCnt;
         lcCnt++;
+        this.isInit = true;
+        this.value = floatvar;
     }
 
     public String toString() {
