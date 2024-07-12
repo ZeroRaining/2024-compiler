@@ -392,7 +392,6 @@ public class Lexer {
             }
             case ')': {
                 Token tk = new Token(RPARENT, ")", lineno);
-                System.out.println(tk.getLineno());
                 tokenList.append(tk);
                 c = readChar(bis);
                 return c;

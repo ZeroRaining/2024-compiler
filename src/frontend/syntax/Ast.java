@@ -803,7 +803,7 @@ public class Ast {
 
         private final Token ident;
         private final ArrayList<Exp> params;
-        private int lineno;
+        private final int lineno;
 
         public Call(Token ident, ArrayList<Exp> params, int lineno) {
             assert ident != null;
@@ -811,7 +811,6 @@ public class Ast {
             this.ident = ident;
             this.params = params;
             this.lineno = lineno;
-            System.out.println("Call: " + ident.getContent() + " at line " + lineno);
         }
 
         public String getName() {
@@ -820,6 +819,10 @@ public class Ast {
 
         public List<Exp> getParams() {
             return params;
+        }
+        
+        public int getLineno() {
+            return lineno;
         }
     }
 
