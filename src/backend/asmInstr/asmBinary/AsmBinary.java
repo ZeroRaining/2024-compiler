@@ -7,6 +7,7 @@ public class AsmBinary extends AsmInstr {
     protected AsmOperand dst, src1, src2;
 
     public AsmBinary(AsmOperand dst, AsmOperand src1, AsmOperand src2) {
+        super("AsmBinary");
         changeDef(dst);
         changeUse1(src1);
         changeUse2(src2);

@@ -50,4 +50,8 @@ public class AsmBlock extends Node {
     public CustomList getInstrs() {
         return instrs;
     }
+
+    public String getName() {
+        return name;
+    }
 }

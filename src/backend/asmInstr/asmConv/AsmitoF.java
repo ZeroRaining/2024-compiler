@@ -7,6 +7,7 @@ public class AsmitoF extends AsmInstr {
     private AsmOperand src;
     private AsmOperand dst;
     public AsmitoF(AsmOperand src, AsmOperand dst){
+        super("AsmitoF");
         this.src = src;
         this.dst = dst;
     }

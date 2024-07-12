@@ -8,6 +8,7 @@ public class AsmBeqz extends AsmInstr {
     private AsmOperand cond;
     private AsmBlock target;
     public AsmBeqz(AsmOperand cond, AsmBlock target) {
+        super("AsmBeqz");
         this.cond = cond;
         this.target = target;
     }

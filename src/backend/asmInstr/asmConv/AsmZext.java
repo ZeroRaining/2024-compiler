@@ -7,6 +7,7 @@ public class AsmZext extends AsmInstr {
     private AsmOperand src;
     private AsmOperand dst;
     public AsmZext(AsmOperand src, AsmOperand dst){
+        super("AsmZext");
         this.src = src;
         this.dst = dst;
     }

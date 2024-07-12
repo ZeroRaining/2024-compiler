@@ -6,6 +6,7 @@ import backend.itemStructure.AsmBlock;
 public class AsmJ extends AsmInstr {
     private AsmBlock target;
     public AsmJ(AsmBlock target) {
+        super("AsmJ");
         this.target = target;
     }
     public String toString() {

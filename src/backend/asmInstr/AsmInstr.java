@@ -17,6 +17,11 @@ public class AsmInstr extends CustomList.Node {
     public ArrayList<AsmReg> regDef = new ArrayList<>();
     public ArrayList<AsmReg> regUse = new ArrayList<>();
 
+    private String type;
+    public AsmInstr(String type) {
+        this.type = type;
+    }
+
     public void addDefReg(AsmOperand oldReg, AsmOperand newReg) {
         if (oldReg != null && oldReg instanceof AsmReg)
             regDef.remove((AsmReg) oldReg);

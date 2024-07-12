@@ -1,6 +1,7 @@
 import arg.Arg;
 import backend.BackendPrinter;
 import backend.IrParser;
+import backend.RegAlloc;
 import backend.itemStructure.AsmModule;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Program;
@@ -35,10 +36,13 @@ public class Compiler {
 //        }
 
         // IR生成测试
-        IRTest();
+        //IRTest();
 
         //后端代码生成测试
         //CodeGenTest();
+
+        //寄存器分配测试
+        RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {
@@ -92,6 +96,26 @@ public class Compiler {
 
         //代码生成测试
         AsmModule asmModule = new IrParser(program).parse();
+        BackendPrinter backendPrinter = new BackendPrinter(asmModule);
+        backendPrinter.printBackend();
+    }
+
+    public static void RegAllocTest() throws IOException {
+        //
+        FileInputStream in = new FileInputStream("in.sy");
+        BufferedInputStream source = new BufferedInputStream(in);
+        TokenList tokenList = Lexer.getInstance().lex(source);
+        Ast ast = new Parser(tokenList).parseAst();
+        Program program = new Program(ast);
+        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
+        DFG.doDFG(functions);
+        Mem2Reg.doMem2Reg(functions);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
+        program.printIR(writer);
+        writer.close();
+        AsmModule asmModule = new IrParser(program).parse();
+        RegAlloc alloc = RegAlloc.getInstance();
+        alloc.run(asmModule);
         BackendPrinter backendPrinter = new BackendPrinter(asmModule);
         backendPrinter.printBackend();
     }
