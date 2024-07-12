@@ -54,4 +54,8 @@ public class AsmBlock extends Node {
     public String getName() {
         return name;
     }
+
+    public String toString() {
+        return name;
+    }
 }

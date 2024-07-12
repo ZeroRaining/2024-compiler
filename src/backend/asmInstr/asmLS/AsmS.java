@@ -2,7 +2,7 @@ package backend.asmInstr.asmLS;
 
 import backend.asmInstr.AsmInstr;
 import backend.itemStructure.AsmOperand;
-public class AsmS extends AsmLS {
+public class AsmS extends AsmInstr {
     protected AsmOperand src, addr, offset;
 
     public AsmS() {
