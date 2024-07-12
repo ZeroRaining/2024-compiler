@@ -166,10 +166,10 @@ public class BasicBlock extends Value {
     @Override
     public void removeFromList() {
         super.removeFromList();
-        Instruction instr = (Instruction) instructions.getTail();
-        if (instr == null) {
-            return;
+        Instruction instr = (Instruction) instructions.getHead();
+        while (instr != null) {
+            instr.removeFromList();
+            instr = (Instruction) instr.getNext();
         }
-        instr.removeFromList();
     }
 }

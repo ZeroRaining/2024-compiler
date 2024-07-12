@@ -8,7 +8,6 @@ import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
-import java.lang.annotation.Target;
 import java.util.*;
 
 public class DFG {
