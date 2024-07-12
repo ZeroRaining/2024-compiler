@@ -2,6 +2,7 @@ package midend.SSA;
 
 import Utils.CustomList;
 import debug.DEBUG;
+import frontend.ir.DataType;
 import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
@@ -9,29 +10,38 @@ import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
+import frontend.ir.instr.otherop.EmptyInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.symbols.Symbol;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class Mem2Reg {
     private static int curRegCnt = 0;//TODO:!!!!!
-    public static void doMem2Reg(HashSet<Function> functions) {
+    public static void doMem2Reg(HashSet<Function> functions) throws IOException {
         for (Function function : functions) {
             curRegCnt = 0;
             removeAlloc(function);
         }
     }
 
-    private static void removeAlloc(Function function) {
+    private static int cnt = 0;
+
+    private static void removeAlloc(Function function) throws IOException {
         for (CustomList.Node node : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) node;
             Instruction instr = (Instruction) block.getInstructions().getHead();
             while (instr != null) {
-                System.out.println(instr.print());
+//                System.out.println(instr.print());
                 if (instr instanceof AllocaInstr && instr.getPointerLevel() == 1) {
+//                    BufferedWriter writer = new BufferedWriter(new FileWriter("testPhi" + cnt++));
+//                    function.printIR(writer);
+//                    writer.close();
                     remove(instr);
                 }
                 instr = (Instruction) instr.getNext();
@@ -45,10 +55,9 @@ public class Mem2Reg {
         ArrayList<BasicBlock> useBlks = new ArrayList<>();
         ArrayList<Instruction> defIns = new ArrayList<>();
         ArrayList<Instruction> useIns = new ArrayList<>();
-//        visited = new HashMap<>();
-//        placed = new HashMap<>();
-        useDBG(instr);
+//        useDBG(instr);
         Use use = instr.getBeginUse();
+//        System.out.println("be used: " + instr.print());
         for (; use != null; use = (Use) use.getNext()) {
             Instruction ins = use.getUser();
             BasicBlock blk = ins.getParentBB();
@@ -62,6 +71,14 @@ public class Mem2Reg {
                 throw new RuntimeException("Furina said you are wrong!");
             }
         }
+//        System.out.println("defIns: ");
+//        for (Instruction ins : defIns) {
+//            System.out.println(ins.print() + " ParentBlk: " + ins.getParentBB());
+//        }
+//        System.out.println("useIns: ");
+//        for (Instruction ins : useIns) {
+//            System.out.println(ins.print() + " ParentBlk: " + ins.getParentBB());
+//        }
         //to be improved
         if (useBlks.isEmpty()) {
             for (Instruction ins : defIns) {
@@ -78,10 +95,12 @@ public class Mem2Reg {
         } else {
             ArrayList<BasicBlock> toPuts = new ArrayList<>();
             Queue<BasicBlock> W = new LinkedList<>(defBlks);
+            System.out.println("toPuts: ");
             while (!W.isEmpty()) {
                 BasicBlock X = W.poll();
                 for (BasicBlock Y : X.getDF()) {
                     if (!toPuts.contains(Y)) {
+                        System.out.println(Y);
                         toPuts.add(Y);
                         if (!defBlks.contains(Y)) {
                             W.add(Y);
@@ -89,14 +108,18 @@ public class Mem2Reg {
                     }
                 }
             }
-            ArrayList<Value> values = new ArrayList<>();
-            ArrayList<BasicBlock> prtBlks = new ArrayList<>();
-            for (Instruction ins : defIns) {
-                values.add(ins);
-                prtBlks.add(ins.getParentBB());
-            }
+            System.out.println();
+
+
             for (BasicBlock block : toPuts) {
-                Instruction phi = new PhiInstr(curRegCnt++, values, prtBlks);
+
+                ArrayList<Value> values = new ArrayList<>();
+                ArrayList<BasicBlock> prtBlks = new ArrayList<>();
+                for (BasicBlock blk : block.getPres()) {
+                    values.add(new EmptyInstr());
+                    prtBlks.add(blk);
+                }
+                Instruction phi = new PhiInstr(curRegCnt++, instr.getDataType(), values, prtBlks);
                 block.getInstructions().addToHead(phi);
                 useIns.add(phi);
                 defIns.add(phi);
@@ -143,13 +166,14 @@ public class Mem2Reg {
         }
         HashSet<BasicBlock> sucs = now.getSucs();
         for (BasicBlock block : sucs) {
-            for (CustomList.Node item : now.getInstructions()) {
+            //block 是 now 的某个后继。顺序保存在了PhiInstr里面
+            for (CustomList.Node item : block.getInstructions()) {
                 Instruction instr = (Instruction) item;
                 if (!(instr instanceof PhiInstr)) {
                     break;
                 }
                 if (useIns.contains(instr)) {
-                    instr.modifyUse(now, getStackValue(S));
+                    ((PhiInstr)instr).modifyUse(getStackValue(S), now);
                 }
             }
         }
