@@ -112,18 +112,6 @@ public class DFG {
         }
     }
 
-    private static void removeUseBlock(Instruction instr, BasicBlock usedBlk) {
-        Use use = usedBlk.getBeginUse();
-        assert use != null;
-        assert instr instanceof JumpInstr || instr instanceof BranchInstr;
-        while (use != null) {
-            if (use.getUser() == instr) {
-                use.removeFromList();
-            }
-            use = (Use) use.getNext();
-        }
-    }
-
     private static void removeBlk(Function function) {
         BasicBlock secondBlk = (BasicBlock) function.getBasicBlocks().getHead().getNext();
         HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();

@@ -162,4 +162,11 @@ public class BasicBlock extends Value {
         printHashset(DF, "DF");
         DEBUG.dbgPrint1("");
     }
+
+    @Override
+    public void removeFromList() {
+        super.removeFromList();
+        Instruction instr = (Instruction) instructions.getTail();
+        instr.removeFromList();
+    }
 }
