@@ -48,7 +48,7 @@ public class Compiler {
         IRTest();
 
         //后端代码生成测试
-        CodeGenTest();
+        //CodeGenTest();
 
         //寄存器分配测试
         RegAllocTest();
@@ -124,9 +124,11 @@ public class Compiler {
         writer.close();
         AsmModule asmModule = new IrParser(program).parse();
         RegAlloc alloc = RegAlloc.getInstance();
-        alloc.run(asmModule);
         BackendPrinter backendPrinter = new BackendPrinter(asmModule);
         backendPrinter.printBackend();
+        alloc.run(asmModule);
+        //BackendPrinter backendPrinter = new BackendPrinter(asmModule);
+        //backendPrinter.printBackend();
     }
 }
 
