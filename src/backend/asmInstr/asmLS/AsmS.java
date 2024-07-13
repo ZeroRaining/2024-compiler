@@ -21,7 +21,11 @@ public class AsmS extends AsmInstr {
         addUseReg(this.offset, offset);
         this.offset = offset;
     }
-    public void ReSetSrc(AsmOperand src) {
-        this.src = src;
+    public void ReSetSrc(int index,AsmOperand src) {
+        if (index == 0) {
+            this.src = src;
+        }else {
+            this.addr = src;
+        }
     }
 }
