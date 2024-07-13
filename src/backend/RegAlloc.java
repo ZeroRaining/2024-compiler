@@ -91,6 +91,9 @@ public class RegAlloc {
                         AsmVirReg vreg1 = (AsmVirReg) vreg;
                         vreg1.color = color.get(vreg);
                     }
+                    LivenessAnalysis(function);//不确定是否要这样
+                    callerSave(function);
+                    calleeSave(function);
                     allocRealReg(function);
                     break;
                 } else {
@@ -100,7 +103,75 @@ public class RegAlloc {
         }
 
     }
-
+    //调用规约的完成是假定我们已经成功实现活跃性分析的基础上的，此阶段的调用规约我们先只实现整数寄存器的
+    //callerSave的寄存器有x1(ra),x5-7(t0-2),x10-11(a0-a1),x12-17(a2-7),x28-31(t3-6)
+    private void callerSave(AsmFunction function) {
+        AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
+        while (blockHead != null) {
+            AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
+            while (instrHead != null) {
+                if (instrHead instanceof AsmCall) {
+                    AsmCall call = (AsmCall) instrHead;
+                    for (AsmReg save :call.LiveOut) {
+                        int beColored = 0;
+                        if (save instanceof AsmVirReg) {
+                            beColored = color.get(save);
+                        }
+                        if (save instanceof AsmPhyReg) {
+                            beColored = preColored.get(save);
+                        }
+                        if (beColored == 1 || (beColored >= 5 &&  beColored <= 7) || (beColored >= 10 &&  beColored <= 11) || (beColored >= 12 &&  beColored <= 17) || (beColored >= 28 &&  beColored <= 31)) {
+                            int spillPlace = function.getAllocaSize();
+                            function.addAllocaSize(4);
+                            AsmImm12 place = new AsmImm12(spillPlace);
+                            AsmSw store = new AsmSw(save, RegGeter.SP, place);
+                            AsmLw load = new AsmLw(save, RegGeter.SP, place);
+                            store.insertBefore(instrHead);
+                            load.insertAfter(instrHead);
+                        }
+                    }
+                }
+                instrHead = (AsmInstr) instrHead.getNext();
+            }
+            blockHead = (AsmBlock) blockHead.getNext();
+        }
+    }
+    //calleeSave 保存的寄存器x2(sp),x8(s0/fp),x9(s1),x18-27(s2-11)
+    private void calleeSave(AsmFunction function) {
+        HashSet<Integer> beChanged = new HashSet<>();
+        AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
+        while (blockHead != null) {
+            AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
+            while (instrHead != null) {
+                for (AsmReg save: instrHead.regDef) {
+                    int beColored = 0;
+                    if (save instanceof AsmVirReg) {
+                        beColored = color.get(save);
+                    }
+                    if (save instanceof AsmPhyReg) {
+                        beColored = preColored.get(save);
+                    }
+                    if (beColored == 2 || beColored == 8 || beColored == 9 || (beColored <= 27 && beColored >= 18)) {
+                        beChanged.add(beColored);
+                    }
+                }
+                instrHead = (AsmInstr) instrHead.getNext();
+            }
+            blockHead = (AsmBlock) blockHead.getNext();
+        }
+        AsmInstr instrHead = (AsmInstr) ((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead();
+        AsmInstr instrTail = (AsmInstr) function.getTailBlock().getInstrs().getTail();
+        for (int save: beChanged) {
+            AsmReg sav = RegGeter.AllRegsInt.get(save);
+            int spillPlace = function.getAllocaSize();
+            function.addAllocaSize(4);
+            AsmImm12 place = new AsmImm12(spillPlace);
+            AsmSw store = new AsmSw(sav, RegGeter.SP, place);
+            AsmLw load = new AsmLw(sav, RegGeter.SP, place);
+            ((AsmBlock) function.getBlocks().getHead()).getInstrs().addToHead(store);
+            load.insertBefore(function.getTailBlock().getInstrTail());
+        }
+    }
     private void allocRealReg(AsmFunction function) {
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
@@ -508,7 +579,7 @@ public class RegAlloc {
                         }
                         AsmImm12 place = new AsmImm12(spillPlace);
                         AsmLw load = new AsmLw(v1, RegGeter.SP,place);
-                        instrHead.insertBefore(load);
+                        load.insertAfter(instrHead);
                         newTemps.add(v1);
                     }
                     if (instrHead.regDef.contains(v)) {
@@ -520,7 +591,7 @@ public class RegAlloc {
                         }
                         AsmImm12 place = new AsmImm12(spillPlace);
                         AsmSw store = new AsmSw(v2, RegGeter.SP, place);
-                        instrHead.insertAfter(store);
+                        store.insertBefore(instrHead);
                         newTemps.add(v2);
                     }
                     instrHead = (AsmInstr) instrHead.getNext();

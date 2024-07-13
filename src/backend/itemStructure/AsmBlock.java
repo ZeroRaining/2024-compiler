@@ -51,6 +51,10 @@ public class AsmBlock extends Node {
         return instrs;
     }
 
+    public Node getInstrTail() {
+        return instrs.getTail();
+    }
+
     public String getName() {
         return name;
     }
