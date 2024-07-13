@@ -5,6 +5,7 @@ import debug.DEBUG;
 import frontend.ir.DataType;
 import frontend.ir.Use;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.AllocaInstr;
@@ -39,9 +40,11 @@ public class Mem2Reg {
             while (instr != null) {
 //                System.out.println(instr.print());
                 if (instr instanceof AllocaInstr && instr.getPointerLevel() == 1) {
-//                    BufferedWriter writer = new BufferedWriter(new FileWriter("testPhi" + cnt++));
-//                    function.printIR(writer);
-//                    writer.close();
+//                    if (cnt <= 10) {
+//                        BufferedWriter writer = new BufferedWriter(new FileWriter("testPhi" + cnt++));
+//                        function.printIR(writer);
+//                        writer.close();
+//                    }
                     remove(instr);
                 }
                 instr = (Instruction) instr.getNext();
@@ -150,7 +153,7 @@ public class Mem2Reg {
             if (!(instr instanceof PhiInstr) && useIns.contains(instr)) {
                 //changeValue
                 assert instr instanceof LoadInstr;
-                instr.replaceUseTo(getStackValue(S));
+                instr.replaceUseTo(getStackValue(S, instr.getDataType()));
             }
             if (defIns.contains(instr)) {
                 assert instr instanceof StoreInstr || instr instanceof PhiInstr;
@@ -171,7 +174,7 @@ public class Mem2Reg {
                     break;
                 }
                 if (useIns.contains(instr)) {
-                    ((PhiInstr)instr).modifyUse(getStackValue(S), now);
+                    ((PhiInstr)instr).modifyUse(getStackValue(S, instr.getDataType()), now);
                 }
             }
         }
@@ -185,8 +188,15 @@ public class Mem2Reg {
         }
     }
 
-    public static Value getStackValue(Stack<Value> S) {
-        return S.isEmpty() ? new ConstInt(0) : S.peek();
+    public static Value getStackValue(Stack<Value> S, DataType type) {
+        if (S.isEmpty()) {
+            if (type == DataType.FLOAT) {
+                return new ConstFloat(0);
+            } else {
+                return new ConstInt(0);
+            }
+        }
+        return S.peek();
     }
 
 
