@@ -28,6 +28,7 @@ import frontend.ir.symbols.Symbol;
 import frontend.lexer.Token;
 import frontend.lexer.TokenType;
 import frontend.syntax.Ast;
+import midend.SSA.Mem2Reg;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -434,19 +435,35 @@ public class Procedure {
         Ast.BinaryExp bin = (Ast.BinaryExp) exp;
         BasicBlock nextBlk;
         boolean flag = true;
+//        Iterator<Token> it = bin.getOps().listIterator();
+//        List<Ast.Exp> exps = new ArrayList<>(bin.getRestExps());
+//        exps.add(0, bin.getFirstExp());
+//        Iterator<Ast.Exp> expIt = exps.listIterator();
+//        while (it.hasNext()) {
+//            Token op = it.next();
+//            Ast.Exp exp1 = expIt.next();
+//            if (it.hasNext()) {
+//                nextBlk = new BasicBlock(curDepth);
+//            } else {
+//                nextBlk = falseBlk;
+//            }
+//            Value condValue = transform2i1(calculateLAnd(exp1, nextBlk, symTab));
+//            assert op.getType() == TokenType.LOR;
+//            curBlock.addInstruction(new BranchInstr(condValue, trueBlk, nextBlk));
+//            curBlock = nextBlk;
+//            curBlock.setLabelCnt(curBlkIndex++);
+//            basicBlocks.addToTail(curBlock);
+//        }
+
         if (bin.getOps().isEmpty()) {
             nextBlk = falseBlk;
         } else {
             nextBlk = new BasicBlock(curDepth);
-            flag = false;
         }
         Value condValue = transform2i1(calculateLAnd(bin.getFirstExp(), nextBlk, symTab));
-
+        //如果不是最后一个，则新建一个块作为false块，给land用，下次的解析在新建的块里
 
         for (int i = 0; i < bin.getOps().size(); i++) {
-            if (flag) {
-                nextBlk = new BasicBlock(curDepth);
-            }
             Token op = bin.getOps().get(i);
             Ast.Exp nextExp = bin.getRestExps().get(i);
             assert op.getType() == TokenType.LOR;
@@ -454,11 +471,31 @@ public class Procedure {
             curBlock = nextBlk;
             curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
-            condValue = transform2i1(calculateLAnd(nextExp, falseBlk, symTab));
-            flag = true;
+            if (i == bin.getOps().size() - 1) {
+                nextBlk = falseBlk;
+            } else {
+                nextBlk = new BasicBlock(curDepth);
+            }
+            condValue = transform2i1(calculateLAnd(nextExp, nextBlk, symTab));
         }
-
         return condValue;
+
+
+//        for (int i = 0; i < bin.getOps().size(); i++) {
+//            if (flag) {
+//                nextBlk = new BasicBlock(curDepth);
+//            }
+//            Token op = bin.getOps().get(i);
+//            Ast.Exp nextExp = bin.getRestExps().get(i);
+//            assert op.getType() == TokenType.LOR;
+//            curBlock.addInstruction(new BranchInstr(condValue, trueBlk, nextBlk));
+//            curBlock = nextBlk;
+//            curBlock.setLabelCnt(curBlkIndex++);
+//            basicBlocks.addToTail(curBlock);
+//            condValue = transform2i1(calculateLAnd(nextExp, falseBlk, symTab));
+//            flag = true;
+//        }
+
     }
 
     private Value calculateLAnd(Ast.Exp exp, BasicBlock falseBlk, SymTab symTab) {
