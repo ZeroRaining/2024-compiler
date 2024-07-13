@@ -11,6 +11,7 @@ import frontend.lexer.TokenList;
 import frontend.syntax.Ast;
 import frontend.syntax.Parser;
 import midend.SSA.DFG;
+import midend.SSA.DeadCodeRemove;
 import midend.SSA.Mem2Reg;
 
 import java.io.*;
@@ -35,6 +36,7 @@ public class Compiler {
         // 开启优化
         if (arg.getOptLevel() == 1) {
             Mem2Reg.doMem2Reg(functions);
+            DeadCodeRemove.doDeadCodeRemove(functions);
         }
 
         // 打印 IR

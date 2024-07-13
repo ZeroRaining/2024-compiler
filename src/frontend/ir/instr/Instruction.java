@@ -60,4 +60,8 @@ public abstract class Instruction extends Value {
             use.removeFromList();
         }
     }
+
+    public ArrayList<Value> getUseValueList() {
+        return useValueList;
+    }
 }
