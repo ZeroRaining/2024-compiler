@@ -1,9 +1,7 @@
 package backend;
 
 import backend.asmInstr.AsmInstr;
-import backend.asmInstr.asmLS.AsmLw;
-import backend.asmInstr.asmLS.AsmMove;
-import backend.asmInstr.asmLS.AsmSw;
+import backend.asmInstr.asmLS.*;
 import backend.asmInstr.asmTermin.AsmCall;
 import backend.itemStructure.*;
 import backend.regs.*;
@@ -164,12 +162,23 @@ public class RegAlloc {
         for (int save: beChanged) {
             AsmReg sav = RegGeter.AllRegsInt.get(save);
             int spillPlace = function.getAllocaSize();
-            function.addAllocaSize(4);
+            if (save != 2) {
+                function.addAllocaSize(4);
+            } else {
+                function.addAllocaSize(8);
+            }
             AsmImm12 place = new AsmImm12(spillPlace);
-            AsmSw store = new AsmSw(sav, RegGeter.SP, place);
-            AsmLw load = new AsmLw(sav, RegGeter.SP, place);
-            ((AsmBlock) function.getBlocks().getHead()).getInstrs().addToHead(store);
-            load.insertBefore(function.getTailBlock().getInstrTail());
+            if (save != 2) {
+                AsmSw store = new AsmSw(sav, RegGeter.SP, place);
+                AsmLw load = new AsmLw(sav, RegGeter.SP, place);
+                ((AsmBlock) function.getBlocks().getHead()).getInstrs().addToHead(store);
+                load.insertBefore(function.getTailBlock().getInstrTail());
+            } else {
+                AsmSd store = new AsmSd(sav, RegGeter.SP, place);
+                AsmLd load = new AsmLd(sav, RegGeter.SP, place);
+                ((AsmBlock) function.getBlocks().getHead()).getInstrs().addToHead(store);
+                load.insertBefore(function.getTailBlock().getInstrTail());
+            }
         }
     }
     private void allocRealReg(AsmFunction function) {
