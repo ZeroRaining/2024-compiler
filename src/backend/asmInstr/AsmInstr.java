@@ -51,7 +51,7 @@ public class AsmInstr extends CustomList.Node {
             if (this.regUse.get(index) == oldReg) {
                 this.regUse.set(index, newReg);
                 AsmS asmS = (AsmS) this;
-                asmS.ReSetSrc(newReg);
+                asmS.ReSetSrc(index,newReg);
             }
         } else if (type == "AsmBinary") {
             if (this.regUse.get(index) == oldReg) {
