@@ -45,14 +45,14 @@ public class DFG {
             BasicBlock block = (BasicBlock) item;
             HashSet<BasicBlock> iDoms = new HashSet<>();
             for (BasicBlock dom1 : block.getDoms()) {
-                boolean flag = block.getDoms().contains(dom1);
-                if (block == dom1) {
-                    flag = false;
-                }
-                for (BasicBlock temp: block.getDoms()) {
-                    if (!temp.equals(block) && !temp.equals(dom1)) {
-                        if (temp.getDoms().contains(dom1)) {
-                            flag = false;
+                boolean flag = block.getDoms().contains(dom1) && block != dom1;
+                if (flag) {
+                    for (BasicBlock temp: block.getDoms()) {
+                        if (!temp.equals(block) && !temp.equals(dom1)) {
+                            if (temp.getDoms().contains(dom1)) {
+                                flag = false;
+                                break;
+                            }
                         }
                     }
                 }
@@ -68,13 +68,13 @@ public class DFG {
         BasicBlock firstBlk = (BasicBlock) function.getBasicBlocks().getHead();
         for (CustomList.Node item : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) item;
-            HashSet<BasicBlock> independent = new HashSet<>();
-            dfs4dom(firstBlk, block, independent);
+            HashSet<BasicBlock> linked = new HashSet<>();
+            dfs4dom(firstBlk, block, linked);
 
             HashSet<BasicBlock> doms = new HashSet<>();
             for (CustomList.Node node : function.getBasicBlocks()) {
                 BasicBlock otherBlk = (BasicBlock) node;
-                if (!independent.contains(otherBlk)) {
+                if (!linked.contains(otherBlk)) {
                     doms.add(otherBlk);
                 }
             }
@@ -82,17 +82,17 @@ public class DFG {
         }
     }
 
-    private static void dfs4dom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> independent) {
+    private static void dfs4dom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> linked) {
         if (block.equals(otherBlk)) {
             return;
         }
-        if (independent.contains(otherBlk)) {
+        if (linked.contains(otherBlk)) {
             return;
         }
-        independent.add(block);
+        linked.add(block);
         for (BasicBlock next : block.getSucs()) {
-            if (!independent.contains(next) && next != otherBlk){
-                dfs4dom(next, otherBlk, independent);
+            if (!linked.contains(next) && next != otherBlk){
+                dfs4dom(next, otherBlk, linked);
             }
         }
     }
@@ -115,11 +115,13 @@ public class DFG {
         BasicBlock secondBlk = (BasicBlock) function.getBasicBlocks().getHead().getNext();
         HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
         HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
-
+        //删除不要的块
         while (secondBlk != null) {
             dfs4remove(secondBlk);
             secondBlk = (BasicBlock) secondBlk.getNext();
         }
+
+        //初始化前驱后继
         BasicBlock tmpBlk = (BasicBlock) function.getBasicBlocks().getHead();
         while (tmpBlk != null) {
             pres.put(tmpBlk, new HashSet<>());
@@ -127,14 +129,15 @@ public class DFG {
             tmpBlk = (BasicBlock) tmpBlk.getNext();
         }
 
+        //遍历所有块，建立前驱后继关系
         Iterator<CustomList.Node> blks = function.getBasicBlocks().iterator();
         while (blks.hasNext()) {
             BasicBlock block = (BasicBlock) blks.next();
             Use use = block.getBeginUse();
             for (;use != null; use = (Use) use.getNext()) {
-                BasicBlock user = use.getUser().getParentBB();
-                pres.get(block).add(user);
-                sucs.get(user).add(block);
+                BasicBlock userBlk = use.getUser().getParentBB();
+                pres.get(block).add(userBlk);
+                sucs.get(userBlk).add(block);
             }
         }
 
