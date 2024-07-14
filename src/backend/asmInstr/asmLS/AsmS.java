@@ -1,6 +1,7 @@
 package backend.asmInstr.asmLS;
 
 import backend.asmInstr.AsmInstr;
+import backend.itemStructure.AsmImm12;
 import backend.itemStructure.AsmOperand;
 public class AsmS extends AsmInstr {
     protected AsmOperand src, addr, offset;
@@ -27,5 +28,8 @@ public class AsmS extends AsmInstr {
         }else {
             this.addr = src;
         }
+    }
+    public void allocNewSize(int newAllocSize) {
+        ((AsmImm12)offset).addNewAllocSize(newAllocSize);
     }
 }
