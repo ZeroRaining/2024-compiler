@@ -107,7 +107,12 @@ public class RegAlloc {
     }
 
     private void changeAllocSize(AsmFunction function, int newAllocSize) {
+        //修改sp
         ((AsmAdd)((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead()).allocNewSize(newAllocSize);
+        ((AsmAdd)(function.getTailBlock()).getInstrTail().getPrev()).allocNewSize(newAllocSize);
+        //修改ld ra
+        ((AsmS)((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead().getNext()).allocNewSize(newAllocSize);
+        ((AsmL)(function.getTailBlock()).getInstrTail().getPrev().getPrev()).allocNewSize(newAllocSize);
     }
     //调用规约的完成是假定我们已经成功实现活跃性分析的基础上的，此阶段的调用规约我们先只实现整数寄存器的
     //callerSave的寄存器有x1(ra),x5-7(t0-2),x10-11(a0-a1),x12-17(a2-7),x28-31(t3-6)
@@ -161,7 +166,8 @@ public class RegAlloc {
                     if (save instanceof AsmPhyReg) {
                         beColored = preColored.get(save);
                     }
-                    if (beColored == 2 || beColored == 8 || beColored == 9 || (beColored <= 27 && beColored >= 18)) {
+                    //删除了对sp的保存
+                    if (beColored == 8 || beColored == 9 || (beColored <= 27 && beColored >= 18)) {
                         beChanged.add(beColored);
                     }
                 }
@@ -185,12 +191,13 @@ public class RegAlloc {
             if (save != 2) {
                 AsmSw store = new AsmSw(sav, RegGeter.SP, place);
                 AsmLw load = new AsmLw(sav, RegGeter.SP, place);
-                store.insertAfter(((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead());
+                store.insertAfter(((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead().getNext());
+                load.insertBefore(function.getTailBlock().getInstrTail().getPrev().getPrev());
             } else {
                 AsmSd store = new AsmSd(sav, RegGeter.SP, place);
                 AsmLd load = new AsmLd(sav, RegGeter.SP, place);
-                store.insertAfter(((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead());
-                load.insertBefore(function.getTailBlock().getInstrTail());
+                store.insertAfter(((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead().getNext());
+                load.insertBefore(function.getTailBlock().getInstrTail().getPrev().getPrev());
             }
         }
         return newAllocSize;

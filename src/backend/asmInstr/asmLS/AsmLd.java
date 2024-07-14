@@ -1,5 +1,6 @@
 package backend.asmInstr.asmLS;
 
+import backend.itemStructure.AsmImm12;
 import backend.itemStructure.AsmOperand;
 
 public class AsmLd extends AsmL {

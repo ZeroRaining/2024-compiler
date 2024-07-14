@@ -1,6 +1,7 @@
 package backend.asmInstr.asmLS;
 
 import backend.asmInstr.AsmInstr;
+import backend.itemStructure.AsmImm12;
 import backend.itemStructure.AsmOperand;
 
 public class AsmL extends AsmInstr {
@@ -37,5 +38,8 @@ public class AsmL extends AsmInstr {
     }
     public void ReSetDst(AsmOperand dst) {
         this.dst = dst;
+    }
+    public void allocNewSize(int newAllocSize) {
+        ((AsmImm12)offset).addNewAllocSize(newAllocSize);
     }
 }
