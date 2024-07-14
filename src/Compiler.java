@@ -50,10 +50,10 @@ public class Compiler {
         //IRTest();
 
         //后端代码生成测试
-        CodeGenTest();
+        //CodeGenTest();
 
         //寄存器分配测试
-        //RegAllocTest();
+        RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {

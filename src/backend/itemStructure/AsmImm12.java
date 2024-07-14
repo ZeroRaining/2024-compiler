@@ -8,6 +8,9 @@ public class AsmImm12 extends AsmOperand{
     public int getValue() {
         return value;
     }
+    public void addNewAllocSize(int newAllocSize) {
+        value -= newAllocSize;
+    }
     public String toString() {
         return String.valueOf(value);
     }
