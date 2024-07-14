@@ -11,7 +11,8 @@ public class AsmLd extends AsmL {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("ld\t");
+        //sb.append("ld\t");
+        sb.append("lw\t");
         sb.append(dst);
         sb.append(",\t");
         sb.append(offset);

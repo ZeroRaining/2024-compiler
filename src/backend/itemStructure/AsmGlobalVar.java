@@ -21,7 +21,7 @@ public class AsmGlobalVar {
 
     //已赋值数组
     public AsmGlobalVar(Symbol symbol) {
-        this.name = symbol.getName();
+        this.name = symbol.getName()+"_val";
         this.isArray = true;
         this.isInit = true;
         this.arraySymbol = symbol;
@@ -30,19 +30,19 @@ public class AsmGlobalVar {
 
     //已赋值变量
     public AsmGlobalVar(String name, Number number) {
-        this.name = name;
+        this.name = name+"_val";
         this.isInit = true;
         this.value = number.intValue();
     }
 
     //未赋值变量
     public AsmGlobalVar(String name) {
-        this.name = name;
+        this.name = name+"_val";
     }
 
     //未赋值数组
     public AsmGlobalVar(String name, int size) {
-        this.name = name;
+        this.name = name+"_val";
         this.size = size;
     }
 
