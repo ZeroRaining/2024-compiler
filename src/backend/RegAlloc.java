@@ -637,7 +637,7 @@ public class RegAlloc {
     private boolean Conservative(HashSet<AsmOperand> nodes) {
         int k = 0;
         for (AsmOperand n: nodes) {
-            if (degree.get(n) >= K) {
+            if (degree.containsKey(n) && degree.get(n) >= K) {
                 k = k + 1;
             }
         }
