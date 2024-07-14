@@ -685,6 +685,9 @@ public class RegAlloc {
     }
     public HashSet<AsmInstr> NodeMoves(AsmOperand n) { //与操作数相关的传送指令集合（未被冻结
         HashSet<AsmInstr> result = new HashSet<>();
+        if (!moveList.containsKey(n)) {
+            return result;
+        }
         result.addAll(moveList.get(n));
         result.removeAll(activeMoves);
         result.removeAll(worklistMoves);
