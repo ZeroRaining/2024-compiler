@@ -6,6 +6,7 @@ import frontend.ir.symbols.Symbol;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * getelementptr
@@ -130,5 +131,19 @@ public class GEPInstr extends MemoryOperation {
         }
         wholeIndexList.addAll(indexList);
         return wholeIndexList;
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof GEPInstr)) {
+            return false;
+        }
+        
+        return this.result == ((GEPInstr) other).result;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(result);
     }
 }

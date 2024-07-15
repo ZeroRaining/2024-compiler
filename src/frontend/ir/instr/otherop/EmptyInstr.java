@@ -1,5 +1,6 @@
 package frontend.ir.instr.otherop;
 
+import debug.DEBUG;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
@@ -10,6 +11,7 @@ public class EmptyInstr extends Instruction {
     public EmptyInstr() {
         myCnt = cnt++;
     }
+    
     @Override
     public Number getNumber() {
         return null;
@@ -22,7 +24,10 @@ public class EmptyInstr extends Instruction {
 
     @Override
     public String value2string() {
-        return "%empty_" + myCnt;
+        if (DEBUG.debug1) {
+            return "%empty_" + myCnt;
+        }
+        throw new RuntimeException("空指令不应该剩下");
     }
 
     @Override
@@ -32,6 +37,5 @@ public class EmptyInstr extends Instruction {
 
     @Override
     public void modifyValue(Value from, Value to) {
-
     }
 }

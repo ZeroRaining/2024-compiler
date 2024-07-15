@@ -1,6 +1,5 @@
 package frontend.ir.instr.binop;
 
-import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 

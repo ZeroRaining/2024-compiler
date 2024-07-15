@@ -2,7 +2,6 @@ package frontend.ir.instr.otherop.cmp;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
-import frontend.ir.structure.BasicBlock;
 
 public class ICmpInstr extends Cmp {
     public ICmpInstr(int result, CmpCond cond, Value op1, Value op2) {

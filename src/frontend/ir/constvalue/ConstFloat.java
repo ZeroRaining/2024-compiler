@@ -2,6 +2,8 @@ package frontend.ir.constvalue;
 
 import frontend.ir.DataType;
 
+import java.util.Objects;
+
 public class ConstFloat extends ConstValue {
     private final float value;
     public ConstFloat(float init) {
@@ -21,5 +23,19 @@ public class ConstFloat extends ConstValue {
     @Override
     public String value2string() {
         return "0x" + Long.toHexString(Double.doubleToLongBits(value));
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof ConstFloat)) {
+            return false;
+        }
+        
+        return this.value == ((ConstFloat) other).value;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 }

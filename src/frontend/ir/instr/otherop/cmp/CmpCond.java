@@ -6,5 +6,5 @@ public enum CmpCond {
     GT,
     GE,
     LT,
-    LE;
+    LE
 }

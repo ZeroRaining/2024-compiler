@@ -12,6 +12,7 @@ import frontend.syntax.Ast;
 import frontend.syntax.Parser;
 import midend.SSA.DFG;
 import midend.SSA.DeadCodeRemove;
+import midend.SSA.GVN;
 import midend.SSA.Mem2Reg;
 
 import java.io.*;
@@ -37,6 +38,7 @@ public class Compiler {
         if (arg.getOptLevel() == 1) {
             Mem2Reg.doMem2Reg(functions);
             DeadCodeRemove.doDeadCodeRemove(functions);
+            GVN.doGVN(functions);
         }
 
         // 打印 IR

@@ -3,10 +3,10 @@ package frontend.ir.instr.otherop;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
-import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.structure.BasicBlock;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class PhiInstr extends Instruction {
     private final int result;
@@ -72,5 +72,35 @@ public class PhiInstr extends Instruction {
                 values.set(i, to);
             }
         }
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof PhiInstr)) {
+            return false;
+        }
+        
+        boolean checkNot1 = this.values.size() != ((PhiInstr) other).values.size();
+        boolean checkNot2 = this.prtBlks.size() != ((PhiInstr) other).prtBlks.size();
+        
+        if (checkNot1 || checkNot2) {
+            return false;
+        }
+        
+        for (int i = 0; i < values.size(); i++) {
+            if (!this.values.get(i).equals(((PhiInstr) other).values.get(i))) {
+                return false;
+            }
+            if (!this.prtBlks.get(i).equals(((PhiInstr) other).prtBlks.get(i))) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(values, prtBlks);
     }
 }

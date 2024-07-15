@@ -3,6 +3,8 @@ package frontend.ir.instr.memop;
 import frontend.ir.Value;
 import frontend.ir.symbols.Symbol;
 
+import java.util.Objects;
+
 public class LoadInstr extends MemoryOperation {
     private final int result;
     private Value ptr = null;
@@ -17,7 +19,6 @@ public class LoadInstr extends MemoryOperation {
     public LoadInstr(int result, Symbol symbol, Value ptr) {
         super(symbol);
         this.result = result;
-        // setUse(symbol.getAllocValue()); todo: 我觉得这条应该没啥用，确定之后再删除
         this.ptr = ptr;
         setUse(ptr);
         this.pointerLevel = ptr.getPointerLevel() - 1;
@@ -65,5 +66,19 @@ public class LoadInstr extends MemoryOperation {
     
     public Value getPtr() {
         return ptr;
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof LoadInstr)) {
+            return false;
+        }
+        
+        return this.result == ((LoadInstr) other).result;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(result);
     }
 }

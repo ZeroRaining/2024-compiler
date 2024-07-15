@@ -1,9 +1,10 @@
 package frontend.ir.instr.unaryop;
 
-import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+
+import java.util.Objects;
 
 public class FNegInstr extends Instruction {
     private final int result;
@@ -37,5 +38,19 @@ public class FNegInstr extends Instruction {
         } else {
             throw new RuntimeException();
         }
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof FNegInstr)) {
+            return false;
+        }
+        
+        return this.value == ((FNegInstr) other).value;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 }

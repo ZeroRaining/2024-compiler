@@ -1,9 +1,10 @@
 package frontend.ir.instr.binop;
 
-import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+
+import java.util.Objects;
 
 public abstract class BinaryOperation extends Instruction {
     private final int result; // 新分配一个寄存器用来存结果
@@ -61,5 +62,23 @@ public abstract class BinaryOperation extends Instruction {
     }
     public Value getOp2() {
         return op2;
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof BinaryOperation)) {
+            return false;
+        }
+        
+        boolean check1 = this.op1.equals(((BinaryOperation) other).op1);
+        boolean check2 = this.op2.equals(((BinaryOperation) other).op2);
+        boolean check3 = this.operationName.equals(((BinaryOperation) other).operationName);
+        
+        return check1 && check2 && check3;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(op1, op2, operationName);
     }
 }

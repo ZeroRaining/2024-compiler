@@ -4,7 +4,6 @@ import frontend.ir.DataType;
 import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
-import frontend.ir.structure.BasicBlock;
 
 import java.util.List;
 
