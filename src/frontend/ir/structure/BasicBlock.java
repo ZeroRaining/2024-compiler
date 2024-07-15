@@ -198,18 +198,4 @@ public class BasicBlock extends Value {
             instr = (Instruction) instr.getNext();
         }
     }
-    
-    @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof BasicBlock)) {
-            return false;
-        }
-        
-        return this.labelCnt == ((BasicBlock) other).labelCnt;
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(labelCnt);
-    }
 }
