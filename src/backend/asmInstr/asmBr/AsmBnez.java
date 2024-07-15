@@ -11,6 +11,7 @@ public class AsmBnez extends AsmInstr {
         super("AsmBnez");
         this.cond = cond;
         this.target = target;
+        addUseReg(this.cond,cond);
     }
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -20,4 +21,8 @@ public class AsmBnez extends AsmInstr {
         sb.append(target);
         return sb.toString();
     }
+    public void ReSetSrc(AsmOperand src) {
+        this.cond = src;
+    }
+
 }

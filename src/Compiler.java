@@ -35,11 +35,11 @@ public class Compiler {
         DFG.doDFG(functions);
 
         // 开启优化
-        if (arg.getOptLevel() == 1) {
-            Mem2Reg.doMem2Reg(functions);
-            DeadCodeRemove.doDeadCodeRemove(functions);
-            GVN.doGVN(functions);
-        }
+//        if (arg.getOptLevel() == 1) {
+//            Mem2Reg.doMem2Reg(functions);
+//            DeadCodeRemove.doDeadCodeRemove(functions);
+//            GVN.doGVN(functions);
+//        }
 
         // 打印 IR
         if (arg.toPrintIR()) {

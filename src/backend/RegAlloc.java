@@ -67,6 +67,9 @@ public class RegAlloc {
         K = 32;
         PreColor();
         for (AsmFunction function: module.getFunctions()){
+            if (((AsmBlock)function.getBlocks().getHead()).getInstrs().getSize() == 0) {
+                continue;
+            }
             while (true) {
                 initial();
                 LivenessAnalysis(function);
