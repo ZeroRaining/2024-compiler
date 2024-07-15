@@ -186,4 +186,9 @@ public class Function extends Value implements FuncDef {
     public String getName() {
         return name;
     }
+    
+    @Override
+    public String toString() {
+        return this.name;
+    }
 }
