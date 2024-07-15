@@ -756,10 +756,10 @@ public class IrParser {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmOperand dst = parseOperand(instr, 0, f, bb);
         AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
-        AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
         if (instr.getOp2() instanceof ConstInt) {
             divByConst(dst, src1, ((ConstInt) instr.getOp2()).getNumber(), bb, f);
         } else {
+            AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
             AsmDiv asmDiv = new AsmDiv(dst, src1, src2);
             if (!instr.is64) {
                 asmDiv.isWord = true;
@@ -780,7 +780,7 @@ public class IrParser {
             return;
         } else {
             int absValue = Math.abs(value);
-            AsmDiv asmDiv = new AsmDiv(dst, src1, parseConstIntOperand(absValue, 12, f, bb));
+            AsmDiv asmDiv = new AsmDiv(dst, src1, parseConstIntOperand(absValue, 0, f, bb));
             asmDiv.isWord = true;
             asmBlock.addInstrTail(asmDiv);
         }
