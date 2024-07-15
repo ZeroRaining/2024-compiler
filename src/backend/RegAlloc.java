@@ -135,7 +135,7 @@ public class RegAlloc {
                         if (beColored == 1 || (beColored >= 5 &&  beColored <= 7) || (beColored >= 10 &&  beColored <= 11) || (beColored >= 12 &&  beColored <= 17) || (beColored >= 28 &&  beColored <= 31)) {
                             int spillPlace = function.getAllocaSize() + function.getArgsSize();
                             function.addAllocaSize(4);
-                            newAllocSize += spillPlace;
+                            newAllocSize += 4;
                             AsmImm12 place = new AsmImm12(spillPlace);
                             AsmSw store = new AsmSw(save, RegGeter.SP, place);
                             AsmLw load = new AsmLw(save, RegGeter.SP, place);
