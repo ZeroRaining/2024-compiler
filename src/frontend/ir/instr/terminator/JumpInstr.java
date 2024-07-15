@@ -36,4 +36,9 @@ public class JumpInstr extends Instruction {
     public void modifyValue(Value from, Value to) {
         throw new RuntimeException("没有可以置换的 value");
     }
+    
+    @Override
+    public Value operationSimplify() {
+        return null;
+    }
 }

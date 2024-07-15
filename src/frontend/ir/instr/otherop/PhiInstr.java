@@ -103,4 +103,9 @@ public class PhiInstr extends Instruction {
     public int hashCode() {
         return Objects.hash(values, prtBlks);
     }
+    
+    @Override
+    public Value operationSimplify() {
+        return null;
+    }
 }

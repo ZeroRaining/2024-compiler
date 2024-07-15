@@ -1,5 +1,6 @@
 package frontend.ir.instr.binop;
 
+import frontend.ir.constvalue.ConstInt;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
@@ -16,5 +17,13 @@ public class MulInstr extends BinaryOperation {
         Value tmp = op1;
         op1 = op2;
         op2 = tmp;
+    }
+    
+    @Override
+    public Value operationSimplify() {
+        if (op1 instanceof ConstInt && op2 instanceof ConstInt) {
+            return new ConstInt(((ConstInt) op1).getNumber() * ((ConstInt) op2).getNumber());
+        }
+        return null;
     }
 }

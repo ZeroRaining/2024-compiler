@@ -37,5 +37,11 @@ public class EmptyInstr extends Instruction {
 
     @Override
     public void modifyValue(Value from, Value to) {
+        throw new RuntimeException("占位空指令没有可以替换的 value,也不应该进入替换流程");
+    }
+    
+    @Override
+    public Value operationSimplify() {
+        return null;
     }
 }

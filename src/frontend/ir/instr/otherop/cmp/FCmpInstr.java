@@ -2,6 +2,9 @@ package frontend.ir.instr.otherop.cmp;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstBool;
+import frontend.ir.constvalue.ConstFloat;
+import frontend.ir.constvalue.ConstInt;
 
 public class FCmpInstr extends Cmp {
     
@@ -27,5 +30,24 @@ public class FCmpInstr extends Cmp {
         }
         stringBuilder.append(" float ").append(op1.value2string()).append(", ").append(op2.value2string());
         return stringBuilder.toString();
+    }
+    
+    @Override
+    public Value operationSimplify() {
+        if (op1 instanceof ConstFloat && op2 instanceof ConstFloat) {
+            float const1 = op1.getNumber().floatValue();
+            float const2 = op2.getNumber().floatValue();
+            switch (cond) {
+                case EQ: return new ConstBool(const1 == const2);
+                case NE: return new ConstBool(const1 != const2);
+                case GE: return new ConstBool(const1 >= const2);
+                case GT: return new ConstBool(const1 >  const2);
+                case LE: return new ConstBool(const1 <= const2);
+                case LT: return new ConstBool(const1 <  const2);
+                default: throw new RuntimeException("意料之外的运算符");
+            }
+        }
+        
+        return null;
     }
 }

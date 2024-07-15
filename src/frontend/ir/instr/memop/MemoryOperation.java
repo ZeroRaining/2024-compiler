@@ -1,6 +1,7 @@
 package frontend.ir.instr.memop;
 
 import frontend.ir.DataType;
+import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.symbols.Symbol;
 
@@ -29,5 +30,10 @@ public abstract class MemoryOperation extends Instruction {
         } else {
             return symbol.getType().toString();
         }
+    }
+    
+    @Override
+    public Value operationSimplify() {
+        return null;
     }
 }

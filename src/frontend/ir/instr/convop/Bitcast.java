@@ -10,4 +10,9 @@ public class Bitcast extends ConversionOperation {
     public Bitcast(int result, Value value) {
         super(result, value.getDataType(), DataType.VOID_, value, "bitcast");
     }
+    
+    @Override
+    public Value operationSimplify() {
+        return null;
+    }
 }

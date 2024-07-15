@@ -55,5 +55,10 @@ public class BranchInstr extends Instruction {
             throw new RuntimeException();
         }
     }
+    
+    @Override
+    public Value operationSimplify() {
+        return null;
+    }
 }
 

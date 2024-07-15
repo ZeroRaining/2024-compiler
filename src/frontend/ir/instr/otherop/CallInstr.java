@@ -82,4 +82,9 @@ public class CallInstr extends Instruction {
     public FuncDef getFuncDef() {
         return funcDef;
     }
+    
+    @Override
+    public Value operationSimplify() {
+        return null;
+    }
 }
