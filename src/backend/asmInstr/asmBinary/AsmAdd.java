@@ -10,6 +10,10 @@ public class AsmAdd extends AsmBinary {
         super(dst, src1, src2);
     }
 
+    public void allocNewSize(int newAllocSize) {
+        ((AsmImm12)super.src2).addNewAllocSize(newAllocSize);
+    }
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("add");

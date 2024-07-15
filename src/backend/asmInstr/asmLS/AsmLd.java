@@ -1,5 +1,6 @@
 package backend.asmInstr.asmLS;
 
+import backend.itemStructure.AsmImm12;
 import backend.itemStructure.AsmOperand;
 
 public class AsmLd extends AsmL {
@@ -11,7 +12,8 @@ public class AsmLd extends AsmL {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("ld\t");
+        //sb.append("ld\t");
+        sb.append("lw\t");
         sb.append(dst);
         sb.append(",\t");
         sb.append(offset);

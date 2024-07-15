@@ -1,6 +1,7 @@
 package backend;
 
 import backend.asmInstr.AsmInstr;
+import backend.asmInstr.asmBinary.AsmAdd;
 import backend.asmInstr.asmLS.*;
 import backend.asmInstr.asmTermin.AsmCall;
 import backend.itemStructure.*;
@@ -90,20 +91,33 @@ public class RegAlloc {
                         vreg1.color = color.get(vreg);
                     }
                     LivenessAnalysis(function);//不确定是否要这样
-                    callerSave(function);
-                    calleeSave(function);
+                    int newAllocSize = 0;
+                    newAllocSize += callerSave(function);
+                    newAllocSize += calleeSave(function);
+                    changeAllocSize(function,newAllocSize);
                     allocRealReg(function);
                     break;
                 } else {
-                    RewriteProgram(function);
+                    int newAllocSize = RewriteProgram(function);
+                    changeAllocSize(function, newAllocSize);
                 }
             }
         }
 
     }
+
+    private void changeAllocSize(AsmFunction function, int newAllocSize) {
+        //修改sp
+        ((AsmAdd)((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead()).allocNewSize(newAllocSize);
+        ((AsmAdd)(function.getTailBlock()).getInstrTail().getPrev()).allocNewSize(newAllocSize);
+        //修改ld ra
+        ((AsmS)((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead().getNext()).allocNewSize(newAllocSize);
+        ((AsmL)(function.getTailBlock()).getInstrTail().getPrev().getPrev()).allocNewSize(newAllocSize);
+    }
     //调用规约的完成是假定我们已经成功实现活跃性分析的基础上的，此阶段的调用规约我们先只实现整数寄存器的
     //callerSave的寄存器有x1(ra),x5-7(t0-2),x10-11(a0-a1),x12-17(a2-7),x28-31(t3-6)
-    private void callerSave(AsmFunction function) {
+    private int callerSave(AsmFunction function) {
+        int newAllocSize = 0;
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
             AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
@@ -119,8 +133,9 @@ public class RegAlloc {
                             beColored = preColored.get(save);
                         }
                         if (beColored == 1 || (beColored >= 5 &&  beColored <= 7) || (beColored >= 10 &&  beColored <= 11) || (beColored >= 12 &&  beColored <= 17) || (beColored >= 28 &&  beColored <= 31)) {
-                            int spillPlace = function.getAllocaSize();
+                            int spillPlace = function.getAllocaSize() + function.getArgsSize();
                             function.addAllocaSize(4);
+                            newAllocSize += 4;
                             AsmImm12 place = new AsmImm12(spillPlace);
                             AsmSw store = new AsmSw(save, RegGeter.SP, place);
                             AsmLw load = new AsmLw(save, RegGeter.SP, place);
@@ -133,9 +148,11 @@ public class RegAlloc {
             }
             blockHead = (AsmBlock) blockHead.getNext();
         }
+        return newAllocSize;
     }
     //calleeSave 保存的寄存器x2(sp),x8(s0/fp),x9(s1),x18-27(s2-11)
-    private void calleeSave(AsmFunction function) {
+    private int calleeSave(AsmFunction function) {
+        int newAllocSize = 0;
         HashSet<Integer> beChanged = new HashSet<>();
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
@@ -149,7 +166,8 @@ public class RegAlloc {
                     if (save instanceof AsmPhyReg) {
                         beColored = preColored.get(save);
                     }
-                    if (beColored == 2 || beColored == 8 || beColored == 9 || (beColored <= 27 && beColored >= 18)) {
+                    //删除了对sp的保存
+                    if (beColored == 8 || beColored == 9 || (beColored <= 27 && beColored >= 18)) {
                         beChanged.add(beColored);
                     }
                 }
@@ -161,25 +179,28 @@ public class RegAlloc {
         AsmInstr instrTail = (AsmInstr) function.getTailBlock().getInstrs().getTail();
         for (int save: beChanged) {
             AsmReg sav = RegGeter.AllRegsInt.get(save);
-            int spillPlace = function.getAllocaSize();
+            int spillPlace = function.getAllocaSize() + function.getArgsSize();
             if (save != 2) {
                 function.addAllocaSize(4);
+                newAllocSize += 4;
             } else {
                 function.addAllocaSize(8);
+                newAllocSize += 8;
             }
             AsmImm12 place = new AsmImm12(spillPlace);
             if (save != 2) {
                 AsmSw store = new AsmSw(sav, RegGeter.SP, place);
                 AsmLw load = new AsmLw(sav, RegGeter.SP, place);
-                ((AsmBlock) function.getBlocks().getHead()).getInstrs().addToHead(store);
-                load.insertBefore(function.getTailBlock().getInstrTail());
+                store.insertAfter(((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead().getNext());
+                load.insertBefore(function.getTailBlock().getInstrTail().getPrev().getPrev());
             } else {
                 AsmSd store = new AsmSd(sav, RegGeter.SP, place);
                 AsmLd load = new AsmLd(sav, RegGeter.SP, place);
-                ((AsmBlock) function.getBlocks().getHead()).getInstrs().addToHead(store);
-                load.insertBefore(function.getTailBlock().getInstrTail());
+                store.insertAfter(((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead().getNext());
+                load.insertBefore(function.getTailBlock().getInstrTail().getPrev().getPrev());
             }
         }
+        return newAllocSize;
     }
     private void allocRealReg(AsmFunction function) {
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
@@ -569,11 +590,13 @@ public class RegAlloc {
         }
     }
 
-    private void RewriteProgram(AsmFunction function){
+    private int RewriteProgram(AsmFunction function){
+        int newAllocSize = 0;
         HashSet<AsmOperand> newTemps = new HashSet<>();
         for (AsmOperand v: spilledNodes) {
-            int spillPlace = function.getAllocaSize();
+            int spillPlace = function.getAllocaSize() + function.getArgsSize();
             function.addAllocaSize(4);
+            newAllocSize += 4;
             AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
             while (blockHead != null) {
                 AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
@@ -609,11 +632,12 @@ public class RegAlloc {
                 blockHead= (AsmBlock) blockHead.getNext();
             }
         }
+        return newAllocSize;
     }
     private boolean Conservative(HashSet<AsmOperand> nodes) {
         int k = 0;
         for (AsmOperand n: nodes) {
-            if (degree.get(n) >= K) {
+            if (degree.containsKey(n) && degree.get(n) >= K) {
                 k = k + 1;
             }
         }
@@ -685,6 +709,9 @@ public class RegAlloc {
     }
     public HashSet<AsmInstr> NodeMoves(AsmOperand n) { //与操作数相关的传送指令集合（未被冻结
         HashSet<AsmInstr> result = new HashSet<>();
+        if (!moveList.containsKey(n)) {
+            return result;
+        }
         result.addAll(moveList.get(n));
         result.removeAll(activeMoves);
         result.removeAll(worklistMoves);

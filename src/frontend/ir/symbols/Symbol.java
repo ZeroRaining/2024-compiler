@@ -72,7 +72,7 @@ public class Symbol {
         } else if (type == DataType.FLOAT) {
             return AsmType.FLOAT;
         } else {
-            throw new RuntimeException("变量出现void类型");
+            return AsmType.POINTER;
         }
     }
 

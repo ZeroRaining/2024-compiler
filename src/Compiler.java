@@ -55,7 +55,7 @@ public class Compiler {
         //CodeGenTest();
 
         //寄存器分配测试
-        //RegAllocTest();
+        RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {
@@ -102,14 +102,14 @@ public class Compiler {
         Program program = new Program(ast);
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
         DFG.doDFG(functions);
-        Mem2Reg.doMem2Reg(functions);
+        //Mem2Reg.doMem2Reg(functions);
         BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
         program.printIR(writer);
         writer.close();
 
         //代码生成测试
         AsmModule asmModule = new IrParser(program).parse();
-        BackendPrinter backendPrinter = new BackendPrinter(asmModule);
+        BackendPrinter backendPrinter = new BackendPrinter(asmModule,false);
         backendPrinter.printBackend();
     }
 
@@ -129,7 +129,7 @@ public class Compiler {
         AsmModule asmModule = new IrParser(program).parse();
         RegAlloc alloc = RegAlloc.getInstance();
         alloc.run(asmModule);
-        BackendPrinter backendPrinter = new BackendPrinter(asmModule);
+        BackendPrinter backendPrinter = new BackendPrinter(asmModule,true);
         backendPrinter.printBackend();
     }
 }
