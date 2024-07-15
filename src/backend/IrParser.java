@@ -115,16 +115,16 @@ public class IrParser {
             //实现BasicBlock的前驱后继
             for (Node bb : f.getBasicBlocks()) {
                 AsmBlock asmBlock = blockMap.get(bb);
-                for (BasicBlock anotherBb: ((BasicBlock) bb).getSucs()) {
+                for (BasicBlock anotherBb : ((BasicBlock) bb).getSucs()) {
                     asmBlock.sucs.add(blockMap.get(anotherBb));
                 }
-                for (BasicBlock anotherBb: ((BasicBlock) bb).getPres()) {
+                for (BasicBlock anotherBb : ((BasicBlock) bb).getPres()) {
                     asmBlock.pres.add(blockMap.get(anotherBb));
                 }
-                for (BasicBlock anotherBb: ((BasicBlock) bb).getDoms()) {
+                for (BasicBlock anotherBb : ((BasicBlock) bb).getDoms()) {
                     asmBlock.doms.add(blockMap.get(anotherBb));
                 }
-                for (BasicBlock anotherBb: ((BasicBlock) bb).getIDoms()) {
+                for (BasicBlock anotherBb : ((BasicBlock) bb).getIDoms()) {
                     asmBlock.iDoms.add(blockMap.get(anotherBb));
                 }
             }
@@ -351,7 +351,9 @@ public class IrParser {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmFunction asmFunction = funcMap.get(f);
         AsmType type;
-        if (instr.getPointerLevel() != 1) {
+        if (instr.getSymbol().getAsmType() == AsmType.ARRAY) {
+            type = AsmType.ARRAY;
+        } else if (instr.getPointerLevel() != 1) {
             type = AsmType.POINTER;
         } else {
             type = instr.getSymbol().getAsmType();
