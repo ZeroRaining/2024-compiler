@@ -55,7 +55,7 @@ public class Compiler {
         //CodeGenTest();
 
         //寄存器分配测试
-        RegAllocTest();
+//        RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {

@@ -21,7 +21,8 @@ public class GVN {
                 Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
                 while (instruction != null) {
                     if (instructions.containsKey(instruction)) {
-                        instruction.replaceUseTo(instructions.get(instruction));
+                        Instruction basicInstr = instructions.get(instruction);
+                        instruction.replaceUseTo(basicInstr);
                         instruction.removeFromList();
                     } else {
                         instructions.put(instruction, instruction);
