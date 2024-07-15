@@ -2,6 +2,7 @@ package backend.asmInstr;
 
 import Utils.CustomList;
 import backend.asmInstr.asmBinary.AsmBinary;
+import backend.asmInstr.asmBr.AsmBnez;
 import backend.asmInstr.asmLS.AsmL;
 import backend.asmInstr.asmLS.AsmS;
 import backend.itemStructure.AsmOperand;
@@ -58,6 +59,12 @@ public class AsmInstr extends CustomList.Node {
                 this.regUse.set(index, newReg);
                 AsmBinary asmBinary = (AsmBinary) this;
                 asmBinary.ReSetSrc(index, newReg);
+            }
+        } else if (type == "AsmBnez") {
+            if (this.regUse.get(index) == oldReg) {
+                this.regUse.set(index, newReg);
+                AsmBnez asmBnez = (AsmBnez) this;
+                asmBnez.ReSetSrc(newReg);
             }
         }
     }
