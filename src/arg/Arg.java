@@ -11,7 +11,7 @@ public class Arg {
     private final int optLevel;
     private final boolean printIR;
     private final FileInputStream srcStream;//源代码输入流
-    private final OutputStream asmStream;//汇编代码输出流
+    private final FileWriter asmWriter;//汇编代码输出流
     private final FileWriter irWriter;//汇编代码输出流
 
     private Arg(String src, String asm, int optimize) throws IOException {
@@ -23,7 +23,7 @@ public class Arg {
         this.irWriter    = null;
 
         this.srcStream   = new FileInputStream(srcFilename);
-        this.asmStream   = Files.newOutputStream(Paths.get(asmFilename));
+        this.asmWriter = new FileWriter(asmFilename);
     }
     
     private Arg(String src, String asm, String ll, int optimize) throws IOException {
@@ -35,7 +35,7 @@ public class Arg {
         
         this.irWriter    = new FileWriter(llFilename);
         this.srcStream   = new FileInputStream(srcFilename);
-        this.asmStream   = Files.newOutputStream(Paths.get(asmFilename));
+        this.asmWriter = new FileWriter(asmFilename);
     }
 
     public static Arg parse(String[] args) throws IOException {
@@ -84,8 +84,8 @@ public class Arg {
         return printIR;
     }
     
-    public OutputStream getAsmStream() {
-        return asmStream;
+    public FileWriter getAsmWriter() {
+        return asmWriter;
     }
     
     public FileWriter getIrWriter() {
