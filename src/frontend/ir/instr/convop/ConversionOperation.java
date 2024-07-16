@@ -10,7 +10,7 @@ public abstract class ConversionOperation extends Instruction {
     private final int result;
     private final DataType from;
     private final DataType to;
-    private Value value;
+    protected Value value;
     private final String opName;
     
     public ConversionOperation(int result, DataType from, DataType to, Value value, String name) {

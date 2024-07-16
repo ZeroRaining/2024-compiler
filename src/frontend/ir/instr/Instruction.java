@@ -64,4 +64,9 @@ public abstract class Instruction extends Value {
     public ArrayList<Value> getUseValueList() {
         return useValueList;
     }
+    
+    /**
+     * 用来简化运算指令,如果可以化成常数或进行部分简化则做简化,否则返回 null 说明无法简化
+     */
+    public abstract Value operationSimplify();
 }

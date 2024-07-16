@@ -2,6 +2,8 @@ package frontend.ir.instr.unaryop;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstFloat;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 
 import java.util.Objects;
@@ -52,5 +54,13 @@ public class FNegInstr extends Instruction {
     @Override
     public int hashCode() {
         return Objects.hash(value);
+    }
+    
+    @Override
+    public Value operationSimplify() {
+        if (this.value instanceof ConstValue) {
+            return new ConstFloat(-1 * value.getNumber().floatValue());
+        }
+        return null;
     }
 }

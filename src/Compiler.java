@@ -10,10 +10,7 @@ import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;
 import frontend.syntax.Ast;
 import frontend.syntax.Parser;
-import midend.SSA.DFG;
-import midend.SSA.DeadCodeRemove;
-import midend.SSA.GVN;
-import midend.SSA.Mem2Reg;
+import midend.SSA.*;
 
 import java.io.*;
 import java.util.HashSet;
@@ -35,11 +32,12 @@ public class Compiler {
         DFG.doDFG(functions);
 
         // 开启优化
-//        if (arg.getOptLevel() == 1) {
-//            Mem2Reg.doMem2Reg(functions);
-//            DeadCodeRemove.doDeadCodeRemove(functions);
-//            GVN.doGVN(functions);
-//        }
+        if (arg.getOptLevel() == 1) {
+            Mem2Reg.doMem2Reg(functions);
+            DeadCodeRemove.doDeadCodeRemove(functions);
+            GVN.doGVN(functions);
+            OIS.doOIS(functions);
+        }
 
         // 打印 IR
         if (arg.toPrintIR()) {
@@ -55,7 +53,7 @@ public class Compiler {
         //CodeGenTest();
 
         //寄存器分配测试
-        RegAllocTest();
+//        RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {

@@ -49,7 +49,16 @@ public class BranchInstr extends Instruction {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        throw new RuntimeException("没有可以置换的 value");
+        if (condition == from) {
+            condition = to;
+        } else {
+            throw new RuntimeException();
+        }
+    }
+    
+    @Override
+    public Value operationSimplify() {
+        return null;
     }
 }
 
