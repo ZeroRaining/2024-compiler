@@ -11,8 +11,8 @@ public class AsmSd extends AsmS {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        //sb.append("sd\t");
-        sb.append("sw\t");
+        sb.append("sd\t");
+        //sb.append("sw\t");
         sb.append(src);
         sb.append(",\t");
         sb.append(offset);
