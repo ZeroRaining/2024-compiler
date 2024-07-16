@@ -8,6 +8,8 @@ import backend.itemStructure.*;
 import backend.regs.*;
 import com.sun.corba.se.spi.protocol.InitialServerRequestDispatcher;
 import frontend.ir.Value;
+import frontend.ir.structure.BasicBlock;
+import frontend.ir.structure.Function;
 
 import java.util.*;
 /*todo*/ //load指令偏移量超过32位
@@ -97,25 +99,88 @@ public class RegAlloc {
                     int newAllocSize = 0;
                     newAllocSize += callerSave(function);
                     newAllocSize += calleeSave(function);
-                    changeAllocSize(function,newAllocSize);
+                    allocAndRecycleSP(function);
                     allocRealReg(function);
                     break;
                 } else {
                     int newAllocSize = RewriteProgram(function);
-                    changeAllocSize(function, newAllocSize);
                 }
             }
         }
 
     }
+    private void allocAndRecycleSP(AsmFunction function) {
+        int offset = 0;
+        offset = function.getWholeSize() - 8;
+        if (function.getRaSize() != 0) {
+            if (offset >= -2048 && offset <= 2047) {
+                AsmSd asmSd = new AsmSd(RegGeter.RA, RegGeter.SP, new AsmImm12(offset));
+                ((AsmBlock)function.getBlocks().getHead()).addInstrHead(asmSd);
+            } else {
+                AsmReg tmpMove = RegGeter.AllRegsInt.get(5);
+                AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
+                AsmOperand tmpAdd = RegGeter.AllRegsInt.get(5);
+                AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
+                AsmSd asmSd = new AsmSd(RegGeter.RA, tmpAdd, new AsmImm12(0));
+                ((AsmBlock)function.getBlocks().getHead()).addInstrHead(asmSd);
+                ((AsmBlock)function.getBlocks().getHead()).addInstrHead(asmAdd);
+                ((AsmBlock)function.getBlocks().getHead()).addInstrHead(asmMove);
+            }
+        }
+        offset = -function.getWholeSize();
+        if (offset >= -2048 && offset <= 2047) {
+            AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, new AsmImm12(offset));
+            ((AsmBlock)function.getBlocks().getHead()).addInstrHead(asmAdd);
+        } else {
+            AsmOperand tmpMove = RegGeter.AllRegsInt.get(5);
+            AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
+            AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, tmpMove);
+            ((AsmBlock)function.getBlocks().getHead()).addInstrHead(asmAdd);
+            ((AsmBlock)function.getBlocks().getHead()).addInstrHead(asmMove);
+        }
+
+         offset = function.getWholeSize() - 8;
+        if (function.getRaSize() != 0) {
+            if (offset >= -2048 && offset <= 2047) {
+                AsmLd asmLd = new AsmLd(RegGeter.RA, RegGeter.SP, new AsmImm12(offset));
+                asmLd.insertBefore(function.getTailBlock().getInstrTail());
+            } else {
+                AsmOperand tmpMove = RegGeter.AllRegsInt.get(5);
+                AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
+                AsmOperand tmpAdd = RegGeter.AllRegsInt.get(5);
+                AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
+                AsmLd asmLd = new AsmLd(RegGeter.RA, tmpAdd, new AsmImm12(0));
+                asmMove.insertBefore(function.getTailBlock().getInstrTail());
+                asmAdd.insertBefore(function.getTailBlock().getInstrTail());
+                asmLd.insertBefore(function.getTailBlock().getInstrTail());
+
+            }
+            AsmAdd asmAddd = new AsmAdd(RegGeter.SP, RegGeter.SP, parseConstIntOperand(function.getWholeSize(), 12, function));
+            asmAddd.insertBefore(function.getTailBlock().getInstrTail());
+        }
+    }
+    private AsmOperand parseConstIntOperand(int value, int maxImm, AsmFunction function) {
+        AsmImm32 asmImm32 = new AsmImm32(value);
+        AsmImm12 asmImm12 = new AsmImm12(value);
+        if (maxImm == 32) {
+            return asmImm32;
+        }
+        if (maxImm == 12 && (value >= -2048 && value <= 2047)) {
+            return asmImm12;
+        }
+        AsmOperand tmpReg = RegGeter.AllRegsInt.get(5);
+        AsmMove asmMove = new AsmMove(tmpReg, asmImm32);
+        asmMove.insertBefore(function.getTailBlock().getInstrTail());
+        return tmpReg;
+    }
 
     private void changeAllocSize(AsmFunction function, int newAllocSize) {
         //修改sp
-        ((AsmAdd)((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead()).allocNewSize(newAllocSize);
-        ((AsmAdd)(function.getTailBlock()).getInstrTail().getPrev()).allocNewSize(newAllocSize);
-        //修改ld ra
-        ((AsmS)((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead().getNext()).allocNewSize(newAllocSize);
-        ((AsmL)(function.getTailBlock()).getInstrTail().getPrev().getPrev()).allocNewSize(newAllocSize);
+//        ((AsmAdd)((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead()).allocNewSize(newAllocSize);
+//        ((AsmAdd)(function.getTailBlock()).getInstrTail().getPrev()).allocNewSize(newAllocSize);
+//        //修改ld ra
+//        ((AsmS)((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead().getNext()).allocNewSize(newAllocSize);
+//        ((AsmL)(function.getTailBlock()).getInstrTail().getPrev().getPrev()).allocNewSize(newAllocSize);
     }
     //调用规约的完成是假定我们已经成功实现活跃性分析的基础上的，此阶段的调用规约我们先只实现整数寄存器的
     //callerSave的寄存器有x1(ra),x5-7(t0-2),x10-11(a0-a1),x12-17(a2-7),x28-31(t3-6)
@@ -194,13 +259,13 @@ public class RegAlloc {
             if (save != 2) {
                 AsmSw store = new AsmSw(sav, RegGeter.SP, place);
                 AsmLw load = new AsmLw(sav, RegGeter.SP, place);
-                store.insertAfter(((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead().getNext());
-                load.insertBefore(function.getTailBlock().getInstrTail().getPrev().getPrev());
+                ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
+                load.insertBefore(function.getTailBlock().getInstrTail());
             } else {
                 AsmSd store = new AsmSd(sav, RegGeter.SP, place);
                 AsmLd load = new AsmLd(sav, RegGeter.SP, place);
-                store.insertAfter(((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead().getNext());
-                load.insertBefore(function.getTailBlock().getInstrTail().getPrev().getPrev());
+                ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
+                load.insertBefore(function.getTailBlock().getInstrTail());
             }
         }
         return newAllocSize;
