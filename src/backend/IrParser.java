@@ -259,8 +259,17 @@ public class IrParser {
                 blockMap.get(bb).addInstrHead(asmMove);
             }
         }
-        AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, parseConstIntOperand(-asmFunction.getWholeSize(), 12, f, bb));
-        blockMap.get(bb).addInstrHead(asmAdd);
+        offset = -asmFunction.getWholeSize();
+        if (offset >= -2048 && offset <= 2047) {
+            AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, new AsmImm12(offset));
+            blockMap.get(bb).addInstrHead(asmAdd);
+        } else {
+            AsmOperand tmpMove = genTmpReg(f);
+            AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
+            AsmAdd asmAdd = new AsmAdd(RegGeter.SP, RegGeter.SP, tmpMove);
+            blockMap.get(bb).addInstrHead(asmAdd);
+            blockMap.get(bb).addInstrHead(asmMove);
+        }
     }
 
     private void parseBlock(BasicBlock bb, Function f) {
