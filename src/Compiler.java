@@ -20,7 +20,7 @@ public class Compiler {
         //解析命令行
         Arg arg = Arg.parse(args);
         BufferedInputStream source = new BufferedInputStream(arg.getSrcStream());
-        // asm 输出流还没有哦
+        BufferedWriter output = new BufferedWriter(arg.getAsmWriter());
 
         //词法分析，得到TokenList
         TokenList tokenList = Lexer.getInstance().lex(source);
@@ -32,25 +32,31 @@ public class Compiler {
         DFG.doDFG(functions);
 
         // 开启优化
-        if (arg.getOptLevel() == 1) {
-            Mem2Reg.doMem2Reg(functions);
-            DeadCodeRemove.doDeadCodeRemove(functions);
-            GVN.doGVN(functions);
-            OIS.doOIS(functions);
-        }
+//        if (arg.getOptLevel() == 1) {
+//            Mem2Reg.doMem2Reg(functions);
+//            DeadCodeRemove.doDeadCodeRemove(functions);
+//            GVN.doGVN(functions);
+//            OIS.doOIS(functions);
+//        }
 
         // 打印 IR
-        if (arg.toPrintIR()) {
-            BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
-            program.printIR(irWriter);
-            irWriter.close();
-        }
+//        if (arg.toPrintIR()) {
+//            BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
+//            program.printIR(irWriter);
+//            irWriter.close();
+//        }
+
+        AsmModule asmModule = new IrParser(program).parse();
+        RegAlloc alloc = RegAlloc.getInstance();
+        alloc.run(asmModule);
+        BackendPrinter backendPrinter = new BackendPrinter(asmModule,true, output);
+        backendPrinter.printBackend();
 
         // IR生成测试
-        //IRTest();
+//        IRTest();
 
         //后端代码生成测试
-        //CodeGenTest();
+//        CodeGenTest();
 
         //寄存器分配测试
 //        RegAllocTest();

@@ -14,15 +14,24 @@ import java.util.ArrayList;
 public class BackendPrinter {
     private AsmModule module;
     private boolean withAlloc = false;
+    private BufferedWriter writer = null;
 
     public BackendPrinter(AsmModule module, boolean withAlloc) {
         this.module = module;
         this.withAlloc = withAlloc;
     }
 
+    public BackendPrinter(AsmModule module, boolean withAlloc, BufferedWriter writer) {
+        this.module = module;
+        this.withAlloc = withAlloc;
+        this.writer = writer;
+    }
+
     public void printBackend() throws IOException {
         BufferedWriter writer;
-        if (withAlloc) {
+        if (this.writer != null) {
+            writer = this.writer;
+        } else if (withAlloc) {
             writer = new BufferedWriter(new FileWriter("output.s"));
         } else {
             writer = new BufferedWriter(new FileWriter("output_no_alloc.s"));
