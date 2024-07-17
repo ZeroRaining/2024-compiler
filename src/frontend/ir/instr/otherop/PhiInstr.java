@@ -29,6 +29,14 @@ public class PhiInstr extends Instruction {
 //        }
     }
 
+    public ArrayList<Value> getValues() {
+        return values;
+    }
+
+    public ArrayList<BasicBlock> getPrtBlks() {
+        return prtBlks;
+    }
+
     @Override
     public String value2string() {
         return "%phi_" + result;

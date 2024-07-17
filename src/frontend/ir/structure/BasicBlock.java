@@ -41,6 +41,10 @@ public class BasicBlock extends Value {
         DF = new HashSet<>();
     }
 
+    public int getDepth() {
+        return depth;
+    }
+
     public void setDepth(int depth) {
         this.depth = depth;
     }

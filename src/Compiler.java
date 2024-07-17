@@ -10,6 +10,7 @@ import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;
 import frontend.syntax.Ast;
 import frontend.syntax.Parser;
+import midend.RemovePhi;
 import midend.SSA.*;
 
 import java.io.*;
@@ -49,7 +50,7 @@ public class Compiler {
             OIS.doOIS(functions);
         }
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
-
+        RemovePhi.removePhi(functions);
         // 打印 IR
         if (arg.toPrintIR()) {
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());

@@ -51,6 +51,10 @@ public class BranchInstr extends Instruction {
     public void modifyValue(Value from, Value to) {
         if (condition == from) {
             condition = to;
+        } else if (thenTarget == from) {
+            thenTarget = (BasicBlock) to;
+        } else if (elseTarget == from) {
+            elseTarget = (BasicBlock) to;
         } else {
             throw new RuntimeException();
         }
