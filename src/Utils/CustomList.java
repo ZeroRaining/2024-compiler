@@ -140,12 +140,12 @@ public class CustomList implements Iterable<CustomList.Node> {
             this.next = node.next;
             node.next = this;
             this.prev = node;
+            this.parent = node.parent;
             if (this.next != null) {
                 this.next.prev = this;
             } else {
                 this.parent.tail = this;
             }
-            this.parent = node.parent;
             this.parent.incrementSize();
         }
 
@@ -156,12 +156,12 @@ public class CustomList implements Iterable<CustomList.Node> {
             this.prev = node.prev;
             node.prev = this;
             this.next = node;
+            this.parent = node.parent;
             if (this.prev != null) {
                 this.prev.next = this;
             } else {
                 this.parent.head = this;
             }
-            this.parent = node.parent;
             this.parent.incrementSize();
         }
 
