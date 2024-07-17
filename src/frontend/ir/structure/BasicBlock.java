@@ -124,15 +124,20 @@ public class BasicBlock extends Value {
 
     public void addInstruction(Instruction instr) {
         //removeFromList销毁所有setUse
+        instr.setParentBB(this);
         instructions.addToTail(instr);
         if (isRet) {
             instr.removeFromList();
             return;
         }
-        if (instr instanceof ReturnInstr || instr instanceof JumpInstr || instr instanceof BranchInstr) {
+        if (instr instanceof ReturnInstr) {
             isRet = true;
+        } else if (instr instanceof JumpInstr) {
+            ((JumpInstr) instr).setRelation(this);
+            isRet = true;
+        } else if (instr instanceof BranchInstr) {
+            ((BranchInstr) instr).setRelation(this);
         }
-        instr.setParentBB(this);
     }
     
     public void printIR(Writer writer) throws IOException {
