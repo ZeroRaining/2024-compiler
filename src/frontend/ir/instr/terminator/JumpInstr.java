@@ -13,6 +13,22 @@ public class JumpInstr extends Instruction {
         setUse(Target);
     }
 
+    public void setRelation(BasicBlock prt) {
+        prt.getSucs().add(Target);
+        Target.getPres().add(prt);
+    }
+
+    @Override
+    public void removeFromList() {
+        if (this.getParentBB() == null) {
+            throw new RuntimeException("why you dont have parent?");
+        }
+        BasicBlock prt = this.getParentBB();
+        prt.getSucs().remove(Target);
+        Target.getPres().remove(prt);
+        super.removeFromList();
+    }
+
     public BasicBlock getTarget() {
         return Target;
     }

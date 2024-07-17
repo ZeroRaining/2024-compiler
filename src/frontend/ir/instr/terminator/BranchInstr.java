@@ -19,6 +19,26 @@ public class BranchInstr extends Instruction {
         setUse(cond);
     }
 
+    public void setRelation(BasicBlock prt) {
+        prt.getSucs().add(thenTarget);
+        thenTarget.getPres().add(prt);
+        prt.getSucs().add(elseTarget);
+        elseTarget.getPres().add(prt);
+    }
+
+    @Override
+    public void removeFromList() {
+        if (this.getParentBB() == null) {
+            throw new RuntimeException("why you dont have parent?");
+        }
+        BasicBlock prt = this.getParentBB();
+        prt.getSucs().add(thenTarget);
+        thenTarget.getPres().add(prt);
+        prt.getSucs().add(elseTarget);
+        elseTarget.getPres().add(prt);
+        super.removeFromList();
+    }
+
     public Value getCond() {
         return condition;
     }
