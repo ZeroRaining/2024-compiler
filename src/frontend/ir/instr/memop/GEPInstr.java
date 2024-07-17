@@ -18,7 +18,7 @@ public class GEPInstr extends MemoryOperation {
     private final int result;
     private final List<Value> indexList;
     private final String arrayTypeName;
-    private final Value ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
+    private Value ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
 
     public GEPInstr(int result, List<Value> indexList, Symbol symbol) {
         super(symbol);
@@ -121,7 +121,17 @@ public class GEPInstr extends MemoryOperation {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        throw new RuntimeException("没有可以置换的 value");
+        if (this.ptrVal == from) {
+            this.ptrVal = to;
+        } else {
+            for (int i = 0; i < indexList.size(); i++) {
+                if (indexList.get(i) == from) {
+                    indexList.set(i, to);
+                    return;
+                }
+            }
+            throw new RuntimeException("没有可以置换的 value");
+        }
     }
 
     public List<Value> getWholeIndexList() {
