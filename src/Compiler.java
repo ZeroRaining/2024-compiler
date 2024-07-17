@@ -36,10 +36,7 @@ public class Compiler {
         // 生成 IR
         Program program = new Program(ast);
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
-        long time1 = System.currentTimeMillis();
         DFG.doDFG(functions);
-        long time2 = System.currentTimeMillis();
-        System.out.println(time2 - time1);
 
         // 开启优化
         if (arg.toTime()) { optimizeStartTime = System.currentTimeMillis(); }
