@@ -60,5 +60,10 @@ public class BranchInstr extends Instruction {
     public Value operationSimplify() {
         return null;
     }
+    
+    @Override
+    public String myHash() {
+        return Integer.toString(this.hashCode());
+    }
 }
 

@@ -73,6 +73,11 @@ public class PhiInstr extends Instruction {
             }
         }
     }
+    
+    @Override
+    public String myHash() {
+        return Integer.toString(this.hashCode());
+    }
 
     @Override
     public Value operationSimplify() {

@@ -3,9 +3,6 @@ package frontend.ir.instr.memop;
 import frontend.ir.Value;
 import frontend.ir.symbols.Symbol;
 
-import java.util.Objects;
-
-
 public class AllocaInstr extends MemoryOperation {
     private final int result;
     
@@ -36,16 +33,7 @@ public class AllocaInstr extends MemoryOperation {
     }
     
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof AllocaInstr)) {
-            return false;
-        }
-        
-        return this.result == ((AllocaInstr) other).result;
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(result);
+    public String myHash() {
+        return this.value2string();
     }
 }

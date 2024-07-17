@@ -4,8 +4,6 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 
-import java.util.Objects;
-
 public abstract class ConversionOperation extends Instruction {
     private final int result;
     private final DataType from;
@@ -64,23 +62,7 @@ public abstract class ConversionOperation extends Instruction {
     }
     
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof ConversionOperation)) {
-            return false;
-        }
-        
-        if (this.result == ((ConversionOperation) other).result) {
-            return true;
-        }
-        
-        boolean check1 = this.value.value2string().equals(((ConversionOperation) other).value.value2string());
-        boolean check2 = this.opName.equals(((ConversionOperation) other).opName);
-        
-        return check1 && check2;
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(value.value2string(), opName);
+    public String myHash() {
+        return value.value2string() + opName;
     }
 }

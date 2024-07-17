@@ -4,8 +4,6 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 
-import java.util.Objects;
-
 public abstract class BinaryOperation extends Instruction {
     private final int result; // 新分配一个寄存器用来存结果
     protected Value op1;
@@ -65,24 +63,7 @@ public abstract class BinaryOperation extends Instruction {
     }
     
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof BinaryOperation)) {
-            return false;
-        }
-        
-        if (this.result == ((BinaryOperation) other).result) {
-            return true;
-        }
-        
-        boolean check1 = this.op1.value2string().equals(op1.value2string());
-        boolean check2 = this.op2.value2string().equals(op2.value2string());
-        boolean check3 = this.operationName.equals(((BinaryOperation) other).operationName);
-        
-        return check1 && check2 && check3;
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(op1.value2string(), op2.value2string(), operationName);
+    public String myHash() {
+        return op1.value2string() + op2.value2string() + operationName;
     }
 }

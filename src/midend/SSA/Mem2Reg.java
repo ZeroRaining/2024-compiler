@@ -30,9 +30,9 @@ public class Mem2Reg {
             removeAlloc(function);
         }
     }
-
+    
     private static int cnt = 0;
-
+    
     private static void removeAlloc(Function function) throws IOException {
         for (CustomList.Node node : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) node;
@@ -49,15 +49,15 @@ public class Mem2Reg {
                 }
                 instr = (Instruction) instr.getNext();
             }
-
+            
         }
     }
-
+    
     private static void remove(Instruction instr) {
         ArrayList<BasicBlock> defBlks = new ArrayList<>();
         ArrayList<BasicBlock> useBlks = new ArrayList<>();
-        HashMap<String, Instruction> defIns = new HashMap<>();
-        HashMap<String, Instruction> useIns = new HashMap<>();
+        ArrayList<Instruction> defIns = new ArrayList<>();
+        ArrayList<Instruction> useIns = new ArrayList<>();
 //        useDBG(instr);
         Use use = instr.getBeginUse();
 //        System.out.println("be used: " + instr.print());
@@ -66,10 +66,10 @@ public class Mem2Reg {
             BasicBlock blk = ins.getParentBB();
             if (ins instanceof StoreInstr) {
                 defBlks.add(blk);
-                defIns.put(ins.getMyOwnName(), ins);
+                defIns.add(ins);
             } else if (ins instanceof LoadInstr) {
                 useBlks.add(blk);
-                useIns.put(ins.getMyOwnName(), ins);
+                useIns.add(ins);
             } else {
                 throw new RuntimeException("Furina said you are wrong!");
             }
@@ -89,13 +89,10 @@ public class Mem2Reg {
 //            }
         } else if (defIns.size() == 1 && defBlks.get(0).getDoms().containsAll(useBlks)) {
             //不处理，未定义的初始值
-            Instruction store = null;//store指令
-            for (Instruction instruction : defIns.values()) {
-                store = instruction;
-            }
+            Instruction store = defIns.get(0);//store指令
             assert store instanceof StoreInstr;
             Value toStoreValue = ((StoreInstr) store).getValue();//要被使用的值1
-            for (Instruction load : useIns.values()) {//load指令
+            for (Instruction load : useIns) {//load指令
                 load.replaceUseTo(toStoreValue);
             }
         } else {
@@ -114,8 +111,8 @@ public class Mem2Reg {
                 }
             }
 //            System.out.println();
-
-
+            
+            
             for (BasicBlock block : toPuts) {
                 ArrayList<Value> values = new ArrayList<>();
                 ArrayList<BasicBlock> prtBlks = new ArrayList<>();
@@ -125,47 +122,40 @@ public class Mem2Reg {
                 }
                 Instruction phi = new PhiInstr(curRegCnt++, instr.getDataType(), values, prtBlks);
                 block.getInstructions().addToHead(phi);
-                useIns.put(phi.getMyOwnName(), phi);
-                defIns.put(phi.getMyOwnName(), phi);
+                useIns.add(phi);
+                defIns.add(phi);
                 useBlks.add(block);
                 defBlks.add(block);
             }
-
+            
             BasicBlock block = (BasicBlock) instr.getParentBB().getParent().getHead();
             Stack<Value> S = new Stack<>();
             dfs4rename(S, block, useIns, defIns);
         }
-
-        for (Instruction ins : useIns.values()) {
+        
+        for (Instruction ins : useIns) {
             if (!(ins instanceof PhiInstr)) {
                 ins.removeFromList();
             }
         }
-        for (Instruction ins : defIns.values()) {
+        for (Instruction ins : defIns) {
             if (!(ins instanceof PhiInstr)) {
                 ins.removeFromList();
             }
         }
         instr.removeFromList();
     }
-
-    private static void dfs4rename(Stack<Value> S, BasicBlock now, HashMap<String, Instruction> useIns,
-                                   HashMap<String, Instruction> defIns) {
+    
+    private static void dfs4rename(Stack<Value> S, BasicBlock now, ArrayList<Instruction> useIns, ArrayList<Instruction> defIns) {
         int cnt = 0;
         for (CustomList.Node item : now.getInstructions()) {
             Instruction instr = (Instruction) item;
-            String key;
-            try {
-                key = instr.getMyOwnName();
-            } catch (RuntimeException re) {
-                key = null;
-            }
-            if (!(instr instanceof PhiInstr) && key != null && useIns.containsKey(key)) {
+            if (!(instr instanceof PhiInstr) && useIns.contains(instr)) {
                 //changeValue
                 assert instr instanceof LoadInstr;
                 instr.replaceUseTo(getStackValue(S, instr.getDataType()));
             }
-            if (key != null && defIns.containsKey(key)) {
+            if (defIns.contains(instr)) {
                 assert instr instanceof StoreInstr || instr instanceof PhiInstr;
                 if (instr instanceof StoreInstr) {
                     S.push(((StoreInstr) instr).getValue());
@@ -183,21 +173,21 @@ public class Mem2Reg {
                 if (!(instr instanceof PhiInstr)) {
                     break;
                 }
-                if (useIns.containsKey(instr.getMyOwnName())) {
+                if (useIns.contains(instr)) {
                     ((PhiInstr)instr).modifyUse(getStackValue(S, instr.getDataType()), now);
                 }
             }
         }
-
+        
         for (BasicBlock nextBlk : now.getIDoms()) {
             dfs4rename(S, nextBlk, useIns, defIns);
         }
-
+        
         for (int i = 0; i < cnt; i++) {
             S.pop();
         }
     }
-
+    
     public static Value getStackValue(Stack<Value> S, DataType type) {
         if (S.isEmpty()) {
             if (type == DataType.FLOAT) {
@@ -208,8 +198,8 @@ public class Mem2Reg {
         }
         return S.peek();
     }
-
-
+    
+    
     private static void useDBG(Instruction instr) {
         DEBUG.dbgPrint1(instr.print());
         DEBUG.dbgPrint1("use:");
