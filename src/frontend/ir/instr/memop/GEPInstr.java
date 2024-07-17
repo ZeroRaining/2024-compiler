@@ -55,6 +55,9 @@ public class GEPInstr extends MemoryOperation {
         this.arrayTypeName = superType.substring(0, superType.length() - 1);
         this.ptrVal = base;
         setUse(base);
+        for (Value value : indexList) {
+            setUse(value);
+        }
     }
 
     @Override
