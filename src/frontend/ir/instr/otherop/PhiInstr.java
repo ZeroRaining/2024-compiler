@@ -73,9 +73,16 @@ public class PhiInstr extends Instruction {
             }
         }
     }
-    
+
     @Override
     public Value operationSimplify() {
         return null;
     }
+
+//    public boolean canSimplify() {
+//        Value value = values.get(0);
+//        for (Value value : values) {
+//
+//        }
+//    }
 }
