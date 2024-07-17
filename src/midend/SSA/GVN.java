@@ -15,23 +15,32 @@ public class GVN {
             throw new NullPointerException();
         }
         for (Function function : functions) {
-            HashMap<String, Instruction> instructions = new HashMap<>();
-            
             BasicBlock basicBlock = (BasicBlock) function.getBasicBlocks().getHead();
-            while (basicBlock != null) {
-                Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
-                while (instruction != null) {
-                    if (instructions.containsKey(instruction.myHash())) {
-                        Instruction basicInstr = instructions.get(instruction.myHash());
-                        instruction.replaceUseTo(basicInstr);
-                        instruction.removeFromList();
-                    } else {
-                        instructions.put(instruction.myHash(), instruction);
-                    }
-                    instruction = (Instruction) instruction.getNext();
-                }
-                basicBlock = (BasicBlock) basicBlock.getNext();
+            dfsIdoms(basicBlock, new HashMap<>());
+        }
+    }
+    
+    private static void dfsIdoms(BasicBlock basicBlock, HashMap<String, Instruction> instructions) {
+        if (basicBlock == null) {
+            throw new NullPointerException();
+        }
+        
+        Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
+        while (instruction != null) {
+            if (instructions.containsKey(instruction.myHash())) {
+                Instruction basicInstr = instructions.get(instruction.myHash());
+                instruction.replaceUseTo(basicInstr);
+                instruction.removeFromList();
+            } else {
+                instructions.put(instruction.myHash(), instruction);
             }
+            instruction = (Instruction) instruction.getNext();
+        }
+        
+        HashSet<BasicBlock> idoms = basicBlock.getIDoms();
+        for (BasicBlock next : idoms) {
+            HashMap<String, Instruction> nextInstrMap = new HashMap<>(instructions);
+            dfsIdoms(next, nextInstrMap);
         }
     }
 }

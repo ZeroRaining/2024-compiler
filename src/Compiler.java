@@ -43,8 +43,8 @@ public class Compiler {
         if (arg.getOptLevel() == 1) {
             Mem2Reg.doMem2Reg(functions);
             DeadCodeRemove.doDeadCodeRemove(functions);
-//            GVN.doGVN(functions);
-//            OIS.doOIS(functions);
+            GVN.doGVN(functions);
+            OIS.doOIS(functions);
         }
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
 //        RemovePhi.removePhi(functions);
