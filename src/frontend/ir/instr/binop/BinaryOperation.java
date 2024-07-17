@@ -74,8 +74,8 @@ public abstract class BinaryOperation extends Instruction {
             return true;
         }
         
-        boolean check1 = this.op1.equals(((BinaryOperation) other).op1);
-        boolean check2 = this.op2.equals(((BinaryOperation) other).op2);
+        boolean check1 = this.op1.value2string().equals(op1.value2string());
+        boolean check2 = this.op2.value2string().equals(op2.value2string());
         boolean check3 = this.operationName.equals(((BinaryOperation) other).operationName);
         
         return check1 && check2 && check3;
@@ -83,6 +83,6 @@ public abstract class BinaryOperation extends Instruction {
     
     @Override
     public int hashCode() {
-        return Objects.hash(op1, op2, operationName);
+        return Objects.hash(op1.value2string(), op2.value2string(), operationName);
     }
 }

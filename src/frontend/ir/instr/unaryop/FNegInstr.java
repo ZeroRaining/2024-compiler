@@ -52,12 +52,12 @@ public class FNegInstr extends Instruction {
             return true;
         }
         
-        return this.value.equals(((FNegInstr) other).value);
+        return this.value.value2string().equals(((FNegInstr) other).value.value2string());
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(value);
+        return Objects.hash(value.value2string());
     }
     
     @Override

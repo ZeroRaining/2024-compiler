@@ -73,7 +73,7 @@ public abstract class ConversionOperation extends Instruction {
             return true;
         }
         
-        boolean check1 = this.value.equals(((ConversionOperation) other).value);
+        boolean check1 = this.value.value2string().equals(((ConversionOperation) other).value.value2string());
         boolean check2 = this.opName.equals(((ConversionOperation) other).opName);
         
         return check1 && check2;
@@ -81,6 +81,6 @@ public abstract class ConversionOperation extends Instruction {
     
     @Override
     public int hashCode() {
-        return Objects.hash(value, opName);
+        return Objects.hash(value.value2string(), opName);
     }
 }
