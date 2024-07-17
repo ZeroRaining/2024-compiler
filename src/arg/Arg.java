@@ -46,7 +46,7 @@ public class Arg {
 
     public static Arg parse(String[] args) throws IOException {
         String src = "in.sy";
-        String asm = "asm.out";
+        String asm = "output.s";
         String ll  = null;
         int optLevel = 0;
         boolean printIR = false;
