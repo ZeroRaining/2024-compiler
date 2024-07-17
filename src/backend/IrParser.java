@@ -998,7 +998,7 @@ public class IrParser {
                 }
             } else {
                 AsmOperand index = parseOperand(indexList.get(i), 0, f, bb);
-                AsmMul asmMul = new AsmMul(index, index, parseConstIntOperand(sizeList.get(i) * 4, 12, f, bb));
+                AsmMul asmMul = new AsmMul(index, index, parseConstIntOperand(sizeList.get(i) * 4, 0, f, bb));
                 asmBlock.addInstrTail(asmMul);
                 AsmAdd asmAdd = new AsmAdd(result, result, index);
                 asmBlock.addInstrTail(asmAdd);
