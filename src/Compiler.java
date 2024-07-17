@@ -17,41 +17,63 @@ import java.util.HashSet;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
-        //解析命令行
+        // 解析命令行
         Arg arg = Arg.parse(args);
         BufferedInputStream source = new BufferedInputStream(arg.getSrcStream());
         BufferedWriter output = new BufferedWriter(arg.getAsmWriter());
-
-        //词法分析，得到TokenList
+        
+        // 准备计时
+        long startTime = 0;
+        long optimizeStartTime = 0;
+        long optimizeEndTime = 0;
+        if (arg.toTime()) { startTime = System.currentTimeMillis(); }
+        
+        // 词法分析，得到 TokenList
         TokenList tokenList = Lexer.getInstance().lex(source);
-        //语法分析，得到AST
+        // 语法分析，得到 AST
         Ast ast = new Parser(tokenList).parseAst();
-        //IR生成
+        // 生成 IR
         Program program = new Program(ast);
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
         DFG.doDFG(functions);
 
         // 开启优化
-//        if (arg.getOptLevel() == 1) {
-//            Mem2Reg.doMem2Reg(functions);
-//            DeadCodeRemove.doDeadCodeRemove(functions);
-//            GVN.doGVN(functions);
-//            OIS.doOIS(functions);
-//        }
+        if (arg.toTime()) { optimizeStartTime = System.currentTimeMillis(); }
+        if (arg.getOptLevel() == 1) {
+            Mem2Reg.doMem2Reg(functions);
+            DeadCodeRemove.doDeadCodeRemove(functions);
+            GVN.doGVN(functions);
+            OIS.doOIS(functions);
+        }
+        if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
 
         // 打印 IR
-//        if (arg.toPrintIR()) {
-//            BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
-//            program.printIR(irWriter);
-//            irWriter.close();
-//        }
+        if (arg.toPrintIR()) {
+            BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
+            program.printIR(irWriter);
+            irWriter.close();
+        }
 
-        AsmModule asmModule = new IrParser(program).parse();
-        RegAlloc alloc = RegAlloc.getInstance();
-        alloc.run(asmModule);
-        BackendPrinter backendPrinter = new BackendPrinter(asmModule,true, output);
-        backendPrinter.printBackend();
-
+        // 运行后端
+        if (!arg.toSkipBackEnd()) {
+            AsmModule asmModule = new IrParser(program).parse();
+            RegAlloc alloc = RegAlloc.getInstance();
+            alloc.run(asmModule);
+            BackendPrinter backendPrinter = new BackendPrinter(asmModule, true, output);
+            backendPrinter.printBackend();
+        }
+        
+        // 计算运行时间
+        if (arg.toTime()) {
+            long endTime = System.currentTimeMillis();
+            long runTime = endTime - startTime;
+            long optimizingTime = optimizeEndTime - optimizeStartTime;
+            
+            System.out.println("runTime: " + runTime + "ms");
+            System.out.println("optimizingTime: " + optimizingTime + "ms");
+        }
+        
+        
         // IR生成测试
 //        IRTest();
 
@@ -59,7 +81,7 @@ public class Compiler {
        // CodeGenTest();
 
         //寄存器分配测试
-        RegAllocTest();
+//        RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {

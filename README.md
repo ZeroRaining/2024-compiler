@@ -12,6 +12,8 @@
 ### 其它功能：
 
 - 打印 IR ：`compiler -S testcase.sy -ll out.ll`
+- 跳过后端：`-mid`
+- 显示运行时间：`-time`
 
 ### 说明：
  
