@@ -5,7 +5,6 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.Value;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 public abstract class Instruction extends Value {
     private BasicBlock parentBB;
@@ -59,6 +58,10 @@ public abstract class Instruction extends Value {
         for (Use use : useList) {
             use.removeFromList();
         }
+    }
+    
+    public String getMyOwnName() {
+        return this.value2string();
     }
 
     public ArrayList<Value> getUseValueList() {

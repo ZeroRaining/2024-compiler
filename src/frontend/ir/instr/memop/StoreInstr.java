@@ -63,6 +63,11 @@ public class StoreInstr extends MemoryOperation {
         }
     }
     
+    @Override
+    public String getMyOwnName() {
+        return "store_" + this.hashCode();
+    }
+    
     public Value getPtr() {
         return ptr;
     }

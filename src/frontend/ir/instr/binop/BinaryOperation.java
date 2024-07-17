@@ -70,6 +70,10 @@ public abstract class BinaryOperation extends Instruction {
             return false;
         }
         
+        if (this.result == ((BinaryOperation) other).result) {
+            return true;
+        }
+        
         boolean check1 = this.op1.equals(((BinaryOperation) other).op1);
         boolean check2 = this.op2.equals(((BinaryOperation) other).op2);
         boolean check3 = this.operationName.equals(((BinaryOperation) other).operationName);

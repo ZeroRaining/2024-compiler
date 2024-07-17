@@ -69,6 +69,10 @@ public abstract class ConversionOperation extends Instruction {
             return false;
         }
         
+        if (this.result == ((ConversionOperation) other).result) {
+            return true;
+        }
+        
         boolean check1 = this.value.equals(((ConversionOperation) other).value);
         boolean check2 = this.opName.equals(((ConversionOperation) other).opName);
         

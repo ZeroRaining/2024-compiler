@@ -48,7 +48,11 @@ public class FNegInstr extends Instruction {
             return false;
         }
         
-        return this.value == ((FNegInstr) other).value;
+        if (this.result == ((FNegInstr) other).result) {
+            return true;
+        }
+        
+        return this.value.equals(((FNegInstr) other).value);
     }
     
     @Override

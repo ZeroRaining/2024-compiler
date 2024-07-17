@@ -65,6 +65,10 @@ public abstract class Cmp extends Instruction {
             return false;
         }
         
+        if (this.result == ((Cmp) other).result) {
+            return true;
+        }
+        
         boolean check1 = this.op1.equals(((Cmp) other).op1);
         boolean check2 = this.op2.equals(((Cmp) other).op2);
         boolean check3 = this.cond.equals(((Cmp) other).cond);
