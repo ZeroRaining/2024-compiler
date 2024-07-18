@@ -6,7 +6,7 @@ import backend.itemStructure.AsmOperand;
 public class AsmFtoi extends AsmInstr {
     private AsmOperand src;
     private AsmOperand dst;
-    public AsmFtoi(AsmOperand src, AsmOperand dst){
+    public AsmFtoi(AsmOperand dst, AsmOperand src){
         super("AsmFtoi");
         this.src = src;
         this.dst = dst;

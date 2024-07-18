@@ -6,7 +6,7 @@ import backend.itemStructure.AsmOperand;
 public class AsmitoF extends AsmInstr {
     private AsmOperand src;
     private AsmOperand dst;
-    public AsmitoF(AsmOperand src, AsmOperand dst){
+    public AsmitoF(AsmOperand dst, AsmOperand src){
         super("AsmitoF");
         this.src = src;
         this.dst = dst;

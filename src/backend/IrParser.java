@@ -316,7 +316,7 @@ public class IrParser {
             parseCall((CallInstr) instr, bb, f);
         else if (instr instanceof GEPInstr)
             parseGEP((GEPInstr) instr, bb, f);
-        else if(instr instanceof Move)
+        else if (instr instanceof Move)
             parseMove((Move) instr, bb, f);
         else if (instr instanceof ConversionOperation)
             parseConv((ConversionOperation) instr, bb, f);
@@ -1035,7 +1035,7 @@ public class IrParser {
             return parseConstFloatOperand(((ConstFloat) irValue).getNumber(), maxImm, irFunction, bb);
         }
         AsmFunction asmFunction = funcMap.get(irFunction);
-        if (irValue instanceof AllocaInstr) {
+        if (irValue.getPointerLevel() != 0) {
             AsmVirReg tmpReg = genTmpReg(irFunction);
             operandMap.put(irValue, tmpReg);
             return tmpReg;
