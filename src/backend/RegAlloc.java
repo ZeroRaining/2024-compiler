@@ -791,43 +791,85 @@ public class RegAlloc {
     private int RewriteProgram(AsmFunction function){
         int newAllocSize = 0;
         HashSet<AsmOperand> newTemps = new HashSet<>();
-        for (AsmOperand v: spilledNodes) {
-            int spillPlace = function.getAllocaSize() + function.getArgsSize();
-            function.addAllocaSize(4);
-            newAllocSize += 4;
-            AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
-            while (blockHead != null) {
-                AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
-                while (instrHead != null) {
-                    //为regUse进行spill处理
-                    if (instrHead.regUse.contains(v)) {
-                        AsmVirReg v1 = new AsmVirReg();
-                        for (int i = 0; i< instrHead.regUse.size();i++) {
-                            if (instrHead.regUse.get(i) == v) {
-                                instrHead.changeUseReg(i,instrHead.regUse.get(i), v1);
+        if (FI == 0) {
+            for (AsmOperand v : spilledNodes) {
+                int spillPlace = function.getAllocaSize() + function.getArgsSize();
+                function.addAllocaSize(4);
+                newAllocSize += 4;
+                AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
+                while (blockHead != null) {
+                    AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
+                    while (instrHead != null) {
+                        //为regUse进行spill处理
+                        if (instrHead.regUse.contains(v)) {
+                            AsmVirReg v1 = new AsmVirReg();
+                            for (int i = 0; i < instrHead.regUse.size(); i++) {
+                                if (instrHead.regUse.get(i) == v) {
+                                    instrHead.changeUseReg(i, instrHead.regUse.get(i), v1);
+                                }
                             }
+                            AsmImm12 place = new AsmImm12(spillPlace);
+                            AsmLw load = new AsmLw(v1, RegGeter.SP, place);
+                            load.insertBefore(instrHead);
+                            newTemps.add(v1);
                         }
-                        AsmImm12 place = new AsmImm12(spillPlace);
-                        AsmLw load = new AsmLw(v1, RegGeter.SP,place);
-                        load.insertBefore(instrHead);
-                        newTemps.add(v1);
-                    }
-                    if (instrHead.regDef.contains(v)) {
-                        AsmVirReg v2 = new AsmVirReg();
-                        for (int i = 0; i < instrHead.regDef.size(); i++) {
-                            if (instrHead.regDef.get(i) == v) {
-                                instrHead.changeDstReg(i,instrHead.regDef.get(i), v2);
+                        if (instrHead.regDef.contains(v)) {
+                            AsmVirReg v2 = new AsmVirReg();
+                            for (int i = 0; i < instrHead.regDef.size(); i++) {
+                                if (instrHead.regDef.get(i) == v) {
+                                    instrHead.changeDstReg(i, instrHead.regDef.get(i), v2);
+                                }
                             }
+                            AsmImm12 place = new AsmImm12(spillPlace);
+                            AsmSw store = new AsmSw(v2, RegGeter.SP, place);
+                            store.insertAfter(instrHead);
+                            newTemps.add(v2);
                         }
-                        AsmImm12 place = new AsmImm12(spillPlace);
-                        AsmSw store = new AsmSw(v2, RegGeter.SP, place);
-                        store.insertAfter(instrHead);
-                        newTemps.add(v2);
-                    }
-                    instrHead = (AsmInstr) instrHead.getNext();
+                        instrHead = (AsmInstr) instrHead.getNext();
 
+                    }
+                    blockHead = (AsmBlock) blockHead.getNext();
                 }
-                blockHead= (AsmBlock) blockHead.getNext();
+            }
+        } else {
+            for (AsmOperand v : spilledNodes) {
+                int spillPlace = function.getAllocaSize() + function.getArgsSize();
+                function.addAllocaSize(4);
+                newAllocSize += 4;
+                AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
+                while (blockHead != null) {
+                    AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
+                    while (instrHead != null) {
+                        //为regUse进行spill处理
+                        if (instrHead.regUse.contains(v)) {
+                            AsmFVirReg v1 = new AsmFVirReg();
+                            for (int i = 0; i < instrHead.regUse.size(); i++) {
+                                if (instrHead.regUse.get(i) == v) {
+                                    instrHead.changeUseReg(i, instrHead.regUse.get(i), v1);
+                                }
+                            }
+                            AsmImm12 place = new AsmImm12(spillPlace);
+                            AsmFlw load = new AsmFlw(v1, RegGeter.SP, place);
+                            load.insertBefore(instrHead);
+                            newTemps.add(v1);
+                        }
+                        if (instrHead.regDef.contains(v)) {
+                            AsmFVirReg v2 = new AsmFVirReg();
+                            for (int i = 0; i < instrHead.regDef.size(); i++) {
+                                if (instrHead.regDef.get(i) == v) {
+                                    instrHead.changeDstReg(i, instrHead.regDef.get(i), v2);
+                                }
+                            }
+                            AsmImm12 place = new AsmImm12(spillPlace);
+                            AsmFsw store = new AsmFsw(v2, RegGeter.SP, place);
+                            store.insertAfter(instrHead);
+                            newTemps.add(v2);
+                        }
+                        instrHead = (AsmInstr) instrHead.getNext();
+
+                    }
+                    blockHead = (AsmBlock) blockHead.getNext();
+                }
             }
         }
         return newAllocSize;
