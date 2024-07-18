@@ -12,6 +12,7 @@ public class AsmFVirReg extends AsmReg {
     }
 
     public String toString() {
-        return "fvir" + personalIndex;
+        return "fvir" + personalIndex+ " color: "+ color;
     }
+
 }

@@ -98,13 +98,12 @@ public class RegAlloc {
                         vreg1.color = color.get(vreg);
                     }
                     LivenessAnalysis(function);//不确定是否要这样
-                    int newAllocSize = 0;
-                    newAllocSize += callerSave(function);
-                    newAllocSize += calleeSave(function);
+                    callerSave(function);
+                    calleeSave(function);
                     allocRealReg(function);
                     break;
                 } else {
-                    int newAllocSize = RewriteProgram(function);
+                    RewriteProgram(function);
                 }
             }
 
@@ -135,13 +134,13 @@ public class RegAlloc {
                         vreg1.color = color.get(vreg);
                     }
                     LivenessAnalysis(function);//不确定是否要这样
-                    int newAllocSize = 0;
-                    newAllocSize += callerSave(function);
-                    newAllocSize += calleeSave(function);
+
+                    callerSave(function);
+                    calleeSave(function);
                     allocRealReg(function);
                     break;
                 } else {
-                    int newAllocSize = RewriteProgram(function);
+                    RewriteProgram(function);
                 }
             }
             allocAndRecycleSP(function);

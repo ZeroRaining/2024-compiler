@@ -3,6 +3,8 @@ package backend.asmInstr;
 import Utils.CustomList;
 import backend.asmInstr.asmBinary.AsmBinary;
 import backend.asmInstr.asmBr.AsmBnez;
+import backend.asmInstr.asmConv.AsmFtoi;
+import backend.asmInstr.asmConv.AsmitoF;
 import backend.asmInstr.asmLS.AsmL;
 import backend.asmInstr.asmLS.AsmS;
 import backend.itemStructure.AsmOperand;
@@ -66,6 +68,24 @@ public class AsmInstr extends CustomList.Node {
                 AsmBnez asmBnez = (AsmBnez) this;
                 asmBnez.ReSetSrc(newReg);
             }
+        } else if (type == "AsmFtoi") {
+            if (this.regUse.get(index) == oldReg) {
+                this.regUse.set(index, newReg);
+                AsmFtoi asmFtoi = (AsmFtoi) this;
+                asmFtoi.ReSetSrc(index, newReg);
+            }
+        } else if (type == "AsmitoF") {
+            if (this.regUse.get(index) == oldReg) {
+                this.regUse.set(index, newReg);
+                AsmitoF asmitoF = (AsmitoF) this;
+                asmitoF.ReSetSrc(index, newReg);
+            }
+        } else if (type == "AsmZext") {
+            if (this.regUse.get(index) == oldReg) {
+                this.regUse.set(index, newReg);
+                AsmitoF asmitoF = (AsmitoF) this;
+                asmitoF.ReSetSrc(index, newReg);
+            }
         }
     }
     public void changeDstReg(int index ,AsmReg oldReg, AsmReg newReg) {
@@ -80,6 +100,24 @@ public class AsmInstr extends CustomList.Node {
                 this.regDef.set(index, newReg);
                 AsmBinary asmBinary = (AsmBinary) this;
                 asmBinary.ReSetDst(newReg);
+            }
+        } else if (type == "AsmFtoi") {
+            if (this.regDef.get(index) == oldReg) {
+                this.regDef.set(index, newReg);
+                AsmFtoi asmFtoi = (AsmFtoi) this;
+                asmFtoi.ReSetDst(index, newReg);
+            }
+        } else if (type == "AsmitoF") {
+            if (this.regDef.get(index) == oldReg) {
+                this.regDef.set(index, newReg);
+                AsmitoF asmitoF = (AsmitoF) this;
+                asmitoF.ReSetDst(index, newReg);
+            }
+        } else if (type == "AsmZext") {
+            if (this.regDef.get(index) == oldReg) {
+                this.regDef.set(index, newReg);
+                AsmitoF asmitoF = (AsmitoF) this;
+                asmitoF.ReSetDst(index, newReg);
             }
         }
     }

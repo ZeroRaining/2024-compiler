@@ -13,6 +13,16 @@ public class AsmFtoi extends AsmInstr {
         addDefReg(this.dst,dst);
         addUseReg(this.src,src);
     }
+    public void ReSetSrc(int index,AsmOperand src) {
+        if (index == 0) {
+            this.src = src;
+        }
+    }
+    public void ReSetDst(int index,AsmOperand dst) {
+        if (index == 0) {
+            this.dst = dst;
+        }
+    }
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("fcvt.w.s");
