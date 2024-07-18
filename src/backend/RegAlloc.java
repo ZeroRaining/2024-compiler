@@ -67,12 +67,13 @@ public class RegAlloc {
     //@2 传送指令集合，传送指令只能存在在其中一张表中
 
     public void run(AsmModule module) {
-        K = 32;
         PreColor();
         for (AsmFunction function: module.getFunctions()){
             if (((AsmBlock)function.getBlocks().getHead()).getInstrs().getSize() == 0) {
                 continue;
             }
+            K = 32;
+            FI = 0;
             while (true) {
                 initial();
                 LivenessAnalysis(function);
@@ -100,13 +101,50 @@ public class RegAlloc {
                     int newAllocSize = 0;
                     newAllocSize += callerSave(function);
                     newAllocSize += calleeSave(function);
-                    allocAndRecycleSP(function);
                     allocRealReg(function);
                     break;
                 } else {
                     int newAllocSize = RewriteProgram(function);
                 }
             }
+
+            K = 64;
+            FI = 1;
+
+            while (true) {
+                initial();
+                LivenessAnalysis(function);
+                build(function);
+                makeWorkList();
+                while(!simplifyWorklist.isEmpty() || !worklistMoves.isEmpty() ||
+                        !freezeWorkList.isEmpty() || !spillWorkList.isEmpty()) {
+                    if (!simplifyWorklist.isEmpty()) {
+                        simplify();
+                    } else if (!worklistMoves.isEmpty()) {
+                        Coalesce();
+                    } else if (!freezeWorkList.isEmpty()) {
+                        Freeze();
+                    } else if (!spillWorkList.isEmpty()) {
+                        SelectSpill();
+                    }
+                }
+                AssignColors();
+                if (spilledNodes.isEmpty()) {
+                    for (AsmOperand vreg: color.keySet()) {
+                        AsmFVirReg vreg1 = (AsmFVirReg) vreg;
+                        vreg1.color = color.get(vreg);
+                    }
+                    LivenessAnalysis(function);//不确定是否要这样
+                    int newAllocSize = 0;
+                    newAllocSize += callerSave(function);
+                    newAllocSize += calleeSave(function);
+                    allocRealReg(function);
+                    break;
+                } else {
+                    int newAllocSize = RewriteProgram(function);
+                }
+            }
+            allocAndRecycleSP(function);
         }
 
     }
@@ -185,6 +223,7 @@ public class RegAlloc {
     }
     //调用规约的完成是假定我们已经成功实现活跃性分析的基础上的，此阶段的调用规约我们先只实现整数寄存器的
     //callerSave的寄存器有x1(ra),x5-7(t0-2),x10-11(a0-a1),x12-17(a2-7),x28-31(t3-6)
+
     private int callerSave(AsmFunction function) {
         int newAllocSize = 0;
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
@@ -201,7 +240,17 @@ public class RegAlloc {
                         if (save instanceof AsmPhyReg) {
                             beColored = preColored.get(save);
                         }
-                        if (beColored == 1 || (beColored >= 5 &&  beColored <= 7) || (beColored >= 10 &&  beColored <= 11) || (beColored >= 12 &&  beColored <= 17) || (beColored >= 28 &&  beColored <= 31)) {
+                        if (FI == 0 && (beColored == 1 || (beColored >= 5 &&  beColored <= 7) || (beColored >= 10 &&  beColored <= 11) || (beColored >= 12 &&  beColored <= 17) || (beColored >= 28 &&  beColored <= 31))) {
+                            int spillPlace = function.getAllocaSize() + function.getArgsSize();
+                            function.addAllocaSize(4);
+                            newAllocSize += 4;
+                            AsmImm12 place = new AsmImm12(spillPlace);
+                            AsmSw store = new AsmSw(save, RegGeter.SP, place);
+                            AsmLw load = new AsmLw(save, RegGeter.SP, place);
+                            store.insertBefore(instrHead);
+                            load.insertAfter(instrHead);
+                        }
+                        if (FI == 1 && ((beColored <= 39 && beColored >=32) || (beColored >= 42 && beColored <= 49) || (beColored >= 60 &&  beColored <= 63))) {
                             int spillPlace = function.getAllocaSize() + function.getArgsSize();
                             function.addAllocaSize(4);
                             newAllocSize += 4;
@@ -220,6 +269,7 @@ public class RegAlloc {
         return newAllocSize;
     }
     //calleeSave 保存的寄存器x2(sp),x8(s0/fp),x9(s1),x18-27(s2-11)
+
     private int calleeSave(AsmFunction function) {
         int newAllocSize = 0;
         HashSet<Integer> beChanged = new HashSet<>();
@@ -229,14 +279,24 @@ public class RegAlloc {
             while (instrHead != null) {
                 for (AsmReg save: instrHead.regDef) {
                     int beColored = 0;
-                    if (save instanceof AsmVirReg) {
+                    if (FI == 0 && save instanceof AsmVirReg) {
                         beColored = color.get(save);
                     }
-                    if (save instanceof AsmPhyReg) {
+                    if (FI == 0 && save instanceof AsmPhyReg) {
                         beColored = preColored.get(save);
                     }
+                    if (FI == 1 && save instanceof AsmFVirReg) {
+                        beColored = color.get(save);
+                    }
+                    if (FI == 1 && save instanceof AsmFPhyReg) {
+                        beColored = preColored.get(save);
+                    }
+
                     //删除了对sp的保存
-                    if (beColored == 8 || beColored == 9 || (beColored <= 27 && beColored >= 18)) {
+                    if (FI == 0 && (beColored == 8 || beColored == 9 || (beColored <= 27 && beColored >= 18))) {
+                        beChanged.add(beColored);
+                    }
+                    if (FI == 1 && (beColored == 40 || beColored == 41 || (beColored <= 59 && beColored >= 50))) {
                         beChanged.add(beColored);
                     }
                 }
@@ -272,25 +332,48 @@ public class RegAlloc {
         return newAllocSize;
     }
     private void allocRealReg(AsmFunction function) {
-        AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
-        while (blockHead != null) {
-            AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
-            while (instrHead != null) {
-                for (int i = 0; i < instrHead.regUse.size(); i++) {
-                    if (instrHead.regUse.get(i) instanceof AsmVirReg) {
-                        int nowColor = color.get(instrHead.regUse.get(i));
-                        instrHead.changeUseReg(i,instrHead.regUse.get(i), RegGeter.AllRegsInt.get(nowColor));
+        if (FI == 0) {
+            AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
+            while (blockHead != null) {
+                AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
+                while (instrHead != null) {
+                    for (int i = 0; i < instrHead.regUse.size(); i++) {
+                        if (instrHead.regUse.get(i) instanceof AsmVirReg) {
+                            int nowColor = color.get(instrHead.regUse.get(i));
+                            instrHead.changeUseReg(i, instrHead.regUse.get(i), RegGeter.AllRegsInt.get(nowColor));
+                        }
                     }
-                }
-                for (int i = 0; i < instrHead.regDef.size(); i++) {
-                    if (instrHead.regDef.get(i) instanceof AsmVirReg) {
-                        int nowColor = color.get(instrHead.regDef.get(i));
-                        instrHead.changeDstReg(i, instrHead.regDef.get(i), RegGeter.AllRegsInt.get(nowColor));
+                    for (int i = 0; i < instrHead.regDef.size(); i++) {
+                        if (instrHead.regDef.get(i) instanceof AsmVirReg) {
+                            int nowColor = color.get(instrHead.regDef.get(i));
+                            instrHead.changeDstReg(i, instrHead.regDef.get(i), RegGeter.AllRegsInt.get(nowColor));
+                        }
                     }
+                    instrHead = (AsmInstr) instrHead.getNext();
                 }
-                instrHead = (AsmInstr) instrHead.getNext();
+                blockHead = (AsmBlock) blockHead.getNext();
             }
-            blockHead = (AsmBlock) blockHead.getNext();
+        } else {
+            AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
+            while (blockHead != null) {
+                AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
+                while (instrHead != null) {
+                    for (int i = 0; i < instrHead.regUse.size(); i++) {
+                        if (instrHead.regUse.get(i) instanceof AsmFVirReg) {
+                            int nowColor = color.get(instrHead.regUse.get(i));
+                            instrHead.changeUseReg(i, instrHead.regUse.get(i), RegGeter.AllRegsFloat.get(nowColor-32));
+                        }
+                    }
+                    for (int i = 0; i < instrHead.regDef.size(); i++) {
+                        if (instrHead.regDef.get(i) instanceof AsmFVirReg) {
+                            int nowColor = color.get(instrHead.regDef.get(i));
+                            instrHead.changeDstReg(i, instrHead.regDef.get(i), RegGeter.AllRegsFloat.get(nowColor-32));
+                        }
+                    }
+                    instrHead = (AsmInstr) instrHead.getNext();
+                }
+                blockHead = (AsmBlock) blockHead.getNext();
+            }
         }
     }
     private void initial() {
@@ -625,9 +708,15 @@ public class RegAlloc {
         while (!selectStack.isEmpty()) {
            AsmOperand n = selectStack.pop();
             HashSet<Integer> okColors = new HashSet<>();
-            for (int k = 0;k<K;k++) {
-                if (k >= 5)
-                okColors.add(k);
+            if (FI == 0) {
+                for (int k = 0; k < K; k++) {
+                    if (k >= 6)
+                        okColors.add(k);
+                }
+            } else {
+                for (int k = 32; k < K; k++) {
+                        okColors.add(k);
+                }
             }
             for (AsmOperand w: adjList.get(n)) {
                 AsmOperand Gw = GetAlias(w);
