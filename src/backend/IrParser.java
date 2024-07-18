@@ -316,7 +316,7 @@ public class IrParser {
             parseCall((CallInstr) instr, bb, f);
         else if (instr instanceof GEPInstr)
             parseGEP((GEPInstr) instr, bb, f);
-        else if(instr instanceof Move)
+        else if (instr instanceof Move)
             parseMove((Move) instr, bb, f);
         else if (instr instanceof ConversionOperation)
             parseConv((ConversionOperation) instr, bb, f);
@@ -326,7 +326,11 @@ public class IrParser {
         AsmBlock asmBlock = blockMap.get(bb);
         Value retValue = instr.getReturnValue();
         if (retValue != null) {
-            if (f.getDataType() == INT) {
+            if (retValue.getPointerLevel() != 0) {
+                AsmOperand asmOperand = parseOperand(retValue, 0, f, bb);
+                AsmMove asmMove = new AsmMove(RegGeter.AregsInt.get(0), asmOperand);
+                asmBlock.addInstrTail(asmMove);
+            } else if (f.getDataType() == INT) {
                 AsmOperand asmOperand = parseOperand(retValue, 32, f, bb);
                 AsmMove asmMove = new AsmMove(RegGeter.AregsInt.get(0), asmOperand);
                 asmBlock.addInstrTail(asmMove);
@@ -863,7 +867,9 @@ public class IrParser {
         List<Value> floatArgs = new ArrayList<>();
         List<Value> intArgs = new ArrayList<>();
         for (Value arg : args) {
-            if (arg.getDataType() == FLOAT) {
+            if (arg.getPointerLevel() != 0) {
+                intArgs.add(arg);
+            } else if (arg.getDataType() == FLOAT) {
                 floatArgs.add(arg);
             } else {
                 intArgs.add(arg);
@@ -880,7 +886,7 @@ public class IrParser {
         }
         for (int i = 0; i < floatArgRegNum; i++) {
             AsmOperand argReg = parseOperand(floatArgs.get(i), 12, f, bb);
-            AsmMove asmMove = new AsmMove(RegGeter.AllRegsFloat.get(i), argReg);
+            AsmMove asmMove = new AsmMove(RegGeter.AregsFloat.get(i), argReg);
             asmBlock.addInstrTail(asmMove);
         }
         if (false/*TODO:尾递归*/) {
@@ -1035,7 +1041,7 @@ public class IrParser {
             return parseConstFloatOperand(((ConstFloat) irValue).getNumber(), maxImm, irFunction, bb);
         }
         AsmFunction asmFunction = funcMap.get(irFunction);
-        if (irValue instanceof AllocaInstr) {
+        if (irValue.getPointerLevel() != 0) {
             AsmVirReg tmpReg = genTmpReg(irFunction);
             operandMap.put(irValue, tmpReg);
             return tmpReg;
