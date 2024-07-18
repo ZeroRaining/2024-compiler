@@ -264,8 +264,8 @@ public class RegAlloc {
                             function.addAllocaSize(4);
                             newAllocSize += 4;
                             AsmImm12 place = new AsmImm12(spillPlace);
-                            AsmSw store = new AsmSw(save, RegGeter.SP, place);
-                            AsmLw load = new AsmLw(save, RegGeter.SP, place);
+                            AsmFsw store = new AsmFsw(save, RegGeter.SP, place);
+                            AsmFlw load = new AsmFlw(save, RegGeter.SP, place);
                             store.insertBefore(instrHead);
                             load.insertAfter(instrHead);
                         }
@@ -353,8 +353,8 @@ public class RegAlloc {
                 }
                 AsmImm12 place = new AsmImm12(spillPlace);
                 if (save != 2) {
-                    AsmSw store = new AsmSw(sav, RegGeter.SP, place);
-                    AsmLw load = new AsmLw(sav, RegGeter.SP, place);
+                    AsmFsw store = new AsmFsw(sav, RegGeter.SP, place);
+                    AsmFlw load = new AsmFlw(sav, RegGeter.SP, place);
                     ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
                     load.insertBefore(function.getTailBlock().getInstrTail());
                 } else {
