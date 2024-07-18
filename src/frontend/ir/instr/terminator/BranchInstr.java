@@ -19,6 +19,26 @@ public class BranchInstr extends Instruction {
         setUse(cond);
     }
 
+    public void setRelation(BasicBlock prt) {
+        prt.getSucs().add(thenTarget);
+        thenTarget.getPres().add(prt);
+        prt.getSucs().add(elseTarget);
+        elseTarget.getPres().add(prt);
+    }
+
+    @Override
+    public void removeFromList() {
+        if (this.getParentBB() == null) {
+            throw new RuntimeException("why you dont have parent?");
+        }
+        BasicBlock prt = this.getParentBB();
+        prt.getSucs().add(thenTarget);
+        thenTarget.getPres().add(prt);
+        prt.getSucs().add(elseTarget);
+        elseTarget.getPres().add(prt);
+        super.removeFromList();
+    }
+
     public Value getCond() {
         return condition;
     }
@@ -51,6 +71,10 @@ public class BranchInstr extends Instruction {
     public void modifyValue(Value from, Value to) {
         if (condition == from) {
             condition = to;
+        } else if (thenTarget == from) {
+            thenTarget = (BasicBlock) to;
+        } else if (elseTarget == from) {
+            elseTarget = (BasicBlock) to;
         } else {
             throw new RuntimeException();
         }
@@ -59,6 +83,11 @@ public class BranchInstr extends Instruction {
     @Override
     public Value operationSimplify() {
         return null;
+    }
+    
+    @Override
+    public String myHash() {
+        return Integer.toString(this.hashCode());
     }
 }
 

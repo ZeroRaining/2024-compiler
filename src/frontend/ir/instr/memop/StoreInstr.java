@@ -66,4 +66,9 @@ public class StoreInstr extends MemoryOperation {
     public Value getPtr() {
         return ptr;
     }
+    
+    @Override
+    public String myHash() {
+        return Integer.toString(this.hashCode());
+    }
 }

@@ -30,9 +30,9 @@ public class Mem2Reg {
             removeAlloc(function);
         }
     }
-
+    
     private static int cnt = 0;
-
+    
     private static void removeAlloc(Function function) throws IOException {
         for (CustomList.Node node : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) node;
@@ -49,10 +49,10 @@ public class Mem2Reg {
                 }
                 instr = (Instruction) instr.getNext();
             }
-
+            
         }
     }
-
+    
     private static void remove(Instruction instr) {
         ArrayList<BasicBlock> defBlks = new ArrayList<>();
         ArrayList<BasicBlock> useBlks = new ArrayList<>();
@@ -111,8 +111,8 @@ public class Mem2Reg {
                 }
             }
 //            System.out.println();
-
-
+            
+            
             for (BasicBlock block : toPuts) {
                 ArrayList<Value> values = new ArrayList<>();
                 ArrayList<BasicBlock> prtBlks = new ArrayList<>();
@@ -127,12 +127,12 @@ public class Mem2Reg {
                 useBlks.add(block);
                 defBlks.add(block);
             }
-
+            
             BasicBlock block = (BasicBlock) instr.getParentBB().getParent().getHead();
             Stack<Value> S = new Stack<>();
             dfs4rename(S, block, useIns, defIns);
         }
-
+        
         for (Instruction ins : useIns) {
             if (!(ins instanceof PhiInstr)) {
                 ins.removeFromList();
@@ -145,7 +145,7 @@ public class Mem2Reg {
         }
         instr.removeFromList();
     }
-
+    
     private static void dfs4rename(Stack<Value> S, BasicBlock now, ArrayList<Instruction> useIns, ArrayList<Instruction> defIns) {
         int cnt = 0;
         for (CustomList.Node item : now.getInstructions()) {
@@ -178,16 +178,16 @@ public class Mem2Reg {
                 }
             }
         }
-
+        
         for (BasicBlock nextBlk : now.getIDoms()) {
             dfs4rename(S, nextBlk, useIns, defIns);
         }
-
+        
         for (int i = 0; i < cnt; i++) {
             S.pop();
         }
     }
-
+    
     public static Value getStackValue(Stack<Value> S, DataType type) {
         if (S.isEmpty()) {
             if (type == DataType.FLOAT) {
@@ -198,8 +198,8 @@ public class Mem2Reg {
         }
         return S.peek();
     }
-
-
+    
+    
     private static void useDBG(Instruction instr) {
         DEBUG.dbgPrint1(instr.print());
         DEBUG.dbgPrint1("use:");

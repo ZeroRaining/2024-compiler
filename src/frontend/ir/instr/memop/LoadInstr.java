@@ -3,8 +3,6 @@ package frontend.ir.instr.memop;
 import frontend.ir.Value;
 import frontend.ir.symbols.Symbol;
 
-import java.util.Objects;
-
 public class LoadInstr extends MemoryOperation {
     private final int result;
     private Value ptr = null;
@@ -69,16 +67,7 @@ public class LoadInstr extends MemoryOperation {
     }
     
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof LoadInstr)) {
-            return false;
-        }
-        
-        return this.result == ((LoadInstr) other).result;
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(result);
+    public String myHash() {
+        return this.value2string();
     }
 }

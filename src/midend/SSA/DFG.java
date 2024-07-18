@@ -113,40 +113,40 @@ public class DFG {
 
     private static void removeBlk(Function function) {
         BasicBlock secondBlk = (BasicBlock) function.getBasicBlocks().getHead().getNext();
-        HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
-        HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
+//        HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
+//        HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
         //删除不要的块
         while (secondBlk != null) {
             dfs4remove(secondBlk);
             secondBlk = (BasicBlock) secondBlk.getNext();
         }
 
-        //初始化前驱后继
-        BasicBlock tmpBlk = (BasicBlock) function.getBasicBlocks().getHead();
-        while (tmpBlk != null) {
-            pres.put(tmpBlk, new HashSet<>());
-            sucs.put(tmpBlk, new HashSet<>());
-            tmpBlk = (BasicBlock) tmpBlk.getNext();
-        }
-
-        //遍历所有块，建立前驱后继关系
-        Iterator<CustomList.Node> blks = function.getBasicBlocks().iterator();
-        while (blks.hasNext()) {
-            BasicBlock block = (BasicBlock) blks.next();
-            Use use = block.getBeginUse();
-            for (;use != null; use = (Use) use.getNext()) {
-                BasicBlock userBlk = use.getUser().getParentBB();
-                pres.get(block).add(userBlk);
-                sucs.get(userBlk).add(block);
-            }
-        }
-
-        blks = function.getBasicBlocks().iterator();
-        while (blks.hasNext()) {
-            BasicBlock block = (BasicBlock) blks.next();
-            block.setPres(pres.get(block));
-            block.setSucs(sucs.get(block));
-        }
+//        //初始化前驱后继
+//        BasicBlock tmpBlk = (BasicBlock) function.getBasicBlocks().getHead();
+//        while (tmpBlk != null) {
+//            pres.put(tmpBlk, new HashSet<>());
+//            sucs.put(tmpBlk, new HashSet<>());
+//            tmpBlk = (BasicBlock) tmpBlk.getNext();
+//        }
+//
+//        //遍历所有块，建立前驱后继关系
+//        Iterator<CustomList.Node> blks = function.getBasicBlocks().iterator();
+//        while (blks.hasNext()) {
+//            BasicBlock block = (BasicBlock) blks.next();
+//            Use use = block.getBeginUse();
+//            for (;use != null; use = (Use) use.getNext()) {
+//                BasicBlock userBlk = use.getUser().getParentBB();
+//                pres.get(block).add(userBlk);
+//                sucs.get(userBlk).add(block);
+//            }
+//        }
+//
+//        blks = function.getBasicBlocks().iterator();
+//        while (blks.hasNext()) {
+//            BasicBlock block = (BasicBlock) blks.next();
+//            block.setPres(pres.get(block));
+//            block.setSucs(sucs.get(block));
+//        }
     }
 
 

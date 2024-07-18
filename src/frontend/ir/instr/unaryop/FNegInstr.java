@@ -43,17 +43,8 @@ public class FNegInstr extends Instruction {
     }
     
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof FNegInstr)) {
-            return false;
-        }
-        
-        return this.value == ((FNegInstr) other).value;
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
+    public String myHash() {
+        return "fneg" + value.value2string();
     }
     
     @Override

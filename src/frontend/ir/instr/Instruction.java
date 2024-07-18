@@ -5,7 +5,6 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.Value;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 public abstract class Instruction extends Value {
     private BasicBlock parentBB;
@@ -64,6 +63,8 @@ public abstract class Instruction extends Value {
     public ArrayList<Value> getUseValueList() {
         return useValueList;
     }
+    
+    public abstract String myHash();
     
     /**
      * 用来简化运算指令,如果可以化成常数或进行部分简化则做简化,否则返回 null 说明无法简化

@@ -74,7 +74,12 @@ public class CallInstr extends Instruction {
         }
         throw new RuntimeException("No such value");
     }
-
+    
+    @Override
+    public String myHash() {
+        return Integer.toString(this.hashCode());
+    }
+    
     public List<Value> getRParams() {
         return rParams;
     }

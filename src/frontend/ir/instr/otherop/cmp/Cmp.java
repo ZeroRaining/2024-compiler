@@ -4,8 +4,6 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 
-import java.util.Objects;
-
 public abstract class Cmp extends Instruction {
     protected final int result;
     protected final CmpCond cond;
@@ -60,20 +58,7 @@ public abstract class Cmp extends Instruction {
     }
     
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof Cmp)) {
-            return false;
-        }
-        
-        boolean check1 = this.op1.equals(((Cmp) other).op1);
-        boolean check2 = this.op2.equals(((Cmp) other).op2);
-        boolean check3 = this.cond.equals(((Cmp) other).cond);
-        
-        return check1 && check2 && check3;
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(op1, op2, cond);
+    public String myHash() {
+        return op1.value2string() + op2.value2string() + cond;
     }
 }

@@ -4,6 +4,7 @@ import Utils.CustomList;
 import frontend.ir.DataType;
 import frontend.ir.FuncDef;
 import frontend.ir.Value;
+import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
@@ -190,5 +191,19 @@ public class Function extends Value implements FuncDef {
     @Override
     public String toString() {
         return this.name;
+    }
+
+    public LinkedList<Instruction> getAllInstr() {
+        LinkedList<Instruction> list = new LinkedList<>();
+        BasicBlock block = (BasicBlock) this.getBasicBlocks().getHead();
+        while (block != null) {
+            Instruction instr = (Instruction) block.getInstructions().getHead();
+            while (instr != null) {
+                list.add(instr);
+                instr = (Instruction) instr.getNext();
+            }
+            block = (BasicBlock) block.getNext();
+        }
+        return list;
     }
 }

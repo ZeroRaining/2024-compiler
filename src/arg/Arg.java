@@ -1,7 +1,5 @@
 package arg;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class Arg {
     //TODO:是否需要处理命令行参数的异常情况？
@@ -10,28 +8,36 @@ public class Arg {
     private final String llFilename;
     private final int optLevel;
     private final boolean printIR;
+    private final boolean skipBackEnd;
+    private final boolean time;
     private final FileInputStream srcStream;//源代码输入流
     private final FileWriter asmWriter;//汇编代码输出流
     private final FileWriter irWriter;//汇编代码输出流
 
-    private Arg(String src, String asm, int optimize) throws IOException {
+    private Arg(String src, String asm, int optimize, boolean skipBackEnd, boolean time)
+            throws IOException {
         this.asmFilename = asm;
         this.srcFilename = src;
         this.optLevel    = optimize;
         this.printIR     = false;
         this.llFilename  = null;
+        this.skipBackEnd = skipBackEnd;
+        this.time        = time;
+        
         this.irWriter    = null;
-
         this.srcStream   = new FileInputStream(srcFilename);
         this.asmWriter = new FileWriter(asmFilename);
     }
     
-    private Arg(String src, String asm, String ll, int optimize) throws IOException {
+    private Arg(String src, String asm, String ll, int optimize, boolean skipBackEnd, boolean time)
+            throws IOException {
         this.asmFilename = asm;
         this.srcFilename = src;
         this.optLevel    = optimize;
         this.printIR     = true;
         this.llFilename  = ll;
+        this.skipBackEnd = skipBackEnd;
+        this.time        = time;
         
         this.irWriter    = new FileWriter(llFilename);
         this.srcStream   = new FileInputStream(srcFilename);
@@ -40,10 +46,12 @@ public class Arg {
 
     public static Arg parse(String[] args) throws IOException {
         String src = "in.sy";
-        String asm = "asm.out";
+        String asm = "output.s";
         String ll  = null;
         int optLevel = 0;
         boolean printIR = false;
+        boolean skipBackEnd = false;
+        boolean time = false;
         
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -53,6 +61,14 @@ public class Arg {
             }
             if (arg.equals("-o")) {
                 asm = args[++i];
+                continue;
+            }
+            if (arg.equals("-mid")) {
+                skipBackEnd = true;
+                continue;
+            }
+            if (arg.equals("-time")) {
+                time = true;
                 continue;
             }
             if (arg.matches("-O[0-9]")) {
@@ -66,9 +82,9 @@ public class Arg {
         }
         
         if (printIR) {
-            return new Arg(src, asm, ll, optLevel);
+            return new Arg(src, asm, ll, optLevel, skipBackEnd, time);
         } else {
-            return new Arg(src, asm, optLevel);
+            return new Arg(src, asm, optLevel, skipBackEnd, time);
         }
     }
     
@@ -90,5 +106,13 @@ public class Arg {
     
     public FileWriter getIrWriter() {
         return irWriter;
+    }
+    
+    public boolean toSkipBackEnd() {
+        return skipBackEnd;
+    }
+    
+    public boolean toTime() {
+        return time;
     }
 }

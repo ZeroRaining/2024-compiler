@@ -6,7 +6,6 @@ import frontend.ir.symbols.Symbol;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * getelementptr
@@ -18,7 +17,7 @@ public class GEPInstr extends MemoryOperation {
     private final int result;
     private final List<Value> indexList;
     private final String arrayTypeName;
-    private final Value ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
+    private Value ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
 
     public GEPInstr(int result, List<Value> indexList, Symbol symbol) {
         super(symbol);
@@ -56,6 +55,9 @@ public class GEPInstr extends MemoryOperation {
         this.arrayTypeName = superType.substring(0, superType.length() - 1);
         this.ptrVal = base;
         setUse(base);
+        for (Value value : indexList) {
+            setUse(value);
+        }
     }
 
     @Override
@@ -121,7 +123,17 @@ public class GEPInstr extends MemoryOperation {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        throw new RuntimeException("没有可以置换的 value");
+        if (this.ptrVal == from) {
+            this.ptrVal = to;
+        } else {
+            for (int i = 0; i < indexList.size(); i++) {
+                if (indexList.get(i) == from) {
+                    indexList.set(i, to);
+                    return;
+                }
+            }
+            throw new RuntimeException("没有可以置换的 value");
+        }
     }
 
     public List<Value> getWholeIndexList() {
@@ -134,16 +146,7 @@ public class GEPInstr extends MemoryOperation {
     }
     
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof GEPInstr)) {
-            return false;
-        }
-        
-        return this.result == ((GEPInstr) other).result;
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(result);
+    public String myHash() {
+        return this.value2string();
     }
 }
