@@ -234,11 +234,21 @@ public class RegAlloc {
                     AsmCall call = (AsmCall) instrHead;
                     for (AsmReg save :call.LiveOut) {
                         int beColored = 0;
-                        if (save instanceof AsmVirReg) {
-                            beColored = color.get(save);
+                        if (FI == 0) {
+                            if (save instanceof AsmVirReg) {
+                                beColored = color.get(save);
+                            }
+                            if (save instanceof AsmPhyReg) {
+                                beColored = preColored.get(save);
+                            }
                         }
-                        if (save instanceof AsmPhyReg) {
-                            beColored = preColored.get(save);
+                        if (FI == 1) {
+                            if (save instanceof AsmFVirReg) {
+                                beColored = color.get(save);
+                            }
+                            if (save instanceof AsmFPhyReg) {
+                                beColored = preColored.get(save);
+                            }
                         }
                         if (FI == 0 && (beColored == 1 || (beColored >= 5 &&  beColored <= 7) || (beColored >= 10 &&  beColored <= 11) || (beColored >= 12 &&  beColored <= 17) || (beColored >= 28 &&  beColored <= 31))) {
                             int spillPlace = function.getAllocaSize() + function.getArgsSize();
@@ -306,27 +316,54 @@ public class RegAlloc {
         }
         AsmInstr instrHead = (AsmInstr) ((AsmBlock)function.getBlocks().getHead()).getInstrs().getHead();
         AsmInstr instrTail = (AsmInstr) function.getTailBlock().getInstrs().getTail();
-        for (int save: beChanged) {
-            AsmReg sav = RegGeter.AllRegsInt.get(save);
-            int spillPlace = function.getAllocaSize() + function.getArgsSize();
-            if (save != 2) {
-                function.addAllocaSize(4);
-                newAllocSize += 4;
-            } else {
-                function.addAllocaSize(8);
-                newAllocSize += 8;
+        if (FI == 0) {
+            for (int save : beChanged) {
+                AsmReg sav = RegGeter.AllRegsInt.get(save);
+                int spillPlace = function.getAllocaSize() + function.getArgsSize();
+                if (save != 2) {
+                    function.addAllocaSize(4);
+                    newAllocSize += 4;
+                } else {
+                    function.addAllocaSize(8);
+                    newAllocSize += 8;
+                }
+                AsmImm12 place = new AsmImm12(spillPlace);
+                if (save != 2) {
+                    AsmSw store = new AsmSw(sav, RegGeter.SP, place);
+                    AsmLw load = new AsmLw(sav, RegGeter.SP, place);
+                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
+                    load.insertBefore(function.getTailBlock().getInstrTail());
+                } else {
+                    AsmSd store = new AsmSd(sav, RegGeter.SP, place);
+                    AsmLd load = new AsmLd(sav, RegGeter.SP, place);
+                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
+                    load.insertBefore(function.getTailBlock().getInstrTail());
+                }
             }
-            AsmImm12 place = new AsmImm12(spillPlace);
-            if (save != 2) {
-                AsmSw store = new AsmSw(sav, RegGeter.SP, place);
-                AsmLw load = new AsmLw(sav, RegGeter.SP, place);
-                ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
-                load.insertBefore(function.getTailBlock().getInstrTail());
-            } else {
-                AsmSd store = new AsmSd(sav, RegGeter.SP, place);
-                AsmLd load = new AsmLd(sav, RegGeter.SP, place);
-                ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
-                load.insertBefore(function.getTailBlock().getInstrTail());
+        }
+        if (FI == 1) {
+            for (int save : beChanged) {
+                AsmReg sav = RegGeter.AllRegsFloat.get(save-32);
+                int spillPlace = function.getAllocaSize() + function.getArgsSize();
+                if (save != 2) {
+                    function.addAllocaSize(4);
+                    newAllocSize += 4;
+                } else {
+                    function.addAllocaSize(8);
+                    newAllocSize += 8;
+                }
+                AsmImm12 place = new AsmImm12(spillPlace);
+                if (save != 2) {
+                    AsmSw store = new AsmSw(sav, RegGeter.SP, place);
+                    AsmLw load = new AsmLw(sav, RegGeter.SP, place);
+                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
+                    load.insertBefore(function.getTailBlock().getInstrTail());
+                } else {
+                    AsmSd store = new AsmSd(sav, RegGeter.SP, place);
+                    AsmLd load = new AsmLd(sav, RegGeter.SP, place);
+                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
+                    load.insertBefore(function.getTailBlock().getInstrTail());
+                }
             }
         }
         return newAllocSize;
