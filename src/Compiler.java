@@ -47,7 +47,7 @@ public class Compiler {
             OIS.doOIS(functions);
         }
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
-//        RemovePhi.removePhi(functions);
+        RemovePhi.removePhi(functions);
         // 打印 IR
         if (arg.toPrintIR()) {
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
@@ -73,16 +73,6 @@ public class Compiler {
             System.out.println("runTime: " + runTime + "ms");
             System.out.println("optimizingTime: " + optimizingTime + "ms");
         }
-        
-        
-        // IR生成测试
-//        IRTest();
-
-        //后端代码生成测试
-       // CodeGenTest();
-
-        //寄存器分配测试
-//        RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {
