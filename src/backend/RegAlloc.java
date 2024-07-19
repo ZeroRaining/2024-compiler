@@ -716,8 +716,34 @@ public class RegAlloc {
     }
 
     private void simplify() {
-        AsmOperand n = simplifyWorklist.iterator().next();
+        List<AsmOperand> sortedList = new ArrayList<>(simplifyWorklist);
+        if (FI == 0) {
+            // 对ArrayList进行排序
+            Collections.sort(sortedList, new Comparator<AsmOperand>() {
+                @Override
+                public int compare(AsmOperand o1, AsmOperand o2) {
+                    if (o1 instanceof AsmVirReg && o2 instanceof AsmVirReg) {
+                        return Integer.compare(((AsmVirReg) o1).getPersonalIndex(), ((AsmVirReg) o2).getPersonalIndex());
+                    }
+                    return 0;
+                }
+            });
+        } else {
+            Collections.sort(sortedList, new Comparator<AsmOperand>() {
+                @Override
+                public int compare(AsmOperand o1, AsmOperand o2) {
+                    if (o1 instanceof AsmFVirReg && o2 instanceof AsmFVirReg) {
+                        return Integer.compare(((AsmFVirReg) o1).getPersonalIndex(), ((AsmFVirReg) o2).getPersonalIndex());
+                    }
+                    return 0;
+                }
+            });
+        }
+        // 按personalIndex最小的顺序取出
+        AsmOperand n = sortedList.get(0);
         simplifyWorklist.remove(n);
+//        AsmOperand n = simplifyWorklist.iterator().next();
+//        simplifyWorklist.remove(n);
         selectStack.push(n);
         for (AsmOperand m: Adjacent(n)) {
             DecrementDegree(m);
@@ -814,8 +840,32 @@ public class RegAlloc {
     }
 
     private void SelectSpill() {
-        AsmOperand m = spillWorkList.iterator().next();//目前是随机选，后面再换/todo/
-        spillWorkList.remove(m);
+        List<AsmOperand> sortedList = new ArrayList<>(spillWorkList);
+        if (FI == 0) {
+            // 对ArrayList进行排序
+            Collections.sort(sortedList, new Comparator<AsmOperand>() {
+                @Override
+                public int compare(AsmOperand o1, AsmOperand o2) {
+                    if (o1 instanceof AsmVirReg && o2 instanceof AsmVirReg) {
+                        return Integer.compare(((AsmVirReg) o1).getPersonalIndex(), ((AsmVirReg) o2).getPersonalIndex());
+                    }
+                    return 0;
+                }
+            });
+        } else {
+            Collections.sort(sortedList, new Comparator<AsmOperand>() {
+                @Override
+                public int compare(AsmOperand o1, AsmOperand o2) {
+                    if (o1 instanceof AsmFVirReg && o2 instanceof AsmFVirReg) {
+                        return Integer.compare(((AsmFVirReg) o1).getPersonalIndex(), ((AsmFVirReg) o2).getPersonalIndex());
+                    }
+                    return 0;
+                }
+            });
+        }
+        AsmOperand m = sortedList.get(0);
+//        AsmOperand m = spillWorkList.iterator().next();//目前是随机选，后面再换/todo/
+//        spillWorkList.remove(m);
         simplifyWorklist.add(m);
         FreezeMoves(m);
     }
@@ -823,7 +873,7 @@ public class RegAlloc {
     private void AssignColors() {
         while (!selectStack.isEmpty()) {
            AsmOperand n = selectStack.pop();
-            HashSet<Integer> okColors = new HashSet<>();
+            ArrayList<Integer> okColors = new ArrayList<>(); //换成固定取色
             if (FI == 0) {
                 for (int k = 0; k < K; k++) {
                     if (k >= 6)
