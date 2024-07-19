@@ -44,6 +44,7 @@ public class IrParser {
     private HashMap<BasicBlock, AsmBlock> blockMap = new HashMap<>();
     //llvm的虚拟寄存器或立即数映射到asm的物理寄存器或立即数
     private HashMap<Value, AsmOperand> operandMap = new HashMap<>();
+    private HashMap<AsmOperand, Value> downOperandMap = new HashMap<>();
     //指示对应浮点数值映射到的标签
     private HashMap<Integer, AsmLabel> floatLabelMap = new HashMap<>();
     private HashMap<Map<AsmBlock, Map<AsmOperand, AsmOperand>>, AsmOperand> blockDivExp2Res = new HashMap<>();
@@ -1044,6 +1045,7 @@ public class IrParser {
         if (irValue.getPointerLevel() != 0) {
             AsmVirReg tmpReg = genTmpReg(irFunction);
             operandMap.put(irValue, tmpReg);
+            downOperandMap.put(tmpReg, irValue);
             return tmpReg;
         }
         if (irValue.getDataType() == FLOAT) {
@@ -1052,12 +1054,14 @@ public class IrParser {
             asmFunction.addUsedVirReg(tmpReg);
             if (!(irValue instanceof ConstFloat)) {
                 operandMap.put(irValue, tmpReg);
+                downOperandMap.put(tmpReg, irValue);
             }
             return tmpReg;
         }
         AsmVirReg tmpReg = genTmpReg(irFunction);
         if (!(irValue instanceof ConstInt)) {
             operandMap.put(irValue, tmpReg);
+            downOperandMap.put(tmpReg, irValue);
         }
         return tmpReg;
     }
