@@ -223,6 +223,96 @@ public class RegAlloc {
     //调用规约的完成是假定我们已经成功实现活跃性分析的基础上的，此阶段的调用规约我们先只实现整数寄存器的
     //callerSave的寄存器有x1(ra),x5-7(t0-2),x10-11(a0-a1),x12-17(a2-7),x28-31(t3-6)
 
+    private void storeOrLoadFromMemory(int spillPlace, AsmReg reg, AsmInstr nowInstr, String type, int foreOrBack) {
+        if (spillPlace >= -2048 && spillPlace <= 2047) {
+            AsmImm12 place = new AsmImm12(spillPlace);
+            if (type == "store") {
+                if (foreOrBack == 0) {
+                    if (FI == 0) {
+                        AsmSw store = new AsmSw(reg, RegGeter.SP, place);
+                        store.insertBefore(nowInstr);
+                    } else {
+                        AsmFsw store = new AsmFsw(reg, RegGeter.SP, place);
+                        store.insertBefore(nowInstr);
+                    }
+                } else {
+                    if (FI == 0) {
+                        AsmSw store = new AsmSw(reg, RegGeter.SP, place);
+                        store.insertAfter(nowInstr);
+                    } else {
+                        AsmFsw store = new AsmFsw(reg, RegGeter.SP, place);
+                        store.insertAfter(nowInstr);
+                    }
+                }
+            } else if (type == "load") {
+                if (foreOrBack == 0) {
+                    if (FI == 0) {
+                        AsmLw load = new AsmLw(reg, RegGeter.SP, place);
+                        load.insertBefore(nowInstr);
+                    } else {
+                        AsmFlw load = new AsmFlw(reg, RegGeter.SP, place);
+                        load.insertBefore(nowInstr);
+                    }
+                } else {
+                    if (FI == 0) {
+                        AsmLw load = new AsmLw(reg, RegGeter.SP, place);
+                        load.insertAfter(nowInstr);
+                    } else {
+                        AsmFlw load = new AsmFlw(reg, RegGeter.SP, place);
+                        load.insertAfter(nowInstr);
+                    }
+                }
+            }
+        } else {
+            AsmReg tmpMove = RegGeter.AllRegsInt.get(5);
+            AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(spillPlace));
+            AsmOperand tmpAdd = RegGeter.AllRegsInt.get(5);
+            AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
+            if (foreOrBack == 0) {
+                asmMove.insertBefore(nowInstr);
+                asmAdd.insertBefore(nowInstr);
+                if (type == "load") {
+                    if (FI == 0) {
+                        AsmLw load = new AsmLw(reg, tmpAdd, new AsmImm12(0));
+                        load.insertBefore(nowInstr);
+                    } else {
+                        AsmFlw load = new AsmFlw(reg, tmpAdd, new AsmImm12(0));
+                        load.insertBefore(nowInstr);
+                    }
+                } else if (type == "store") {
+                    if (FI == 0) {
+                        AsmSw store = new AsmSw(reg, tmpAdd, new AsmImm12(0));
+                        store.insertBefore(nowInstr);
+                    } else {
+                        AsmFsw store = new AsmFsw(reg, tmpAdd, new AsmImm12(0));
+                        store.insertBefore(nowInstr);
+                    }
+                }
+            } else {
+                if (type == "load") {
+                    if (FI == 0) {
+                        AsmLw load = new AsmLw(reg, tmpAdd, new AsmImm12(0));
+                        load.insertAfter(nowInstr);
+                    } else {
+                        AsmFlw load = new AsmFlw(reg, tmpAdd, new AsmImm12(0));
+                        load.insertAfter(nowInstr);
+                    }
+                } else if (type == "store") {
+                    if (FI == 0) {
+                        AsmSw store = new AsmSw(reg, tmpAdd, new AsmImm12(0));
+                        store.insertAfter(nowInstr);
+                    } else {
+                        AsmFsw store = new AsmFsw(reg, tmpAdd, new AsmImm12(0));
+                        store.insertAfter(nowInstr);
+                    }
+                }
+                asmAdd.insertAfter(nowInstr);
+                asmMove.insertAfter(nowInstr);
+            }
+        }
+
+
+    }
     private int callerSave(AsmFunction function) {
         int newAllocSize = 0;
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
@@ -253,21 +343,15 @@ public class RegAlloc {
                             int spillPlace = function.getAllocaSize() + function.getArgsSize();
                             function.addAllocaSize(4);
                             newAllocSize += 4;
-                            AsmImm12 place = new AsmImm12(spillPlace);
-                            AsmSw store = new AsmSw(save, RegGeter.SP, place);
-                            AsmLw load = new AsmLw(save, RegGeter.SP, place);
-                            store.insertBefore(instrHead);
-                            load.insertAfter(instrHead);
+                            storeOrLoadFromMemory(spillPlace, save, instrHead, "store", 0);
+                            storeOrLoadFromMemory(spillPlace, save, instrHead, "load", 1);
                         }
                         if (FI == 1 && ((beColored <= 39 && beColored >=32) || (beColored >= 42 && beColored <= 49) || (beColored >= 60 &&  beColored <= 63))) {
                             int spillPlace = function.getAllocaSize() + function.getArgsSize();
                             function.addAllocaSize(4);
                             newAllocSize += 4;
-                            AsmImm12 place = new AsmImm12(spillPlace);
-                            AsmFsw store = new AsmFsw(save, RegGeter.SP, place);
-                            AsmFlw load = new AsmFlw(save, RegGeter.SP, place);
-                            store.insertBefore(instrHead);
-                            load.insertAfter(instrHead);
+                            storeOrLoadFromMemory(spillPlace, save, instrHead, "store", 0);
+                            storeOrLoadFromMemory(spillPlace, save, instrHead, "load", 1);
                         }
                     }
                 }
@@ -328,15 +412,13 @@ public class RegAlloc {
                 }
                 AsmImm12 place = new AsmImm12(spillPlace);
                 if (save != 2) {
-                    AsmSw store = new AsmSw(sav, RegGeter.SP, place);
-                    AsmLw load = new AsmLw(sav, RegGeter.SP, place);
-                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
-                    load.insertBefore(function.getTailBlock().getInstrTail());
-                } else {
-                    AsmSd store = new AsmSd(sav, RegGeter.SP, place);
-                    AsmLd load = new AsmLd(sav, RegGeter.SP, place);
-                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
-                    load.insertBefore(function.getTailBlock().getInstrTail());
+                    AsmInstr firstrHead = (AsmInstr) ((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead();
+                    storeOrLoadFromMemory(spillPlace, sav, firstrHead, "store", 0);
+                    storeOrLoadFromMemory(spillPlace, sav, (AsmInstr) function.getTailBlock().getInstrTail(), "load", 0);
+//                    AsmSw store = new AsmSw(sav, RegGeter.SP, place);
+//                    AsmLw load = new AsmLw(sav, RegGeter.SP, place);
+//                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
+//                    load.insertBefore(function.getTailBlock().getInstrTail());
                 }
             }
         }
@@ -353,15 +435,13 @@ public class RegAlloc {
                 }
                 AsmImm12 place = new AsmImm12(spillPlace);
                 if (save != 2) {
-                    AsmFsw store = new AsmFsw(sav, RegGeter.SP, place);
-                    AsmFlw load = new AsmFlw(sav, RegGeter.SP, place);
-                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
-                    load.insertBefore(function.getTailBlock().getInstrTail());
-                } else {
-                    AsmSd store = new AsmSd(sav, RegGeter.SP, place);
-                    AsmLd load = new AsmLd(sav, RegGeter.SP, place);
-                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
-                    load.insertBefore(function.getTailBlock().getInstrTail());
+                    AsmInstr firstrHead = (AsmInstr) ((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead();
+                    storeOrLoadFromMemory(spillPlace, sav, firstrHead, "store", 0);
+                    storeOrLoadFromMemory(spillPlace, sav, (AsmInstr) function.getTailBlock().getInstrTail(), "load", 0);
+//                    AsmFsw store = new AsmFsw(sav, RegGeter.SP, place);
+//                    AsmFlw load = new AsmFlw(sav, RegGeter.SP, place);
+//                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
+//                    load.insertBefore(function.getTailBlock().getInstrTail());
                 }
             }
         }
@@ -808,9 +888,10 @@ public class RegAlloc {
                                     instrHead.changeUseReg(i, instrHead.regUse.get(i), v1);
                                 }
                             }
-                            AsmImm12 place = new AsmImm12(spillPlace);
-                            AsmLw load = new AsmLw(v1, RegGeter.SP, place);
-                            load.insertBefore(instrHead);
+                            storeOrLoadFromMemory(spillPlace, v1, instrHead, "load", 0);
+//                            AsmImm12 place = new AsmImm12(spillPlace);
+//                            AsmLw load = new AsmLw(v1, RegGeter.SP, place);
+//                            load.insertBefore(instrHead);
                             newTemps.add(v1);
                         }
                         if (instrHead.regDef.contains(v)) {
@@ -820,9 +901,10 @@ public class RegAlloc {
                                     instrHead.changeDstReg(i, instrHead.regDef.get(i), v2);
                                 }
                             }
-                            AsmImm12 place = new AsmImm12(spillPlace);
-                            AsmSw store = new AsmSw(v2, RegGeter.SP, place);
-                            store.insertAfter(instrHead);
+                            storeOrLoadFromMemory(spillPlace, v2, instrHead, "store", 1);
+//                            AsmImm12 place = new AsmImm12(spillPlace);
+//                            AsmSw store = new AsmSw(v2, RegGeter.SP, place);
+//                            store.insertAfter(instrHead);
                             newTemps.add(v2);
                         }
                         instrHead = (AsmInstr) instrHead.getNext();
@@ -848,9 +930,10 @@ public class RegAlloc {
                                     instrHead.changeUseReg(i, instrHead.regUse.get(i), v1);
                                 }
                             }
-                            AsmImm12 place = new AsmImm12(spillPlace);
-                            AsmFlw load = new AsmFlw(v1, RegGeter.SP, place);
-                            load.insertBefore(instrHead);
+                            storeOrLoadFromMemory(spillPlace, v1, instrHead, "load", 0);
+//                            AsmImm12 place = new AsmImm12(spillPlace);
+//                            AsmFlw load = new AsmFlw(v1, RegGeter.SP, place);
+//                            load.insertBefore(instrHead);
                             newTemps.add(v1);
                         }
                         if (instrHead.regDef.contains(v)) {
@@ -860,9 +943,10 @@ public class RegAlloc {
                                     instrHead.changeDstReg(i, instrHead.regDef.get(i), v2);
                                 }
                             }
-                            AsmImm12 place = new AsmImm12(spillPlace);
-                            AsmFsw store = new AsmFsw(v2, RegGeter.SP, place);
-                            store.insertAfter(instrHead);
+                            storeOrLoadFromMemory(spillPlace, v2, instrHead, "store", 1);
+//                            AsmImm12 place = new AsmImm12(spillPlace);
+//                            AsmFsw store = new AsmFsw(v2, RegGeter.SP, place);
+//                            store.insertAfter(instrHead);
                             newTemps.add(v2);
                         }
                         instrHead = (AsmInstr) instrHead.getNext();
