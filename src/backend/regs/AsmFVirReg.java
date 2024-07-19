@@ -10,7 +10,9 @@ public class AsmFVirReg extends AsmReg {
         wholeIndex++;
         color = -1;
     }
-
+    public  int getPersonalIndex() {
+        return personalIndex;
+    }
     public String toString() {
         return "fvir" + personalIndex+ " color: "+ color;
     }
