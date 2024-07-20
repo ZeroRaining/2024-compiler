@@ -39,11 +39,13 @@ public class AddInstr extends BinaryOperation {
                 Value upperOp1 = ((AddInstr) nonConst).getOp1();
                 Value upperOp2 = ((AddInstr) nonConst).getOp2();
                 if (upperOp1 instanceof ConstInt) {
-                    ((ConstInt) upperOp1).add(constInt.getNumber());
+                    int res = upperOp1.getNumber().intValue() + constInt.getNumber();
+                    ((AddInstr) nonConst).setOp1(new ConstInt(res));
                     return nonConst;
                 }
                 if (upperOp2 instanceof ConstInt) {
-                    ((ConstInt) upperOp2).add(constInt.getNumber());
+                    int res = upperOp2.getNumber().intValue() + constInt.getNumber();
+                    ((AddInstr) nonConst).setOp2(new ConstInt(res));
                     return nonConst;
                 }
             }
@@ -53,11 +55,13 @@ public class AddInstr extends BinaryOperation {
                 Value upperOp1 = ((SubInstr) nonConst).getOp1();
                 Value upperOp2 = ((SubInstr) nonConst).getOp2();
                 if (upperOp1 instanceof ConstInt) {
-                    ((ConstInt) upperOp1).add(constInt.getNumber());
+                    int res = upperOp1.getNumber().intValue() + constInt.getNumber();
+                    ((SubInstr) nonConst).setOp1(new ConstInt(res));
                     return nonConst;
                 }
                 if (upperOp2 instanceof ConstInt) {
-                    ((ConstInt) upperOp2).sub(constInt.getNumber());
+                    int res = upperOp2.getNumber().intValue() - constInt.getNumber();
+                    ((SubInstr) nonConst).setOp2(new ConstInt(res));
                     return nonConst;
                 }
             }

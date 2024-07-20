@@ -1,5 +1,6 @@
 package frontend.ir.instr;
 
+import Utils.CustomList;
 import frontend.ir.Use;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.Value;
@@ -70,4 +71,10 @@ public abstract class Instruction extends Value {
      * 用来简化运算指令,如果可以化成常数或进行部分简化则做简化,否则返回 null 说明无法简化
      */
     public abstract Value operationSimplify();
+    
+    @Override
+    public void insertAfter(CustomList.Node node) {
+        super.insertAfter(node);
+        this.parentBB = ((Instruction) node).parentBB;
+    }
 }

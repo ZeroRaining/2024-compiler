@@ -206,4 +206,8 @@ public class Function extends Value implements FuncDef {
         }
         return list;
     }
+    
+    public int getAndAddRegIndex() {
+        return this.procedure.getAndAddRegIndex();
+    }
 }

@@ -4,6 +4,9 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 
+/**
+ * 实际上包括了常规运算和位运算
+ */
 public abstract class BinaryOperation extends Instruction {
     private final int result; // 新分配一个寄存器用来存结果
     protected Value op1;
@@ -58,8 +61,17 @@ public abstract class BinaryOperation extends Instruction {
     public Value getOp1() {
         return op1;
     }
+    
     public Value getOp2() {
         return op2;
+    }
+    
+    public void setOp1(Value op1) {
+        this.op1 = op1;
+    }
+    
+    public void setOp2(Value op2) {
+        this.op2 = op2;
     }
     
     @Override
