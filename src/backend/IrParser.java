@@ -369,7 +369,7 @@ public class IrParser {
         AsmType type;
         if (instr.getSymbol().getAsmType() == AsmType.ARRAY) {
             type = AsmType.ARRAY;
-        } else if (instr.getPointerLevel() != 1) {
+        } else if (instr.getPointerLevel() > 1) {
             type = AsmType.POINTER;
         } else {
             type = instr.getSymbol().getAsmType();
@@ -377,7 +377,11 @@ public class IrParser {
         int offset = asmFunction.getArgsSize() + asmFunction.getAllocaSize();
         AsmOperand offOp = parseConstIntOperand(offset, 12, f, bb);
         if (type == AsmType.ARRAY) {
-            asmFunction.addAllocaSize(4 * instr.getSymbol().getLimSize());
+            if (instr.getSymbol().isArrayFParam()) {
+                asmFunction.addAllocaSize(8);
+            } else {
+                asmFunction.addAllocaSize(4 * instr.getSymbol().getLimSize());
+            }
         } else if (type == AsmType.POINTER) {
             asmFunction.addAllocaSize(8);
         } else {
