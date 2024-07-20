@@ -15,9 +15,11 @@ public class AsmBlock extends Node {
     private int index;
 
     private CustomList instrs = new CustomList();
-    public AsmBlock(String name) {
+    public AsmBlock(String name, int deepth) {
         this.name = name;
+        this.deepth = deepth;
     }
+    private int deepth = 0;
     public HashSet<AsmBlock> sucs = new HashSet<>();
     public HashSet<AsmBlock> pres = new HashSet<>();
     public HashSet<AsmBlock> doms = new HashSet<>();
@@ -29,6 +31,10 @@ public class AsmBlock extends Node {
     public HashSet<AsmReg> LiveOut = new HashSet<>();
     public HashSet<AsmReg> getDef() {
         return def;
+    }
+
+    public int getDeepth() {
+        return deepth;
     }
 
     public HashSet<AsmReg> getUse() {

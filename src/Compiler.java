@@ -68,7 +68,6 @@ public class Compiler {
         if (!arg.toSkipBackEnd()) {
             IrParser parser = new IrParser(program);
             AsmModule asmModule = parser.parse();
-
             RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
             alloc.run(asmModule);
             BackendPrinter backendPrinter = new BackendPrinter(asmModule, true, output);

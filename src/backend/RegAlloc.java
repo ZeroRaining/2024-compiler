@@ -35,7 +35,7 @@ public class RegAlloc {
     private int FI = 0;//0代表处理Int型，1代表处理Float型
     private static int K = 27;
 
-
+    HashMap<AsmOperand, Integer> loopDepths = new HashMap<>();
     private HashSet<AsmOperand> S = new HashSet<>();//暂时未用到
     private HashSet<AsmOperand> T = new HashSet<>();
 
@@ -51,9 +51,9 @@ public class RegAlloc {
     private HashMap<AsmOperand, Integer> color = new HashMap<>();
     //@1
     private HashSet<AsmOperand> all = new HashSet<>(); // 临时寄存器集合
-    private ArrayList<AsmOperand> simplifyWorklist = new ArrayList<>();//低度数的传送无关的节点
+    private HashSet<AsmOperand> simplifyWorklist = new HashSet<>();//低度数的传送无关的节点
     private HashSet<AsmOperand> freezeWorkList = new HashSet<>();//低度数的传送有关的指令
-    private ArrayList<AsmOperand> spillWorkList = new ArrayList<>();//高度数节点
+    private HashSet<AsmOperand> spillWorkList = new HashSet<>();//高度数节点
     private HashSet<AsmOperand> spilledNodes = new HashSet<>();//本轮中要被溢出的结点集合
     private HashSet<AsmOperand> coalescedNodes = new HashSet<>();//已合并的的传送指令集合
     private HashSet<AsmOperand> coloredNodes = new HashSet<>();//已经成功着色的结点集合
@@ -79,6 +79,7 @@ public class RegAlloc {
             while (true) {
                 initial();
                 LivenessAnalysis(function);
+                //findLoopDepth(function);
                 build(function);
                 makeWorkList();
                 while (!simplifyWorklist.isEmpty() || !worklistMoves.isEmpty() ||
@@ -115,6 +116,7 @@ public class RegAlloc {
             while (true) {
                 initial();
                 LivenessAnalysis(function);
+                findLoopDepth(function);
                 build(function);
                 makeWorkList();
                 while (!simplifyWorklist.isEmpty() || !worklistMoves.isEmpty() ||
@@ -587,6 +589,7 @@ public class RegAlloc {
         frozenMoves.clear();
         worklistMoves.clear();
         activeMoves.clear();
+        loopDepths.clear();
     }
 
     private void PreColor() {
@@ -638,7 +641,42 @@ public class RegAlloc {
             blockHead = (AsmBlock) blockHead.getNext();
         }
     }
+    private void findLoopDepth(AsmFunction function) {
+        AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
+        while (blockHead != null) {
+            int depth = blockHead.getDeepth() + 1;
+            HashMap<AsmOperand, Integer> defanduse = new HashMap<>();
+            AsmInstr InsHead = (AsmInstr) blockHead.getInstrs().getHead();
+            while (InsHead != null) {
+                for (AsmReg one : InsHead.regUse) {
+                    if (CanBeAddToRun(one)) {
+                        defanduse.putIfAbsent(one,0);
+                        int cur = defanduse.get(one);
+                        cur++;
+                        defanduse.put(one, cur);
+                    }
+                }
+                for (AsmReg one : InsHead.regDef) {
+                    if (CanBeAddToRun(one)) {
+                        defanduse.putIfAbsent(one,0);
+                        int cur = defanduse.get(one);
+                        cur++;
+                        defanduse.put(one, cur);
+                    }
+                }
+                InsHead = (AsmInstr) InsHead.getNext();
+            }
+            for (HashMap.Entry<AsmOperand, Integer> entry : defanduse.entrySet()) {
+                AsmOperand key = entry.getKey();
+                int val = entry.getValue();
+                loopDepths.putIfAbsent(key, 0);
+                int cur = loopDepths.get(key);
+                loopDepths.put(key, cur + 10 * depth * val);
 
+            }
+            blockHead = (AsmBlock) blockHead.getNext();
+        }
+    }
     private void GetBlockLiveInAndOut(AsmFunction function) {
         //初始化block and instr 的LiveIn和LiveOut
         {
@@ -755,12 +793,12 @@ public class RegAlloc {
 
                 //live.addAll(instrTail.regDef);
                 for (AsmOperand D : instrTail.regDef) {
-                    if (CanBeAddToRun(D)) {
+                    if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
                         live.add(D);
                     }
                 }
                 for (AsmOperand b : instrTail.regDef) {
-                    if (CanBeAddToRun(b)) {
+                    if (CanBeAddToRun(b) || (b instanceof AsmPhyReg && FI == 0) || (b instanceof AsmFPhyReg && FI == 1)) {
                         for (AsmOperand l : live) {
                             AddEdge(b, l);
                         }
@@ -795,7 +833,25 @@ public class RegAlloc {
     }
 
     private void simplify() {
-        AsmOperand n = simplifyWorklist.iterator().next();
+    AsmOperand n =  simplifyWorklist.iterator().next();
+//        AsmOperand n ;
+//        if (simplifyWorklist.size() > 20) {
+//             n = simplifyWorklist.iterator().next();
+//        } else {
+//            int small = -1;
+//             n = null;
+//            for (AsmOperand one: simplifyWorklist) {
+//                if (small == -1) {
+//                    n = one;
+//                    small = loopDepths.get(one);
+//                } else {
+//                    if ((loopDepths.get(one) * 100 + 5000 ) * (degree.get(n) * 10 + 100) < (loopDepths.get(n) * 100 + 5000) * (degree.get(one) * 10 + 100)) {
+//                        n = one;
+//                        small = loopDepths.get(one);
+//                    }
+//                }
+//            }
+//        }
         simplifyWorklist.remove(n);
         selectStack.push(n);
         for (AsmOperand m : Adjacent(n)) {
@@ -895,6 +951,19 @@ public class RegAlloc {
 
     private void SelectSpill() {
         AsmOperand m = spillWorkList.iterator().next();//目前是随机选，后面再换/todo/
+//        int small = -1;
+//        AsmOperand m = null;
+//        for (AsmOperand one: spillWorkList) {
+//            if (small == -1) {
+//                m = one;
+//                small = loopDepths.get(one);
+//            } else {
+//                if (loopDepths.get(one) * (degree.get(one) + 1 ) < loopDepths.get(m)  * (degree.get(m) + 1)) {
+//                    m = one;
+//                    small = loopDepths.get(one);
+//                }
+//            }
+//        }
         spillWorkList.remove(m);
         simplifyWorklist.add(m);
         FreezeMoves(m);

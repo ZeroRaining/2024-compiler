@@ -109,7 +109,7 @@ public class IrParser {
             asmModule.addFunction(asmFunction);
             funcMap.put(f, asmFunction);
             for (Node bb : f.getBasicBlocks()) {
-                AsmBlock asmBlock = new AsmBlock(f.getName() + "_" + ((BasicBlock) bb).value2string());
+                AsmBlock asmBlock = new AsmBlock(f.getName() + "_" + ((BasicBlock) bb).value2string(),  ((BasicBlock) bb).getDepth());
                 asmFunction.addBlock(asmBlock);
                 blockMap.put((BasicBlock) bb, asmBlock);
             }
