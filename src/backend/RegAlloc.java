@@ -482,25 +482,15 @@ public class RegAlloc {
             for (int save : beChanged) {
                 AsmReg sav = RegGeter.AllRegsInt.get(save);
                 int spillPlace = function.getAllocaSize() + function.getArgsSize();
-                if (downOperandMap.containsKey(save) && downOperandMap.get(save).getPointerLevel() == 0) {
-                    function.addAllocaSize(4);
-                    newAllocSize += 4;
-                    AsmImm12 place = new AsmImm12(spillPlace);
-                    AsmInstr firstrHead = (AsmInstr) ((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead();
-                    storeOrLoadFromMemory(spillPlace, sav, firstrHead, "store", 0);
-                    storeOrLoadFromMemory(spillPlace, sav, (AsmInstr) function.getTailBlock().getInstrTail(), "load", 0);
 //              AsmSw store = new AsmSw(sav, RegGeter.SP, place);
 //              AsmLw load = new AsmLw(sav, RegGeter.SP, place);
 //              ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
 //              load.insertBefore(function.getTailBlock().getInstrTail());
-                } else {
-                    function.addAllocaSize(8);
-                    newAllocSize += 8;
-                    AsmInstr firstrHead = (AsmInstr) ((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead();
-                    storeDOrLoadDFromMemory(spillPlace, sav, firstrHead, "store", 0);
-                    storeDOrLoadDFromMemory(spillPlace, sav, (AsmInstr) function.getTailBlock().getInstrTail(), "load", 0);
-                }
-
+                function.addAllocaSize(8);
+                newAllocSize += 8;
+                AsmInstr firstrHead = (AsmInstr) ((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead();
+                storeDOrLoadDFromMemory(spillPlace, sav, firstrHead, "store", 0);
+                storeDOrLoadDFromMemory(spillPlace, sav, (AsmInstr) function.getTailBlock().getInstrTail(), "load", 0);
             }
         }
         if (FI == 1) {
@@ -803,32 +793,6 @@ public class RegAlloc {
     }
 
     private void simplify() {
-//        List<AsmOperand> sortedList = new ArrayList<>(simplifyWorklist);
-//        if (FI == 0) {
-//            // 对ArrayList进行排序
-//            Collections.sort(sortedList, new Comparator<AsmOperand>() {
-//                @Override
-//                public int compare(AsmOperand o1, AsmOperand o2) {
-//                    if (o1 instanceof AsmVirReg && o2 instanceof AsmVirReg) {
-//                        return Integer.compare(((AsmVirReg) o1).getPersonalIndex(), ((AsmVirReg) o2).getPersonalIndex());
-//                    }
-//                    return 0;
-//                }
-//            });
-//        } else {
-//            Collections.sort(sortedList, new Comparator<AsmOperand>() {
-//                @Override
-//                public int compare(AsmOperand o1, AsmOperand o2) {
-//                    if (o1 instanceof AsmFVirReg && o2 instanceof AsmFVirReg) {
-//                        return Integer.compare(((AsmFVirReg) o1).getPersonalIndex(), ((AsmFVirReg) o2).getPersonalIndex());
-//                    }
-//                    return 0;
-//                }
-//            });
-//        }
-//        // 按personalIndex最小的顺序取出
-//        AsmOperand n = sortedList.get(0);
-//        simplifyWorklist.remove(n);
         AsmOperand n = simplifyWorklist.iterator().next();
         simplifyWorklist.remove(n);
         selectStack.push(n);
@@ -928,30 +892,6 @@ public class RegAlloc {
     }
 
     private void SelectSpill() {
-//        List<AsmOperand> sortedList = new ArrayList<>(spillWorkList);
-//        if (FI == 0) {
-//            // 对ArrayList进行排序
-//            Collections.sort(sortedList, new Comparator<AsmOperand>() {
-//                @Override
-//                public int compare(AsmOperand o1, AsmOperand o2) {
-//                    if (o1 instanceof AsmVirReg && o2 instanceof AsmVirReg) {
-//                        return Integer.compare(((AsmVirReg) o1).getPersonalIndex(), ((AsmVirReg) o2).getPersonalIndex());
-//                    }
-//                    return 0;
-//                }
-//            });
-//        } else {
-//            Collections.sort(sortedList, new Comparator<AsmOperand>() {
-//                @Override
-//                public int compare(AsmOperand o1, AsmOperand o2) {
-//                    if (o1 instanceof AsmFVirReg && o2 instanceof AsmFVirReg) {
-//                        return Integer.compare(((AsmFVirReg) o1).getPersonalIndex(), ((AsmFVirReg) o2).getPersonalIndex());
-//                    }
-//                    return 0;
-//                }
-//            });
-//        }
-//        AsmOperand m = sortedList.get(0);
         AsmOperand m = spillWorkList.iterator().next();//目前是随机选，后面再换/todo/
         spillWorkList.remove(m);
         simplifyWorklist.add(m);
