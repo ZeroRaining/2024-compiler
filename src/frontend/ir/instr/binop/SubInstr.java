@@ -27,11 +27,13 @@ public class SubInstr extends BinaryOperation {
                     Value upperOp1 = ((AddInstr) op1).getOp1();
                     Value upperOp2 = ((AddInstr) op1).getOp2();
                     if (upperOp1 instanceof ConstInt) {
-                        ((ConstInt) upperOp1).sub(op2.getNumber().intValue());
+                        int res = upperOp1.getNumber().intValue() - op2.getNumber().intValue();
+                        ((AddInstr) op1).setOp1(new ConstInt(res));
                         return op1;
                     }
                     if (upperOp2 instanceof ConstInt) {
-                        ((ConstInt) upperOp2).sub(op2.getNumber().intValue());
+                        int res = upperOp2.getNumber().intValue() - op2.getNumber().intValue();
+                        ((AddInstr) op1).setOp2(new ConstInt(res));
                         return op1;
                     }
                 }
@@ -41,11 +43,13 @@ public class SubInstr extends BinaryOperation {
                     Value upperOp1 = ((SubInstr) op1).getOp1();
                     Value upperOp2 = ((SubInstr) op1).getOp2();
                     if (upperOp1 instanceof ConstInt) {
-                        ((ConstInt) upperOp1).sub(op2.getNumber().intValue());
+                        int res = upperOp1.getNumber().intValue() - op2.getNumber().intValue();
+                        ((SubInstr) op1).setOp1(new ConstInt(res));
                         return op1;
                     }
                     if (upperOp2 instanceof ConstInt) {
-                        ((ConstInt) upperOp2).add(op2.getNumber().intValue());
+                        int res = upperOp2.getNumber().intValue() + op2.getNumber().intValue();
+                        ((SubInstr) op1).setOp2(new ConstInt(res));
                         return op1;
                     }
                 }

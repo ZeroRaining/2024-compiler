@@ -3,6 +3,8 @@ package frontend.ir.instr.binop;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 
@@ -45,11 +47,13 @@ public class MulInstr extends BinaryOperation {
                 Value upperOp1 = ((MulInstr) nonConst).getOp1();
                 Value upperOp2 = ((MulInstr) nonConst).getOp2();
                 if (upperOp1 instanceof ConstInt) {
-                    ((ConstInt) upperOp1).mul(constInt.getNumber());
+                    int res = upperOp1.getNumber().intValue() * constInt.getNumber();
+                    ((MulInstr) nonConst).setOp1(new ConstInt(res));
                     return nonConst;
                 }
                 if (upperOp2 instanceof ConstInt) {
-                    ((ConstInt) upperOp2).mul(constInt.getNumber());
+                    int res = upperOp2.getNumber().intValue() * constInt.getNumber();
+                    ((MulInstr) nonConst).setOp2(new ConstInt(res));
                     return nonConst;
                 }
             }
@@ -58,12 +62,55 @@ public class MulInstr extends BinaryOperation {
             if (userSet2list.size() == 1 && userSet2list.get(0) == this) {
                 Value upperOp1 = ((SDivInstr) nonConst).getOp1();
                 if (upperOp1 instanceof ConstInt) {
-                    ((ConstInt) upperOp1).mul(constInt.getNumber());
+                    int res = upperOp1.getNumber().intValue() * constInt.getNumber();
+                    ((SDivInstr) nonConst).setOp1(new ConstInt(res));
                     return nonConst;
                 }
             }
         }
         
         return null;
+    }
+    
+    public ArrayList<Instruction> strengthReduction(Function function) {
+        ArrayList<Instruction> res = new ArrayList<>();
+        
+        if (op2 instanceof ConstInt && !(op1 instanceof ConstInt)) {
+            swapOp();
+        }
+        
+        if (op1 instanceof ConstInt) {
+            int intValue = op1.getNumber().intValue();
+            int absValue = Math.abs(intValue);
+            
+            Value abs = null;
+            int exp = 0;
+            while (absValue > 0) {
+                if ((absValue & 1) > 0) {
+                    if (exp == 0) {
+                        abs = op2;
+                    } else {
+                        ShlInstr newShl = new ShlInstr(function.getAndAddRegIndex(), op2, new ConstInt(exp));
+                        res.add(newShl);
+                        if (abs == null) {
+                            abs = newShl;
+                        } else {
+                            abs = new AddInstr(function.getAndAddRegIndex(), abs, newShl);
+                            res.add((Instruction) abs);
+                        }
+                    }
+                }
+                exp += 1;
+                absValue >>= 1;
+            }
+            
+            if (intValue < 0) {
+                ConstInt zero = new ConstInt(0);
+                SubInstr sub = new SubInstr(function.getAndAddRegIndex(), zero, abs);
+                res.add(sub);
+            }
+        }
+        
+        return res;
     }
 }

@@ -46,8 +46,9 @@ public class Compiler {
         if (arg.getOptLevel() == 1) {
             Mem2Reg.doMem2Reg(functions);
             DeadCodeRemove.doDeadCodeRemove(functions);
-            GVN.doGVN(functions);
             OIS.doOIS(functions);
+            OISR.doOISR(functions);
+            GVN.doGVN(functions);
         }
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();

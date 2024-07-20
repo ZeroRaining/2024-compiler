@@ -861,4 +861,8 @@ public class Procedure {
     public CustomList getBasicBlocks() {
         return basicBlocks;
     }
+    
+    public int getAndAddRegIndex() {
+        return this.curRegIndex++;
+    }
 }

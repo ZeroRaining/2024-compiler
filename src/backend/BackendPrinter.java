@@ -5,6 +5,7 @@ import backend.itemStructure.AsmBlock;
 import backend.itemStructure.AsmFunction;
 import backend.itemStructure.AsmGlobalVar;
 import backend.itemStructure.AsmModule;
+import backend.regs.RegGeter;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -61,6 +62,14 @@ public class BackendPrinter {
             }
             writer.write(function.getName() + ":");
             writer.newLine();
+            if(function.getName().equals("main")){
+                //所有寄存器全部初始化为0
+                for (int i = 5; i < 32; i++) {
+                    writer.write("li\t" + RegGeter.AllRegsInt.get(i).toString() + ",\t0");
+                    writer.newLine();
+                }
+                writer.newLine();
+            }
             CustomList blocks = function.getBlocks();
             for (CustomList.Node node : blocks) {
                 AsmBlock block = (AsmBlock) node;
