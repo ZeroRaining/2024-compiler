@@ -29,13 +29,15 @@ public class RemovePhi {
     private static void addMove(Function function) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         while (blk != null) {
-            Instruction instr = (Instruction) blk.getInstructions().getTail().getPrev();
-            if (!(instr instanceof PCInstr)) {
+            Instruction last = (Instruction) blk.getInstructions().getTail();
+            assert last != null;
+            if (last.getPrev() == null || !(last.getPrev() instanceof PCInstr)) {
                 blk = (BasicBlock) blk.getNext();
                 continue;
             }
             //只有一个PCInstr
             //TODO:setUse and removeFromList
+            Instruction instr = (Instruction) last.getPrev();
             ArrayList<Value> srcs = ((PCInstr) instr).getSrcs();
             ArrayList<Value> dsts = ((PCInstr) instr).getDsts();
             HashSet<Value> srcSet = new HashSet<>(((PCInstr) instr).getSrcs());
@@ -79,13 +81,14 @@ public class RemovePhi {
                     i--;
                 }
             }
+            instr.removeFromList();
             // a->b, b->c => a->b' b->c b'->b? or replace all b => b'
 //            blk = (BasicBlock) blk.getNext();
         }
     }
 
     private static void removePhi(Function function) {
-        blkCnt = ((BasicBlock)function.getBasicBlocks().getTail()).getLabelCnt();
+        blkCnt = ((BasicBlock)function.getBasicBlocks().getTail()).getLabelCnt() + 1;
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         while (blk != null) {
             if (!(blk.getInstructions().getHead() instanceof PhiInstr)) {
@@ -101,10 +104,10 @@ public class RemovePhi {
                     if (pre.getSucs().size() == 1) {
                         Instruction last = pre.getEndInstr();
                         if ((last.getPrev()) instanceof PCInstr) {
-                            ((PCInstr) last.getPrev()).addPC(phi, src);
+                            ((PCInstr) last.getPrev()).addPC(src, phi);
                         } else {
                             PCInstr pc = new PCInstr();
-                            pc.addPC(phi, src);
+                            pc.addPC(src, phi);
                             pc.insertBefore(last);
                         }
                     } else if (pre.getSucs().size() == 2){
@@ -114,10 +117,9 @@ public class RemovePhi {
                         branch.modifyUse(blk, newBlk);
                         newBlk.setLabelCnt(blkCnt++);
                         PCInstr pc = new PCInstr();
-                        pc.addPC(phi, src);
+                        pc.addPC(src, phi);
                         newBlk.addInstruction(pc);
                         newBlk.addInstruction(new JumpInstr(blk));
-                        branch.removeFromList();
                     } else if (pre.getSucs().size() != 0){
                         DEBUG.dbgPrint(pre.value2string());
                         DEBUG.dbgPrint2("sucs size: " + pre.getSucs());
