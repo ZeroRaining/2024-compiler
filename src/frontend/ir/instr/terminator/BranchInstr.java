@@ -32,10 +32,10 @@ public class BranchInstr extends Instruction {
             throw new RuntimeException("why you dont have parent?");
         }
         BasicBlock prt = this.getParentBB();
-        prt.getSucs().add(thenTarget);
-        thenTarget.getPres().add(prt);
-        prt.getSucs().add(elseTarget);
-        elseTarget.getPres().add(prt);
+        prt.getSucs().remove(thenTarget);
+        thenTarget.getPres().remove(prt);
+        prt.getSucs().remove(elseTarget);
+        elseTarget.getPres().remove(prt);
         super.removeFromList();
     }
 

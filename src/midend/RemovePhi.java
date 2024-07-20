@@ -3,25 +3,88 @@ package midend;
 import debug.DEBUG;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
-import frontend.ir.instr.otherop.Move;
+import frontend.ir.instr.otherop.EmptyInstr;
+import frontend.ir.instr.otherop.MoveInstr;
+import frontend.ir.instr.otherop.PCInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class RemovePhi {
     private static int blkCnt = 0;
 
-    public static void removePhi(HashSet<Function> functions) {
+    public static void phi2move(HashSet<Function> functions) {
         for (Function function : functions) {
-            remove(function);
+            removePhi(function);
+            addMove(function);
         }
     }
 
-    private static void remove(Function function) {
+    private static void addMove(Function function) {
+        BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
+        while (blk != null) {
+            Instruction instr = (Instruction) blk.getInstructions().getTail().getPrev();
+            if (!(instr instanceof PCInstr)) {
+                blk = (BasicBlock) blk.getNext();
+                continue;
+            }
+            //只有一个PCInstr
+            //TODO:setUse and removeFromList
+            ArrayList<Value> srcs = ((PCInstr) instr).getSrcs();
+            ArrayList<Value> dsts = ((PCInstr) instr).getDsts();
+            HashSet<Value> srcSet = new HashSet<>(((PCInstr) instr).getSrcs());
+            HashSet<Value> dstSet = new HashSet<>(((PCInstr) instr).getDsts());
+
+            for (int i =0; i < srcs.size(); i++){
+                Value src = srcs.get(i);
+                Value dst = dsts.get(i);
+                if (src == dst) {
+                    continue;
+                }
+                if (!srcSet.contains(dst)) {
+                    //TODO:insertBefore and insertAfter should be set used
+                    MoveInstr move = new MoveInstr(src, dst);
+                    move.insertBefore(blk.getEndInstr());
+                    srcSet.remove(src);
+                    dstSet.remove(dst);
+                    srcs.remove(i);
+                    dsts.remove(i);
+                    i--;
+                } else {
+                    //src->dst, dst->c => dst =>dst'
+                    // a->b, b->c => b->b' a->b b'->c
+                    Instruction tmp = new EmptyInstr();
+                    MoveInstr move1 = new MoveInstr(dst, tmp);
+                    move1.insertBefore(blk.getEndInstr());
+                    MoveInstr move2 = new MoveInstr(src, dst);
+                    move2.insertBefore(blk.getEndInstr());
+                    srcSet.remove(src);
+                    srcSet.remove(dst);
+                    srcSet.add(tmp);
+                    dstSet.remove(dst);
+                    for (int j = i; j < srcs.size(); j++) {
+                        if (srcs.get(j) == dst) {
+                            srcs.remove(j);
+                            srcs.add(j, tmp);
+                        }
+                    }
+                    srcs.remove(i);
+                    dsts.remove(i);
+                    i--;
+                }
+            }
+            // a->b, b->c => a->b' b->c b'->b? or replace all b => b'
+//            blk = (BasicBlock) blk.getNext();
+        }
+    }
+
+    private static void removePhi(Function function) {
         blkCnt = ((BasicBlock)function.getBasicBlocks().getTail()).getLabelCnt();
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         while (blk != null) {
@@ -35,25 +98,26 @@ public class RemovePhi {
                 for (int i = 0; i < phi.getPrtBlks().size(); i++) {
                     BasicBlock pre = phi.getPrtBlks().get(i);
                     Value src = phi.getValues().get(i);
-
                     if (pre.getSucs().size() == 1) {
-                        Move move = new Move(src, phi);
-                        move.insertBefore(pre.getEndInstr());
+                        Instruction last = pre.getEndInstr();
+                        if ((last.getPrev()) instanceof PCInstr) {
+                            ((PCInstr) last.getPrev()).addPC(phi, src);
+                        } else {
+                            PCInstr pc = new PCInstr();
+                            pc.addPC(phi, src);
+                            pc.insertBefore(last);
+                        }
                     } else if (pre.getSucs().size() == 2){
                         BranchInstr branch = (BranchInstr) pre.getEndInstr();
                         BasicBlock newBlk = new BasicBlock(pre.getDepth());
                         newBlk.insertAfter(pre);
                         branch.modifyUse(blk, newBlk);
                         newBlk.setLabelCnt(blkCnt++);
+                        PCInstr pc = new PCInstr();
+                        pc.addPC(phi, src);
+                        newBlk.addInstruction(pc);
                         newBlk.addInstruction(new JumpInstr(blk));
-
-                        //TODO：对于前驱后继的修改，是否应该放在新建指令时？
-                        pre.getSucs().remove(blk);
-                        pre.getSucs().add(newBlk);
-                        newBlk.getSucs().add(blk);
-                        newBlk.getPres().add(pre);
-                        blk.getPres().remove(pre);
-                        blk.getPres().add(newBlk);
+                        branch.removeFromList();
                     } else if (pre.getSucs().size() != 0){
                         DEBUG.dbgPrint(pre.value2string());
                         DEBUG.dbgPrint2("sucs size: " + pre.getSucs());

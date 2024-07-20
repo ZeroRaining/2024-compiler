@@ -16,7 +16,7 @@ import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.convop.ConversionOperation;
 import frontend.ir.instr.otherop.CallInstr;
-import frontend.ir.instr.otherop.Move;
+import frontend.ir.instr.otherop.MoveInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.terminator.*;
@@ -317,8 +317,8 @@ public class IrParser {
             parseCall((CallInstr) instr, bb, f);
         else if (instr instanceof GEPInstr)
             parseGEP((GEPInstr) instr, bb, f);
-        else if (instr instanceof Move)
-            parseMove((Move) instr, bb, f);
+        else if (instr instanceof MoveInstr)
+            parseMove((MoveInstr) instr, bb, f);
         else if (instr instanceof ConversionOperation)
             parseConv((ConversionOperation) instr, bb, f);
     }
@@ -951,7 +951,7 @@ public class IrParser {
     }
 
 
-    private void parseMove(Move instr, BasicBlock bb, Function f) {
+    private void parseMove(MoveInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmOperand dst = parseOperand(instr.getDst(), 0, f, bb);
         AsmOperand src = parseOperand(instr.getSrc(), 0, f, bb);
