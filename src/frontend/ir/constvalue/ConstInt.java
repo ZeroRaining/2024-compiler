@@ -5,9 +5,22 @@ import frontend.ir.DataType;
 import java.util.Objects;
 
 public class ConstInt extends ConstValue {
-    private final int value;
+    private int value;
+    
     public ConstInt(int init) {
         value = init;
+    }
+    
+    public void add(int op) {
+        this.value += op;
+    }
+    
+    public void sub(int op) {
+        this.value -= op;
+    }
+    
+    public void mul(int op) {
+        this.value *= op;
     }
     
     @Override
