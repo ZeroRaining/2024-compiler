@@ -1,8 +1,6 @@
 package midend.SSA;
 
-import frontend.ir.Use;
 import frontend.ir.instr.Instruction;
-import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 

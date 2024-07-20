@@ -47,7 +47,7 @@ public class Compiler {
             OIS.doOIS(functions);
         }
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
-        RemovePhi.removePhi(functions);
+        RemovePhi.phi2move(functions);
         // 打印 IR
         if (arg.toPrintIR()) {
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());

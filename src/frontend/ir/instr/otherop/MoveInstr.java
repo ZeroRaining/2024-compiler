@@ -1,15 +1,14 @@
 package frontend.ir.instr.otherop;
 
-import debug.DEBUG;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 
-public class Move extends Instruction {
+public class MoveInstr extends Instruction {
     private Value src;
     private Value dst;
 
-    public Move(Value src, Value dst) {
+    public MoveInstr(Value src, Value dst) {
         this.src = src;
         this.dst = dst;
     }

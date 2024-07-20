@@ -1,7 +1,6 @@
 package frontend.ir.instr.binop;
 
 import frontend.ir.constvalue.ConstInt;
-import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 
@@ -17,6 +16,8 @@ public class SDivInstr extends BinaryOperation {
     public Value operationSimplify() {
         if (op1 instanceof ConstInt && op2 instanceof ConstInt) {
             return new ConstInt(((ConstInt) op1).getNumber() / ((ConstInt) op2).getNumber());
+        } else if (op1 instanceof ConstInt && op1.getNumber().intValue() == 0) {
+            return op1;
         }
         return null;
     }
