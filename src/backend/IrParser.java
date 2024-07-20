@@ -460,7 +460,7 @@ public class IrParser {
                 AsmFsw asmFsw = new AsmFsw(src, laReg, offset);
                 asmBlock.addInstrTail(asmFsw);
             }
-        } else if (instr.getPointerLevel() != 0) {
+        } else if (instr.getValue().getPointerLevel() != 0) {
             AsmOperand src = parseOperand(instr.getValue(), 0, f, bb);
             AsmOperand dst;
             if (instr.getPtr() != null) {
