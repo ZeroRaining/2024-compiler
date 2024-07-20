@@ -766,13 +766,15 @@ public class RegAlloc {
                         }
                     }
                 }
+
                 //live.addAll(instrTail.regUse);
+                live.removeAll(instrTail.regDef);
                 for (AsmOperand U : instrTail.regUse) {
                     if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) { //不确定是否要要算上预着色的，但应该要算，所以先按算的来/todo
                         live.add(U);
                     }
                 }
-                live.removeAll(instrTail.regDef);//删除无所谓
+                //删除无所谓
                 instrTail = (AsmInstr) instrTail.getPrev();
             }
             blockHead = (AsmBlock) blockHead.getNext();
