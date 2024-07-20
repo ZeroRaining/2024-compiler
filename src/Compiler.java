@@ -61,7 +61,7 @@ public class Compiler {
         }
         
         if (arg.getOptLevel() == 1 && !arg.toSkipBackEnd()) {
-            RemovePhi.removePhi(functions);
+            RemovePhi.phi2move(functions);
         }
         
         // 运行后端
