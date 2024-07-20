@@ -47,7 +47,7 @@ public class Compiler {
             OIS.doOIS(functions);
         }
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
-//        RemovePhi.removePhi(functions);
+        RemovePhi.removePhi(functions);
         // 打印 IR
         if (arg.toPrintIR()) {
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
@@ -57,8 +57,9 @@ public class Compiler {
 
         // 运行后端
         if (!arg.toSkipBackEnd()) {
-            AsmModule asmModule = new IrParser(program).parse();
-            RegAlloc alloc = RegAlloc.getInstance();
+            IrParser parser = new IrParser(program);
+            AsmModule asmModule = parser.parse();
+            RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
             alloc.run(asmModule);
             BackendPrinter backendPrinter = new BackendPrinter(asmModule, true, output);
             backendPrinter.printBackend();
@@ -73,16 +74,6 @@ public class Compiler {
             System.out.println("runTime: " + runTime + "ms");
             System.out.println("optimizingTime: " + optimizingTime + "ms");
         }
-        
-        
-        // IR生成测试
-//        IRTest();
-
-        //后端代码生成测试
-       // CodeGenTest();
-
-        //寄存器分配测试
-//        RegAllocTest();
     }
 
     public static void LexerTest() throws IOException {
@@ -153,8 +144,9 @@ public class Compiler {
         BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
         program.printIR(writer);
         writer.close();
-        AsmModule asmModule = new IrParser(program).parse();
-        RegAlloc alloc = RegAlloc.getInstance();
+        IrParser parser = new IrParser(program);
+        AsmModule asmModule = parser.parse();
+        RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
         alloc.run(asmModule);
         BackendPrinter backendPrinter = new BackendPrinter(asmModule,true);
         backendPrinter.printBackend();
