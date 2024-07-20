@@ -37,7 +37,7 @@ public abstract class Instruction extends Value {
     public String value2string() {
         return "%reg_" + this.getNumber();
     }
-//修改当前的指令的use，将原来对from的使用改为对to的使用
+    //修改当前的指令的use，将原来对from的使用改为对to的使用,以及对from的值的使用会变为对to的值的使用
     public void modifyUse(Value from, Value to) {
         for (Use one: useList) {
             if (one.getUsed() == from) {
