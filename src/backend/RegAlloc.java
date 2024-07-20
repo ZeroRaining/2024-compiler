@@ -51,9 +51,9 @@ public class RegAlloc {
     private HashMap<AsmOperand, Integer> color = new HashMap<>();
     //@1
     private HashSet<AsmOperand> all = new HashSet<>(); // 临时寄存器集合
-    private HashSet<AsmOperand> simplifyWorklist = new HashSet<>();//低度数的传送无关的节点
+    private ArrayList<AsmOperand> simplifyWorklist = new ArrayList<>();//低度数的传送无关的节点
     private HashSet<AsmOperand> freezeWorkList = new HashSet<>();//低度数的传送有关的指令
-    private HashSet<AsmOperand> spillWorkList = new HashSet<>();//高度数节点
+    private ArrayList<AsmOperand> spillWorkList = new ArrayList<>();//高度数节点
     private HashSet<AsmOperand> spilledNodes = new HashSet<>();//本轮中要被溢出的结点集合
     private HashSet<AsmOperand> coalescedNodes = new HashSet<>();//已合并的的传送指令集合
     private HashSet<AsmOperand> coloredNodes = new HashSet<>();//已经成功着色的结点集合
