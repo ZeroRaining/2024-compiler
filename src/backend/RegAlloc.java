@@ -16,17 +16,18 @@ import java.util.stream.Collectors;
 /*todo*/ //load指令偏移量超过32位
 
 public class RegAlloc {
-    private RegAlloc() {
+    private RegAlloc(HashMap<AsmOperand, Value> downOperandMap) {
         // 初始化逻辑
+    this.downOperandMap = downOperandMap;
     }
-
+    private HashMap<AsmOperand, Value> downOperandMap;
     // 单例模式下的私有静态成员变量
     private static RegAlloc instance = null;
 
     // 提供一个公共的静态方法，用于获取单例对象
-    public static synchronized RegAlloc getInstance() {
+    public static synchronized RegAlloc getInstance(HashMap<AsmOperand, Value> downOperandMap) {
         if (instance == null) {
-            instance = new RegAlloc();
+            instance = new RegAlloc(downOperandMap);
         }
         return instance;
     }
@@ -313,6 +314,72 @@ public class RegAlloc {
 
 
     }
+    private void storeDOrLoadDFromMemory(int spillPlace, AsmReg reg, AsmInstr nowInstr, String type, int foreOrBack) {
+        if (spillPlace >= -2048 && spillPlace <= 2047) {
+            AsmImm12 place = new AsmImm12(spillPlace);
+            if (type == "store") {
+                if (foreOrBack == 0) {
+                    if (FI == 0) {
+                        AsmSd store = new AsmSd(reg, RegGeter.SP, place);
+                        store.insertBefore(nowInstr);
+                    }
+                } else {
+                    if (FI == 0) {
+                        AsmSd store = new AsmSd(reg, RegGeter.SP, place);
+                        store.insertAfter(nowInstr);
+                    }
+                }
+            } else if (type == "load") {
+                if (foreOrBack == 0) {
+                    if (FI == 0) {
+                        AsmLd load = new AsmLd(reg, RegGeter.SP, place);
+                        load.insertBefore(nowInstr);
+                    }
+                } else {
+                    if (FI == 0) {
+                        AsmLd load = new AsmLd(reg, RegGeter.SP, place);
+                        load.insertAfter(nowInstr);
+                    }
+                }
+            }
+        } else {
+            AsmReg tmpMove = RegGeter.AllRegsInt.get(5);
+            AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(spillPlace));
+            AsmOperand tmpAdd = RegGeter.AllRegsInt.get(5);
+            AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
+            if (foreOrBack == 0) {
+                asmMove.insertBefore(nowInstr);
+                asmAdd.insertBefore(nowInstr);
+                if (type == "load") {
+                    if (FI == 0) {
+                        AsmLd load = new AsmLd(reg, tmpAdd, new AsmImm12(0));
+                        load.insertBefore(nowInstr);
+                    }
+                } else if (type == "store") {
+                    if (FI == 0) {
+                        AsmSd store = new AsmSd(reg, tmpAdd, new AsmImm12(0));
+                        store.insertBefore(nowInstr);
+                    }
+                }
+            } else {
+                if (type == "load") {
+                    if (FI == 0) {
+                        AsmLd load = new AsmLd(reg, tmpAdd, new AsmImm12(0));
+                        load.insertAfter(nowInstr);
+                    }
+                } else if (type == "store") {
+                    if (FI == 0) {
+                        AsmSd store = new AsmSd(reg, tmpAdd, new AsmImm12(0));
+                        store.insertAfter(nowInstr);
+                    }
+                }
+                asmAdd.insertAfter(nowInstr);
+                asmMove.insertAfter(nowInstr);
+            }
+        }
+
+
+    }
     private int callerSave(AsmFunction function) {
         int newAllocSize = 0;
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
@@ -341,10 +408,17 @@ public class RegAlloc {
                         }
                         if (FI == 0 && (beColored == 1 || (beColored >= 5 &&  beColored <= 7) || (beColored >= 10 &&  beColored <= 11) || (beColored >= 12 &&  beColored <= 17) || (beColored >= 28 &&  beColored <= 31))) {
                             int spillPlace = function.getAllocaSize() + function.getArgsSize();
-                            function.addAllocaSize(4);
-                            newAllocSize += 4;
-                            storeOrLoadFromMemory(spillPlace, save, instrHead, "store", 0);
-                            storeOrLoadFromMemory(spillPlace, save, instrHead, "load", 1);
+                            if (downOperandMap.containsKey(save) && downOperandMap.get(save).getPointerLevel() == 0) {
+                                function.addAllocaSize(4);
+                                newAllocSize += 4;
+                                storeOrLoadFromMemory(spillPlace, save, instrHead, "store", 0);
+                                storeOrLoadFromMemory(spillPlace, save, instrHead, "load", 1);
+                            } else {
+                                function.addAllocaSize(8);
+                                newAllocSize += 8;
+                                storeDOrLoadDFromMemory(spillPlace, save, instrHead, "store", 0);
+                                storeDOrLoadDFromMemory(spillPlace, save, instrHead, "load", 1);
+                            }
                         }
                         if (FI == 1 && ((beColored <= 39 && beColored >=32) || (beColored >= 42 && beColored <= 49) || (beColored >= 60 &&  beColored <= 63))) {
                             int spillPlace = function.getAllocaSize() + function.getArgsSize();
@@ -403,23 +477,25 @@ public class RegAlloc {
             for (int save : beChanged) {
                 AsmReg sav = RegGeter.AllRegsInt.get(save);
                 int spillPlace = function.getAllocaSize() + function.getArgsSize();
-                if (save != 2) {
+                if (downOperandMap.containsKey(save) && downOperandMap.get(save).getPointerLevel() == 0) {
                     function.addAllocaSize(4);
                     newAllocSize += 4;
-                } else {
-                    function.addAllocaSize(8);
-                    newAllocSize += 8;
-                }
-                AsmImm12 place = new AsmImm12(spillPlace);
-                if (save != 2) {
+                    AsmImm12 place = new AsmImm12(spillPlace);
                     AsmInstr firstrHead = (AsmInstr) ((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead();
                     storeOrLoadFromMemory(spillPlace, sav, firstrHead, "store", 0);
                     storeOrLoadFromMemory(spillPlace, sav, (AsmInstr) function.getTailBlock().getInstrTail(), "load", 0);
-//                    AsmSw store = new AsmSw(sav, RegGeter.SP, place);
-//                    AsmLw load = new AsmLw(sav, RegGeter.SP, place);
-//                    ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
-//                    load.insertBefore(function.getTailBlock().getInstrTail());
+//              AsmSw store = new AsmSw(sav, RegGeter.SP, place);
+//              AsmLw load = new AsmLw(sav, RegGeter.SP, place);
+//              ((AsmBlock) function.getBlocks().getHead()).addInstrHead(store);
+//              load.insertBefore(function.getTailBlock().getInstrTail());
+                } else {
+                    function.addAllocaSize(8);
+                    newAllocSize += 8;
+                    AsmInstr firstrHead = (AsmInstr) ((AsmBlock) function.getBlocks().getHead()).getInstrs().getHead();
+                    storeDOrLoadDFromMemory(spillPlace, sav, firstrHead, "store", 0);
+                    storeDOrLoadDFromMemory(spillPlace, sav, (AsmInstr) function.getTailBlock().getInstrTail(), "load", 0);
                 }
+
             }
         }
         if (FI == 1) {
@@ -924,8 +1000,13 @@ public class RegAlloc {
         if (FI == 0) {
             for (AsmOperand v : spilledNodes) {
                 int spillPlace = function.getAllocaSize() + function.getArgsSize();
-                function.addAllocaSize(4);
-                newAllocSize += 4;
+                if (downOperandMap.containsKey(v) && downOperandMap.get(v).getPointerLevel() == 0) {
+                    function.addAllocaSize(4);
+                    newAllocSize += 4;
+                } else {
+                    function.addAllocaSize(8);
+                    newAllocSize += 8;
+                }
                 AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
                 while (blockHead != null) {
                     AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
@@ -933,12 +1014,17 @@ public class RegAlloc {
                         //为regUse进行spill处理
                         if (instrHead.regUse.contains(v)) {
                             AsmVirReg v1 = new AsmVirReg();
+                            downOperandMap.put(v1, downOperandMap.get(v));
                             for (int i = 0; i < instrHead.regUse.size(); i++) {
                                 if (instrHead.regUse.get(i) == v) {
                                     instrHead.changeUseReg(i, instrHead.regUse.get(i), v1);
                                 }
                             }
-                            storeOrLoadFromMemory(spillPlace, v1, instrHead, "load", 0);
+                            if (downOperandMap.containsKey(v) && downOperandMap.get(v).getPointerLevel() == 0) {
+                                storeOrLoadFromMemory(spillPlace, v1, instrHead, "load", 0);
+                            } else {
+                                storeDOrLoadDFromMemory(spillPlace, v1, instrHead, "load", 0);
+                            }
 //                            AsmImm12 place = new AsmImm12(spillPlace);
 //                            AsmLw load = new AsmLw(v1, RegGeter.SP, place);
 //                            load.insertBefore(instrHead);
@@ -946,12 +1032,17 @@ public class RegAlloc {
                         }
                         if (instrHead.regDef.contains(v)) {
                             AsmVirReg v2 = new AsmVirReg();
+                            downOperandMap.put(v2, downOperandMap.get(v));
                             for (int i = 0; i < instrHead.regDef.size(); i++) {
                                 if (instrHead.regDef.get(i) == v) {
                                     instrHead.changeDstReg(i, instrHead.regDef.get(i), v2);
                                 }
                             }
-                            storeOrLoadFromMemory(spillPlace, v2, instrHead, "store", 1);
+                            if (downOperandMap.containsKey(v) && downOperandMap.get(v).getPointerLevel() == 0) {
+                                storeOrLoadFromMemory(spillPlace, v2, instrHead, "store", 1);
+                            } else {
+                                storeDOrLoadDFromMemory(spillPlace, v2, instrHead, "store", 1);
+                            }
 //                            AsmImm12 place = new AsmImm12(spillPlace);
 //                            AsmSw store = new AsmSw(v2, RegGeter.SP, place);
 //                            store.insertAfter(instrHead);

@@ -57,8 +57,9 @@ public class Compiler {
 
         // 运行后端
         if (!arg.toSkipBackEnd()) {
-            AsmModule asmModule = new IrParser(program).parse();
-            RegAlloc alloc = RegAlloc.getInstance();
+            IrParser parser = new IrParser(program);
+            AsmModule asmModule = parser.parse();
+            RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
             alloc.run(asmModule);
             BackendPrinter backendPrinter = new BackendPrinter(asmModule, true, output);
             backendPrinter.printBackend();
@@ -143,8 +144,9 @@ public class Compiler {
         BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
         program.printIR(writer);
         writer.close();
-        AsmModule asmModule = new IrParser(program).parse();
-        RegAlloc alloc = RegAlloc.getInstance();
+        IrParser parser = new IrParser(program);
+        AsmModule asmModule = parser.parse();
+        RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
         alloc.run(asmModule);
         BackendPrinter backendPrinter = new BackendPrinter(asmModule,true);
         backendPrinter.printBackend();
