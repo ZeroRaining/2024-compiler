@@ -5,7 +5,6 @@ import backend.RegAlloc;
 import backend.itemStructure.AsmModule;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Program;
-import frontend.lexer.Token;
 import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;
 import frontend.syntax.Ast;
@@ -27,7 +26,9 @@ public class Compiler {
         long startTime = 0;
         long optimizeStartTime = 0;
         long optimizeEndTime = 0;
-        if (arg.toTime()) { startTime = System.currentTimeMillis(); }
+        if (arg.toTime()) {
+            startTime = System.currentTimeMillis();
+        }
         
         // 词法分析，得到 TokenList
         TokenList tokenList = Lexer.getInstance().lex(source);
@@ -37,24 +38,32 @@ public class Compiler {
         Program program = new Program(ast);
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
         DFG.doDFG(functions);
-
+        
         // 开启优化
-        if (arg.toTime()) { optimizeStartTime = System.currentTimeMillis(); }
+        if (arg.toTime()) {
+            optimizeStartTime = System.currentTimeMillis();
+        }
         if (arg.getOptLevel() == 1) {
             Mem2Reg.doMem2Reg(functions);
             DeadCodeRemove.doDeadCodeRemove(functions);
             GVN.doGVN(functions);
             OIS.doOIS(functions);
         }
-        if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
-        RemovePhi.removePhi(functions);
+        if (arg.toTime()) {
+            optimizeEndTime = System.currentTimeMillis();
+        }
+        
         // 打印 IR
         if (arg.toPrintIR()) {
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
             program.printIR(irWriter);
             irWriter.close();
         }
-
+        
+        if (arg.getOptLevel() == 1 && !arg.toSkipBackEnd()) {
+            RemovePhi.removePhi(functions);
+        }
+        
         // 运行后端
         if (!arg.toSkipBackEnd()) {
             IrParser parser = new IrParser(program);
@@ -75,82 +84,4 @@ public class Compiler {
             System.out.println("optimizingTime: " + optimizingTime + "ms");
         }
     }
-
-    public static void LexerTest() throws IOException {
-        //词法分析测试
-        FileInputStream in = new FileInputStream("lexerTest.txt");
-        BufferedInputStream source = new BufferedInputStream(in);
-        TokenList tokenList = Lexer.getInstance().lex(source);
-        while (tokenList.hasNext()) {
-            Token token = tokenList.getChar();
-            System.out.println(token.getType() + " " + token.getContent());
-        }
-    }
-
-    public static void ParserTest() throws IOException {
-        //语法分析测试
-        FileInputStream in = new FileInputStream("in.sy");
-        BufferedInputStream source = new BufferedInputStream(in);
-        TokenList tokenList = Lexer.getInstance().lex(source);
-        Ast ast = new Parser(tokenList).parseAst();
-        System.out.println(ast);
-    }
-
-    public static void IRTest() throws IOException {
-        //语法分析测试
-        FileInputStream in = new FileInputStream("in.sy");
-        BufferedInputStream source = new BufferedInputStream(in);
-        TokenList tokenList = Lexer.getInstance().lex(source);
-        Ast ast = new Parser(tokenList).parseAst();
-        Program program = new Program(ast);
-        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
-        DFG.doDFG(functions);
-        Mem2Reg.doMem2Reg(functions);
-        BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
-        program.printIR(writer);
-        writer.close();
-    }
-
-    public static void CodeGenTest() throws IOException {
-        //语法分析测试
-        FileInputStream in = new FileInputStream("in.sy");
-        BufferedInputStream source = new BufferedInputStream(in);
-        TokenList tokenList = Lexer.getInstance().lex(source);
-        Ast ast = new Parser(tokenList).parseAst();
-        Program program = new Program(ast);
-        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
-        DFG.doDFG(functions);
-        //Mem2Reg.doMem2Reg(functions);
-        BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
-        program.printIR(writer);
-        writer.close();
-
-        //代码生成测试
-        AsmModule asmModule = new IrParser(program).parse();
-        BackendPrinter backendPrinter = new BackendPrinter(asmModule,false);
-        backendPrinter.printBackend();
-    }
-
-    public static void RegAllocTest() throws IOException {
-        //
-        FileInputStream in = new FileInputStream("in.sy");
-        BufferedInputStream source = new BufferedInputStream(in);
-        TokenList tokenList = Lexer.getInstance().lex(source);
-        Ast ast = new Parser(tokenList).parseAst();
-        Program program = new Program(ast);
-        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
-        DFG.doDFG(functions);
-        //Mem2Reg.doMem2Reg(functions);
-        BufferedWriter writer = new BufferedWriter(new FileWriter("out.ll"));
-        program.printIR(writer);
-        writer.close();
-        IrParser parser = new IrParser(program);
-        AsmModule asmModule = parser.parse();
-        RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
-        alloc.run(asmModule);
-        BackendPrinter backendPrinter = new BackendPrinter(asmModule,true);
-        backendPrinter.printBackend();
-    }
 }
-
-//
