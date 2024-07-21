@@ -419,12 +419,12 @@ public class RegAlloc {
                                 function.addAllocaSize(4);
                                 newAllocSize += 4;
                                 storeOrLoadFromMemory(spillPlace, save, instrHead, "store", 0);
-                                storeOrLoadFromMemory(spillPlace, save, instrHead, "load", 1);
+                                storeOrLoadFromMemory(spillPlace, save, (AsmInstr) instrHead.getNext(), "load", 1);
                             } else {
                                 function.addAllocaSize(8);
                                 newAllocSize += 8;
                                 storeDOrLoadDFromMemory(spillPlace, save, instrHead, "store", 0);
-                                storeDOrLoadDFromMemory(spillPlace, save, instrHead, "load", 1);
+                                storeDOrLoadDFromMemory(spillPlace, save, (AsmInstr) instrHead.getNext(), "load", 1);
                             }
                         }
                         if (FI == 1 && ((beColored <= 39 && beColored >= 32) || (beColored >= 42 && beColored <= 49) || (beColored >= 60 && beColored <= 63))) {
@@ -432,7 +432,7 @@ public class RegAlloc {
                             function.addAllocaSize(4);
                             newAllocSize += 4;
                             storeOrLoadFromMemory(spillPlace, save, instrHead, "store", 0);
-                            storeOrLoadFromMemory(spillPlace, save, instrHead, "load", 1);
+                            storeOrLoadFromMemory(spillPlace, save, (AsmInstr) instrHead.getNext(), "load", 1);
                         }
                     }
                 }
