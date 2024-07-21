@@ -31,18 +31,15 @@ public abstract class Cmp extends Instruction {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        boolean notOk = true;
         if (op1 == from) {
             op1 = to;
-            notOk = false;
+            return;
         }
         if (op2 == from) {
             op2 = to;
-            notOk = false;
+            return;
         }
-        if (notOk) {
-            throw new RuntimeException();
-        }
+        throw new RuntimeException();
     }
 
     public CmpCond getCond() {

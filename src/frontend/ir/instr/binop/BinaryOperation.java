@@ -43,16 +43,12 @@ public abstract class BinaryOperation extends Instruction {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        boolean ok = false;
         if (op1 == from) {
             op1 = to;
-            ok = true;
+            return;
         }
         if (op2 == from) {
             op2 = to;
-            ok = true;
-        }
-        if (ok) {
             return;
         }
         throw new RuntimeException();
