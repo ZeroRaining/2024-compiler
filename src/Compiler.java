@@ -37,6 +37,7 @@ public class Compiler {
         // 生成 IR
         Program program = new Program(ast);
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
+        DeadBlockRemove.execute(functions);
         DFG.doDFG(functions);
         
         // 开启优化
@@ -49,6 +50,9 @@ public class Compiler {
             OIS.doOIS(functions);
             OISR.doOISR(functions);
             GVN.doGVN(functions);
+            SimplifyBranch.execute(functions);
+            MergeBlock.execute(functions);
+            DeadBlockRemove.execute(functions);
         }
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();

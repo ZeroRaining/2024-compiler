@@ -13,7 +13,6 @@ import java.util.*;
 public class DFG {
     public static void doDFG(HashSet<Function> functions) {
         for (Function function : functions) {
-            removeBlk(function);
             makeDoms(function);
             makeIDoms(function);
             makeDF(function);
@@ -96,59 +95,5 @@ public class DFG {
             }
         }
     }
-
-    private static void dfs4remove(BasicBlock block) {
-        if (block.getBeginUse() == null) {
-            Instruction instr = block.getEndInstr();
-            block.removeFromList();
-            //把我用到的所有block的use信息删掉
-            if (instr instanceof JumpInstr) {
-                dfs4remove(((JumpInstr) instr).getTarget());
-            } else if (instr instanceof BranchInstr) {
-                dfs4remove(((BranchInstr) instr).getThenTarget());
-                dfs4remove(((BranchInstr) instr).getElseTarget());
-            }
-        }
-    }
-
-    private static void removeBlk(Function function) {
-        BasicBlock secondBlk = (BasicBlock) function.getBasicBlocks().getHead().getNext();
-//        HashMap<BasicBlock, HashSet<BasicBlock>> pres = new HashMap<>();
-//        HashMap<BasicBlock, HashSet<BasicBlock>> sucs = new HashMap<>();
-        //删除不要的块
-        while (secondBlk != null) {
-            dfs4remove(secondBlk);
-            secondBlk = (BasicBlock) secondBlk.getNext();
-        }
-
-//        //初始化前驱后继
-//        BasicBlock tmpBlk = (BasicBlock) function.getBasicBlocks().getHead();
-//        while (tmpBlk != null) {
-//            pres.put(tmpBlk, new HashSet<>());
-//            sucs.put(tmpBlk, new HashSet<>());
-//            tmpBlk = (BasicBlock) tmpBlk.getNext();
-//        }
-//
-//        //遍历所有块，建立前驱后继关系
-//        Iterator<CustomList.Node> blks = function.getBasicBlocks().iterator();
-//        while (blks.hasNext()) {
-//            BasicBlock block = (BasicBlock) blks.next();
-//            Use use = block.getBeginUse();
-//            for (;use != null; use = (Use) use.getNext()) {
-//                BasicBlock userBlk = use.getUser().getParentBB();
-//                pres.get(block).add(userBlk);
-//                sucs.get(userBlk).add(block);
-//            }
-//        }
-//
-//        blks = function.getBasicBlocks().iterator();
-//        while (blks.hasNext()) {
-//            BasicBlock block = (BasicBlock) blks.next();
-//            block.setPres(pres.get(block));
-//            block.setSucs(sucs.get(block));
-//        }
-    }
-
-
 
 }
