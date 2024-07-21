@@ -148,7 +148,7 @@ public class RegAlloc {
                 }
             }
             allocAndRecycleSP(function);
-            deleteMove(function);
+            //deleteMove(function);
         }
 
     }

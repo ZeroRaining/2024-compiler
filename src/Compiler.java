@@ -52,9 +52,9 @@ public class Compiler {
             GVN.doGVN(functions);
             SimplifyBranch.execute(functions);
             MergeBlock.execute(functions);
-            DeadBlockRemove.execute(functions);
+//            DeadBlockRemove.execute(functions);
             //makeDFG
-            RemoveUseLessPhi.execute(functions);
+//            RemoveUseLessPhi.execute(functions);
 //            SimplifyBranch.execute(functions);
 //            MergeBlock.execute(functions);
 //            DeadBlockRemove.execute(functions);

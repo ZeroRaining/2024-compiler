@@ -2,6 +2,7 @@ package midend.SSA;
 
 import Utils.CustomList;
 import arg.Arg;
+import frontend.ir.Use;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.terminator.JumpInstr;
@@ -54,8 +55,8 @@ public class MergeBlock {
                     last.linked(nextBlk.getInstructions().getHead());
                     CustomList ins = new CustomList();
                     blk.setInstructions(ins);
-                    blk.replaceUseTo(nextBlk);
                 }
+                blk.replaceUseTo(nextBlk);
                 blk.removeFromList();
             }
             blk = (BasicBlock) blk.getNext();
