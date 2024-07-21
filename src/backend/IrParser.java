@@ -951,6 +951,9 @@ public class IrParser {
                 AsmMove asmMove = new AsmMove(dst, RegGeter.AregsFloat.get(0));
                 asmBlock.addInstrTail(asmMove);
             }
+        } else {
+            AsmMove asmMove = new AsmMove(ZERO, ZERO);
+            asmBlock.addInstrTail(asmMove);
         }
     }
 
