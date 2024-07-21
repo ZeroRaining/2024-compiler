@@ -109,7 +109,7 @@ public class IrParser {
             asmModule.addFunction(asmFunction);
             funcMap.put(f, asmFunction);
             for (Node bb : f.getBasicBlocks()) {
-                AsmBlock asmBlock = new AsmBlock(f.getName() + "_" + ((BasicBlock) bb).value2string(),  ((BasicBlock) bb).getDepth());
+                AsmBlock asmBlock = new AsmBlock(f.getName() + "_" + ((BasicBlock) bb).value2string(), ((BasicBlock) bb).getDepth());
                 asmFunction.addBlock(asmBlock);
                 blockMap.put((BasicBlock) bb, asmBlock);
             }
@@ -397,7 +397,7 @@ public class IrParser {
         //dst                    addr
         AsmBlock asmBlock = blockMap.get(bb);
         Symbol addr = instr.getSymbol();
-        if (addr.isGlobal()) {
+        if (instr.getPtr() == null && addr.isGlobal()) {
             AsmOperand laReg = genTmpReg(f);
             AsmOperand dst = parseOperand(instr, 0, f, bb);
             AsmOperand src = parseGlobalToOperand(addr, bb);
@@ -593,7 +593,7 @@ public class IrParser {
                 AsmOperand left = parseOperand(op1, 0, f, bb);
                 AsmOperand right = parseOperand(op2, 12, f, bb);
                 AsmOperand tmp = genTmpReg(f);
-                if (left instanceof AsmImm12) {
+                if (right instanceof AsmImm12) {
                     AsmSlti asmSlti = new AsmSlti(tmp, left, right);
                     asmBlock.addInstrTail(asmSlti);
                 } else {
