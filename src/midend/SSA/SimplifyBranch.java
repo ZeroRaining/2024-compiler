@@ -24,7 +24,29 @@ public class SimplifyBranch {
             }
         }
     }
-
+    //会出现两个块跳到同一个地方吗？//如果if内的语句为空？
+    private static void Simplify(Function function) {
+        BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
+        while (blk != null) {
+            Instruction last = blk.getEndInstr();
+            if (last instanceof BranchInstr) {
+                Value cond = ((BranchInstr) last).getCond();
+                if (cond instanceof ConstBool) {
+                    if (cond.getNumber().intValue() == 1) {
+                        blk.addInstruction(new JumpInstr(((BranchInstr) last).getThenTarget()));
+                    } else if (cond.getNumber().intValue() == 0) {
+                        blk.addInstruction(new JumpInstr(((BranchInstr) last).getElseTarget()));
+                    } else {
+                        throw new RuntimeException("unexpected cond value");
+                    }
+                    last.removeFromList();
+                    toBeContinue = true;
+                }
+            }
+            blk = (BasicBlock) blk.getNext();
+        }
+    }
+    //phi的block的setUse应该是要加的
     private static void removeUselessPhi(Function function) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         BasicBlock first = blk;
@@ -54,28 +76,5 @@ public class SimplifyBranch {
             blk = (BasicBlock) blk.getNext();
         }
     }
-
-    private static void Simplify(Function function) {
-        BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
-        while (blk != null) {
-            Instruction last = blk.getEndInstr();
-            if (last instanceof BranchInstr) {
-                Value cond = ((BranchInstr) last).getCond();
-                if (cond instanceof ConstBool) {
-                    if (cond.getNumber().intValue() == 1) {
-                        blk.addInstruction(new JumpInstr(((BranchInstr) last).getThenTarget()));
-                    } else if (cond.getNumber().intValue() == 0) {
-                        blk.addInstruction(new JumpInstr(((BranchInstr) last).getElseTarget()));
-                    } else {
-                        throw new RuntimeException("unexpected cond value");
-                    }
-                    last.removeFromList();
-                    toBeContinue = true;
-                }
-            }
-            blk = (BasicBlock) blk.getNext();
-        }
-    }
-
 
 }
