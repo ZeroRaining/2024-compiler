@@ -63,6 +63,9 @@ public class Arg {
                 asm = args[++i];
                 continue;
             }
+            if (arg.equals("-S")) {
+                continue;
+            }
             if (arg.equals("-mid")) {
                 skipBackEnd = true;
                 continue;

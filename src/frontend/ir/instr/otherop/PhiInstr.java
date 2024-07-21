@@ -78,6 +78,7 @@ public class PhiInstr extends Instruction {
         for (int i = 0; i < values.size(); i++) {
             if (values.get(i) == from) {
                 values.set(i, to);
+                 // todo return;
             }
         }
     }

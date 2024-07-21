@@ -100,7 +100,7 @@ public class RegAlloc {
                         AsmVirReg vreg1 = (AsmVirReg) vreg;
                         vreg1.color = color.get(vreg);
                     }
-                    LivenessAnalysis(function);//不确定是否要这样
+                    //不确定是否要这样
                     callerSave(function);
                     calleeSave(function);
                     allocRealReg(function);
@@ -761,7 +761,7 @@ public class RegAlloc {
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
             AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
-            HashSet<AsmOperand> live = new HashSet<>();
+            HashSet<AsmReg> live = new HashSet<>();
             live.addAll(blockHead.LiveOut);
             while (instrTail != null) {
 //                if (instrTail instanceof AsmMove  && ((AsmMove) instrTail).getSrc() instanceof AsmReg && ((AsmMove) instrTail).getDst() instanceof  AsmReg) {
@@ -792,12 +792,12 @@ public class RegAlloc {
 //                }
 
                 //live.addAll(instrTail.regDef);
-                for (AsmOperand D : instrTail.regDef) {
+                for (AsmReg D : instrTail.regDef) {
                     if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
                         live.add(D);
                     }
                 }
-                for (AsmOperand b : instrTail.regDef) {
+                for (AsmReg b : instrTail.regDef) {
                     if (CanBeAddToRun(b) || (b instanceof AsmPhyReg && FI == 0) || (b instanceof AsmFPhyReg && FI == 1)) {
                         for (AsmOperand l : live) {
                             AddEdge(b, l);
@@ -807,13 +807,17 @@ public class RegAlloc {
 
                 //live.addAll(instrTail.regUse);
                 live.removeAll(instrTail.regDef);
-                for (AsmOperand U : instrTail.regUse) {
+                for (AsmReg U : instrTail.regUse) {
                     if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) { //不确定是否要要算上预着色的，但应该要算，所以先按算的来/todo
                         live.add(U);
                     }
                 }
                 //删除无所谓
                 instrTail = (AsmInstr) instrTail.getPrev();
+                if (instrTail != null) {
+                    instrTail.LiveOut.clear();
+                    instrTail.LiveOut.addAll(live);
+                }
             }
             blockHead = (AsmBlock) blockHead.getNext();
         }

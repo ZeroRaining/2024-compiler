@@ -64,6 +64,13 @@ public class ReturnInstr extends Instruction {
             throw new RuntimeException();
         }
     }
+    //保证return块不会被删除
+    @Override
+    public void setParentBB(BasicBlock parentBB) {
+        super.setParentBB(parentBB);
+        setUse(parentBB);
+    }
+
     
     @Override
     public Value operationSimplify() {

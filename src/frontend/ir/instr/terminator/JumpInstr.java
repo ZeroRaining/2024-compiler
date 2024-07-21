@@ -50,7 +50,9 @@ public class JumpInstr extends Instruction {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        throw new RuntimeException("没有可以置换的 value");
+        if (Target == from) {
+            Target = (BasicBlock) to;
+        }
     }
     
     @Override
