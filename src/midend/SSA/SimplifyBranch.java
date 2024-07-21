@@ -31,8 +31,8 @@ public class SimplifyBranch {
             Instruction last = blk.getEndInstr();
             if (last instanceof BranchInstr) {
                 Value cond = ((BranchInstr) last).getCond();
-                last.removeFromList();
                 if (cond instanceof ConstBool) {
+                    last.removeFromList();
                     if (cond.getNumber().intValue() == 1) {
                         blk.addInstruction(new JumpInstr(((BranchInstr) last).getThenTarget()));
                     } else if (cond.getNumber().intValue() == 0) {
