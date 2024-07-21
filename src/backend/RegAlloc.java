@@ -148,10 +148,25 @@ public class RegAlloc {
                 }
             }
             allocAndRecycleSP(function);
+            deleteMove(function);
         }
 
     }
-
+    private void deleteMove(AsmFunction function) {
+        AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
+        while (blockHead != null) {
+            AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
+            while (instrHead != null) {
+                instrHead = (AsmInstr) instrHead.getNext();
+                if (instrHead instanceof AsmMove) {
+                    if (((AsmMove) instrHead).getDst() == ((AsmMove) instrHead).getSrc()) {
+                        instrHead.removeFromList();
+                    }
+                }
+            }
+            blockHead = (AsmBlock) blockHead.getNext();
+        }
+    }
     private void allocAndRecycleSP(AsmFunction function) {
         int offset = 0;
         offset = function.getWholeSize() - 8;
