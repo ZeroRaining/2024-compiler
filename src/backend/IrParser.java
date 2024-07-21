@@ -446,7 +446,7 @@ public class IrParser {
         //sw s0,0(s1)
         AsmBlock asmBlock = blockMap.get(bb);
         Symbol addr = instr.getSymbol();
-        if (addr.isGlobal()) {
+        if (instr.getPtr() == null && addr.isGlobal()) {
             AsmOperand laReg = genTmpReg(f);
             AsmOperand addrOp = parseGlobalToOperand(addr, bb);
             AsmLa asmLa = new AsmLa(laReg, addrOp);
