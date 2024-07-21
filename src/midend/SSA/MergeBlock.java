@@ -1,14 +1,14 @@
 package midend.SSA;
 
 import Utils.CustomList;
-import frontend.ir.Value;
+import arg.Arg;
 import frontend.ir.instr.Instruction;
-import frontend.ir.instr.terminator.BranchInstr;
+import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.terminator.JumpInstr;
-import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class MergeBlock {
@@ -16,6 +16,7 @@ public class MergeBlock {
         for (Function function : functions) {
             merge(function);
         }
+        RemoveUseLessPhi.execute(functions);
     }
 
     private static boolean check4merge(Instruction instr) {
@@ -45,9 +46,17 @@ public class MergeBlock {
                     nextBlk.getInstructions().addToHead(last);
                     last = tmp;
                 }
+                Instruction phi = (Instruction) nextBlk.getInstructions().getHead();
+                while (phi instanceof PhiInstr) {
+                    ArrayList<BasicBlock> prts = ((PhiInstr) phi).getPrtBlks();
+                    assert prts.size() == 1;
+                    phi.replaceUseTo(((PhiInstr) phi).getValues().get(0));
+                    phi.removeFromList();
+                    phi = (Instruction) phi.getNext();
+                }
                 blk.setInstructions(ins);
                 blk.replaceUseTo(nextBlk);
-                blk.removeFromList();
+//                blk.removeFromList();
             }
             blk = (BasicBlock) blk.getNext();
         }
