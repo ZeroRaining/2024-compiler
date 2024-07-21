@@ -53,9 +53,11 @@ public class Compiler {
             SimplifyBranch.execute(functions);
             MergeBlock.execute(functions);
             DeadBlockRemove.execute(functions);
+            //makeDFG
+//            RemoveUseLessPhi.execute(functions);
             SimplifyBranch.execute(functions);
-//            MergeBlock.execute(functions);
-//            DeadBlockRemove.execute(functions);
+            MergeBlock.execute(functions);
+            DeadBlockRemove.execute(functions);
         }
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
