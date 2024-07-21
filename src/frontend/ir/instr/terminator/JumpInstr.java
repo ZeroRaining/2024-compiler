@@ -27,6 +27,7 @@ public class JumpInstr extends Instruction {
         prt.getSucs().remove(Target);
         Target.getPres().remove(prt);
         super.removeFromList();
+        this.getParentBB().setRet(false);
     }
 
     public BasicBlock getTarget() {

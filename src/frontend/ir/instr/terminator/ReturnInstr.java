@@ -71,6 +71,11 @@ public class ReturnInstr extends Instruction {
         setUse(parentBB);
     }
 
+    @Override
+    public void removeFromList() {
+        super.removeFromList();
+        this.getParentBB().setRet(false);
+    }
     
     @Override
     public Value operationSimplify() {

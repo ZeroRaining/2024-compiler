@@ -31,6 +31,7 @@ public class SimplifyBranch {
             Instruction last = blk.getEndInstr();
             if (last instanceof BranchInstr) {
                 Value cond = ((BranchInstr) last).getCond();
+                last.removeFromList();
                 if (cond instanceof ConstBool) {
                     if (cond.getNumber().intValue() == 1) {
                         blk.addInstruction(new JumpInstr(((BranchInstr) last).getThenTarget()));
@@ -39,7 +40,6 @@ public class SimplifyBranch {
                     } else {
                         throw new RuntimeException("unexpected cond value");
                     }
-                    last.removeFromList();
                     toBeContinue = true;
                 }
             }
@@ -55,7 +55,7 @@ public class SimplifyBranch {
             while (instr instanceof PhiInstr) {
                 ArrayList<BasicBlock> prts = ((PhiInstr) instr).getPrtBlks();
                 for (int i = 0; i < prts.size(); i++) {
-                    if (prts.get(i).getBeginUse() == null && prts.get(i) != first) {
+                    if (!blk.getPres().contains(prts.get(i))) {
                         prts.remove(i);
                         ((PhiInstr) instr).getValues().remove(i);
                         i--;

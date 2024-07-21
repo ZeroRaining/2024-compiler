@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class BasicBlock extends Value {
-    private final CustomList instructions = new CustomList();
+    private CustomList instructions = new CustomList();
     private int labelCnt;
     private int depth;
     private boolean isRet;
@@ -39,6 +39,14 @@ public class BasicBlock extends Value {
         doms = new HashSet<>();
         iDoms = new HashSet<>();
         DF = new HashSet<>();
+    }
+
+    public void setInstructions(CustomList instructions) {
+        this.instructions = instructions;
+    }
+
+    public void setRet(boolean ret) {
+        isRet = ret;
     }
 
     public int getDepth() {
@@ -137,6 +145,7 @@ public class BasicBlock extends Value {
             isRet = true;
         } else if (instr instanceof BranchInstr) {
             ((BranchInstr) instr).setRelation(this);
+            isRet = true;
         }
     }
     

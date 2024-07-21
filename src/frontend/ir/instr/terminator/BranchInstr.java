@@ -29,7 +29,7 @@ public class BranchInstr extends Instruction {
     @Override
     public void removeFromList() {
         if (this.getParentBB() == null) {
-            throw new RuntimeException("why you dont have parent?");
+            throw new RuntimeException("why dont you have parent?");
         }
         BasicBlock prt = this.getParentBB();
         prt.getSucs().remove(thenTarget);
@@ -37,6 +37,7 @@ public class BranchInstr extends Instruction {
         prt.getSucs().remove(elseTarget);
         elseTarget.getPres().remove(prt);
         super.removeFromList();
+        this.getParentBB().setRet(false);
     }
 
     public Value getCond() {

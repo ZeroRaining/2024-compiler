@@ -170,12 +170,16 @@ public class CustomList implements Iterable<CustomList.Node> {
                 return;
             }
             if (this.prev != null) {
-                this.prev.next = this.next;
+                if (this.prev.next == this) {
+                    this.prev.next = this.next;
+                }
             } else {
                 this.parent.head = this.next;
             }
             if (this.next != null) {
-                this.next.prev = this.prev;
+                if (this.next.prev == this) {
+                    this.next.prev = this.prev;
+                }
             } else {
                 this.parent.tail = this.prev;
             }

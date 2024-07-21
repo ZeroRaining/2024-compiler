@@ -1,5 +1,6 @@
 package midend.SSA;
 
+import Utils.CustomList;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.terminator.BranchInstr;
@@ -17,36 +18,43 @@ public class MergeBlock {
         }
     }
 
+    private static boolean check4merge(Instruction instr) {
+        if (instr.getParentBB().getSucs().size() != 1) {
+            return false;
+        }
+        assert instr instanceof JumpInstr;
+        if (((JumpInstr) instr).getTarget().getPres().size() != 1) {
+            return false;
+        }
+        return true;
+    }
     private static void merge(Function function) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         //删除不要的块
         while (blk != null) {
             Instruction last = blk.getEndInstr();
-            if (last instanceof JumpInstr) {
-                Instruction tmp = last;
-                Instruction next = ((JumpInstr) tmp).getTarget().getEndInstr();
-                //tmp是最后一个只有一个jumpInstr的块的jump语句
-                //next为tmp的下一个块的最后一条语句，有可能为return
-                while (check4remove(next) && next instanceof JumpInstr) {
-                    tmp = next;
-                    next = ((JumpInstr) next).getTarget().getEndInstr();
+            CustomList ins = new CustomList();
+            ins.addToTail(last);
+            if (check4merge(last)) {
+                //效率太慢
+                BasicBlock nextBlk = ((JumpInstr) last).getTarget();
+                last = (Instruction) last.getPrev();
+                while (last != null) {
+                    Instruction tmp = (Instruction) last.getPrev();
+                    last.setParentBB(nextBlk);
+                    nextBlk.getInstructions().addToHead(last);
+                    last = tmp;
                 }
-                if (tmp != last) {
-                    last.modifyUse(((JumpInstr) last).getTarget(), ((JumpInstr) tmp).getTarget());
-                }
-                if (next.getParentBB().getPres().size() == 1
-                        && next instanceof ReturnInstr
-                        && last.getParentBB().getInstructions().getSize() == 1) {
-                    Value to = next.getParentBB();
-                    Value from = last.getParentBB();
-                    from.replaceUseTo(to);
-                    last.getParentBB().removeFromList();
-                }
+                blk.setInstructions(ins);
+                blk.replaceUseTo(nextBlk);
+                blk.removeFromList();
             }
             blk = (BasicBlock) blk.getNext();
         }
 
     }
+
+
 
     private static boolean check4remove(Instruction next) {
         if (next.getParentBB().getInstructions().getSize() != 1) {
@@ -56,12 +64,5 @@ public class MergeBlock {
             return false;
         }
         return true;
-//        for (BasicBlock suc : last.getParentBB().getSucs()) {
-//            for (BasicBlock pre : last.getParentBB().getSucs()) {
-//                tmp.getParentBB().getSucs().contains(suc);
-//                return false;
-//            }
-//        }
-//        return true;
     }
 }
