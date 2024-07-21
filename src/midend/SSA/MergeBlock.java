@@ -1,5 +1,6 @@
 package midend.SSA;
 
+import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
@@ -26,7 +27,9 @@ public class MergeBlock {
                 Instruction next = ((JumpInstr) tmp).getTarget().getEndInstr();
                 //tmp是最后一个只有一个jumpInstr的块的jump语句
                 //next为tmp的下一个块的最后一条语句，有可能为return
-                while (next instanceof JumpInstr && next.getParentBB().getInstructions().getSize() == 1) {
+                while (next instanceof JumpInstr
+                        && next.getParentBB().getInstructions().getSize() == 1
+                        && next.getParentBB().getUserSet().size() == 1) {
                     tmp = next;
                     next = ((JumpInstr) next).getTarget().getEndInstr();
                 }
@@ -34,6 +37,9 @@ public class MergeBlock {
                     last.modifyUse(((JumpInstr) last).getTarget(), ((JumpInstr) tmp).getTarget());
                 }
                 if (next instanceof ReturnInstr && last.getParentBB().getInstructions().getSize() == 1) {
+                    Value to = next.getParentBB();
+                    Value from = last.getParentBB();
+                    from.replaceUseTo(to);
                     last.getParentBB().removeFromList();
                 }
             }

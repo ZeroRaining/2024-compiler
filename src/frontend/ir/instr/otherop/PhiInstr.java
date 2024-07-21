@@ -2,6 +2,8 @@ package frontend.ir.instr.otherop;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstInt;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
 
@@ -93,10 +95,16 @@ public class PhiInstr extends Instruction {
         return null;
     }
 
-//    public boolean canSimplify() {
-//        Value value = values.get(0);
-//        for (Value value : values) {
-//
-//        }
-//    }
+    public boolean canSimplify() {
+        Value value = values.get(0);
+        if (!(value instanceof ConstValue)) {
+            return false;
+        }
+        for (Value other : values) {
+            if (value != other) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

@@ -27,12 +27,13 @@ public class SimplifyBranch {
 
     private static void removeUselessPhi(Function function) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
+        BasicBlock first = blk;
         while (blk != null) {
             Instruction instr = (Instruction) blk.getInstructions().getHead();
             while (instr instanceof PhiInstr) {
                 ArrayList<BasicBlock> prts = ((PhiInstr) instr).getPrtBlks();
                 for (int i = 0; i < prts.size(); i++) {
-                    if (prts.get(i).getBeginUse() == null) {
+                    if (prts.get(i).getBeginUse() == null && prts.get(i) != first) {
                         prts.remove(i);
                         ((PhiInstr) instr).getValues().remove(i);
                         i--;
@@ -42,7 +43,7 @@ public class SimplifyBranch {
                 if (prts.isEmpty()) {
                     instr.removeFromList();
                     toBeContinue = true;
-                } else if (prts.size() == 1) {
+                } else if (((PhiInstr) instr).canSimplify()) {
                     Value value = ((PhiInstr) instr).getValues().get(0);
                     instr.replaceUseTo(value);
                     instr.removeFromList();
