@@ -209,5 +209,21 @@ public class CustomList implements Iterable<CustomList.Node> {
         public CustomList getParent() {
             return parent;
         }
+
+        public void linked(Node oldHead) {
+            oldHead.parent.size = (oldHead.parent.size + this.parent.size);
+            this.next = oldHead;
+            oldHead.prev = this;
+            oldHead.parent.head = this.parent.head;
+            Node node = this;
+            while (node != null) {
+                setParent(oldHead);
+                node = node.getPrev();
+            }
+        }
+
+        public void setParent(Node node) {
+            this.parent = node.parent;
+        }
     }
 }
