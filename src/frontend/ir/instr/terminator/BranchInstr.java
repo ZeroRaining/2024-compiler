@@ -73,8 +73,16 @@ public class BranchInstr extends Instruction {
             condition = to;
         } else if (thenTarget == from) {
             thenTarget = (BasicBlock) to;
+            this.getParentBB().getSucs().add((BasicBlock) to);
+            this.getParentBB().getSucs().remove((BasicBlock) to);
+            ((BasicBlock) to).getPres().add(this.getParentBB());
+            ((BasicBlock) from).getPres().remove(this.getParentBB());
         } else if (elseTarget == from) {
             elseTarget = (BasicBlock) to;
+            this.getParentBB().getSucs().add((BasicBlock) to);
+            this.getParentBB().getSucs().remove((BasicBlock) to);
+            ((BasicBlock) to).getPres().add(this.getParentBB());
+            ((BasicBlock) from).getPres().remove(this.getParentBB());
         } else {
             throw new RuntimeException();
         }

@@ -52,6 +52,10 @@ public class JumpInstr extends Instruction {
     public void modifyValue(Value from, Value to) {
         if (Target == from) {
             Target = (BasicBlock) to;
+            this.getParentBB().getSucs().add((BasicBlock) to);
+            this.getParentBB().getSucs().remove((BasicBlock) from);
+            ((BasicBlock) to).getPres().add(this.getParentBB());
+            ((BasicBlock) from).getPres().remove(this.getParentBB());
         }
     }
     

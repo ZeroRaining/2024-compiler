@@ -304,6 +304,9 @@ public class Procedure {
         }
         Ast.LVal lVal = item.getLVal();
         Symbol left = symTab.getSym(lVal.getName());
+        if (left.isConstant()) {
+            throw new RuntimeException("const 对象不应该被赋值");
+        }
         Value right = calculateExpr(item.getExp(), symTab, false);
         right = toSameType(right, left);
         if (left.isArray()) {
