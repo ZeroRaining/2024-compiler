@@ -72,6 +72,13 @@ public abstract class BinaryOperation extends Instruction {
     
     @Override
     public String myHash() {
+        if (this instanceof Swappable) {
+            boolean bothIns = op1 instanceof Instruction && op2 instanceof Instruction;
+            boolean outOfOrder = op1.value2string().compareTo(op2.value2string()) > 0;
+            if (bothIns && outOfOrder) {
+                return op2.value2string() + op1.value2string() + operationName;
+            }
+        }
         return op1.value2string() + op2.value2string() + operationName;
     }
 }

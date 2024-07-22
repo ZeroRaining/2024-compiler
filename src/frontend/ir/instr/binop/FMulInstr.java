@@ -4,7 +4,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
 
-public class FMulInstr extends BinaryOperation{
+public class FMulInstr extends BinaryOperation implements Swappable {
     public FMulInstr(int result, Value op1, Value op2) {
         super(result, op1, op2, "fmul", DataType.FLOAT);
         assert op1.getDataType() == DataType.FLOAT;
