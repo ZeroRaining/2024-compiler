@@ -138,13 +138,13 @@ public class GEPInstr extends MemoryOperation {
 
     public List<Value> getWholeIndexList() {
         List<Value> wholeIndexList = new ArrayList<>();
+        wholeIndexList.addAll(indexList);
         for (int i = 0; i < symbol.getLimitList().size() - indexList.size(); i++) {
             wholeIndexList.add(new ConstInt(0));
         }
-        wholeIndexList.addAll(indexList);
         return wholeIndexList;
     }
-    
+
     @Override
     public String myHash() {
         return this.value2string();

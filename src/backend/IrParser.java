@@ -22,6 +22,7 @@ import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.terminator.*;
 import frontend.ir.instr.memop.*;
 import frontend.ir.structure.BasicBlock;
+import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Program;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
@@ -174,6 +175,7 @@ public class IrParser {
                 iargs.add(arg);
             }
         }
+        asmFunction.addIntAndFloatFunctions(iargs,fargs);
         int iargnum = Math.min(iargs.size(), 8);
         int fargnum = Math.min(fargs.size(), 8);
         for (int i = 0; i < iargnum; i++) {
@@ -991,7 +993,7 @@ public class IrParser {
         AsmBlock asmBlock = blockMap.get(bb);
         List<Value> indexList = instr.getWholeIndexList();
         AsmOperand base;
-        if (instr.getSymbol().isGlobal()) {
+        if (instr.getPtrVal() instanceof GlobalObject) {
             base = parseGlobalToOperand(instr.getSymbol(), bb);
         } else {
             base = parseOperand(instr.getPtrVal(), 0, f, bb);

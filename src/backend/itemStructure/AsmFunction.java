@@ -2,9 +2,12 @@ package backend.itemStructure;
 
 import Utils.CustomList;
 import backend.regs.AsmReg;
+import frontend.ir.Value;
 import frontend.ir.structure.BasicBlock;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 public class AsmFunction {
     String name;
@@ -15,6 +18,8 @@ public class AsmFunction {
     private int raSize = 0;
     private int argsSize = 0;
     boolean isTail = false;
+    List<Value> iargs = new ArrayList<>();
+    List<Value> fargs = new ArrayList<>();
 
     public AsmFunction(String name) {
         this.name = name;
@@ -60,6 +65,7 @@ public class AsmFunction {
     public int getRaSize() {
         return raSize;
     }
+
     public String getName() {
         return name;
     }
@@ -67,6 +73,7 @@ public class AsmFunction {
     public CustomList getBlocks() {
         return blocks;
     }
+
     public AsmBlock getTailBlock() {
         return (AsmBlock) blocks.getTail();
     }
@@ -74,6 +81,11 @@ public class AsmFunction {
     public String toString() {
         //应该无法用到
         return null;
+    }
+
+    public void addIntAndFloatFunctions(List<Value> iargs, List<Value> fargs) {
+        this.iargs.addAll(iargs);
+        this.fargs.addAll(fargs);
     }
 
 }
