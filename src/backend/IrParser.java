@@ -683,7 +683,7 @@ public class IrParser {
                     asmBlock.addInstrTail(asmSub);
                 }
             } else if (isTwoTimes(Math.abs(value) + 1)) {
-                int absValue = Math.abs(value + 1);
+                int absValue = Math.abs(value) + 1;
                 int shift = -1;
                 while (absValue != 0) {
                     absValue >>= 1;
@@ -708,6 +708,7 @@ public class IrParser {
                 asmMul.isWord = true;
                 asmBlock.addInstrTail(asmMul);
             }
+            //TODO:纯常数相乘优化
         } else {
             AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
             AsmOperand dst = parseOperand(instr, 0, f, bb);
