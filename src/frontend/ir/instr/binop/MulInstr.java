@@ -8,18 +8,33 @@ import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 
-public class MulInstr extends BinaryOperation {
+public class MulInstr extends BinaryOperation implements Swappable {
     public boolean is64 = false;
     public MulInstr(int result, Value op1, Value op2) {
         super(result, op1, op2, "mul", DataType.INT);
         assert op1.getDataType() == DataType.INT;
         assert op2.getDataType() == DataType.INT;
+        trySwapOp();
     }
 
     public void swapOp() {
         Value tmp = op1;
         op1 = op2;
         op2 = tmp;
+    }
+    
+    public void trySwapOp() {
+        if (op1 instanceof ConstInt && !(op2 instanceof ConstInt)) {
+            Value tmp = op1;
+            op1 = op2;
+            op2 = tmp;
+        }
+    }
+    
+    @Override
+    public void modifyValue(Value from, Value to) {
+        super.modifyValue(from, to);
+        trySwapOp();
     }
     
     @Override
@@ -75,12 +90,8 @@ public class MulInstr extends BinaryOperation {
     public ArrayList<Instruction> strengthReduction(Function function) {
         ArrayList<Instruction> res = new ArrayList<>();
         
-        if (op2 instanceof ConstInt && !(op1 instanceof ConstInt)) {
-            swapOp();
-        }
-        
-        if (op1 instanceof ConstInt) {
-            int intValue = op1.getNumber().intValue();
+        if (op2 instanceof ConstInt) {
+            int intValue = op2.getNumber().intValue();
             int absValue = Math.abs(intValue);
             
             Value abs = null;
@@ -88,9 +99,9 @@ public class MulInstr extends BinaryOperation {
             while (absValue > 0) {
                 if ((absValue & 1) > 0) {
                     if (exp == 0) {
-                        abs = op2;
+                        abs = op1;
                     } else {
-                        ShlInstr newShl = new ShlInstr(function.getAndAddRegIndex(), op2, new ConstInt(exp));
+                        ShlInstr newShl = new ShlInstr(function.getAndAddRegIndex(), op1, new ConstInt(exp));
                         res.add(newShl);
                         if (abs == null) {
                             abs = newShl;

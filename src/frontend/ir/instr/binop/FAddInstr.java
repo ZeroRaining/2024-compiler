@@ -4,7 +4,7 @@ import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 
-public class FAddInstr extends BinaryOperation {
+public class FAddInstr extends BinaryOperation implements Swappable {
     public FAddInstr(int result, Value op1, Value op2) {
         super(result, op1, op2, "fadd", DataType.FLOAT);
         assert op1.getDataType() == DataType.FLOAT;
