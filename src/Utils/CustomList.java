@@ -170,17 +170,13 @@ public class CustomList implements Iterable<CustomList.Node> {
                 return;
             }
             if (this.prev != null) {
-                if (this.prev.next == this) {
-                    this.prev.next = this.next;
-                }
+                this.prev.next = this.next;
             } else {
                 this.parent.head = this.next;
             }
             if (this.next != null) {
-                if (this.next.prev == this) {
-                    this.next.prev = this.prev;
-                }
-            } else {
+                this.next.prev = this.prev;
+             } else {
                 this.parent.tail = this.prev;
             }
             this.parent.decrementSize();
@@ -217,7 +213,7 @@ public class CustomList implements Iterable<CustomList.Node> {
             oldHead.parent.head = this.parent.head;
             Node node = this;
             while (node != null) {
-                setParent(oldHead);
+                node.setParent(oldHead);
                 node = node.getPrev();
             }
         }
