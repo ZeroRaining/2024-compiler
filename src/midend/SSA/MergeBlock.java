@@ -32,7 +32,7 @@ public class MergeBlock {
     }
 
     private static void merge(Function function) {
-        BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
+        BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead().getNext();
         //合并不要的块
         while (blk != null) {
             Instruction last = blk.getEndInstr();
