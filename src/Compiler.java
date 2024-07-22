@@ -52,12 +52,12 @@ public class Compiler {
             GVN.doGVN(functions);
             SimplifyBranch.execute(functions);
             MergeBlock.execute(functions);
-            DeadBlockRemove.execute(functions);
+//            DeadBlockRemove.execute(functions);
             //makeDFG
 //            RemoveUseLessPhi.execute(functions);
-            SimplifyBranch.execute(functions);
-            MergeBlock.execute(functions);
-            DeadBlockRemove.execute(functions);
+//            SimplifyBranch.execute(functions);
+//            MergeBlock.execute(functions);
+//            DeadBlockRemove.execute(functions);
         }
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();

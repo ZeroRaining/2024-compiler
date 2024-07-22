@@ -6,7 +6,7 @@ import frontend.ir.constvalue.ConstInt;
 
 import java.util.ArrayList;
 
-public class AddInstr extends BinaryOperation {
+public class AddInstr extends BinaryOperation implements Swappable {
     public AddInstr(int result, Value op1, Value op2) {
         super(result, op1, op2, "add", DataType.INT);
         assert op1.getDataType() == DataType.INT;

@@ -2,6 +2,7 @@ package midend.SSA;
 
 import Utils.CustomList;
 import arg.Arg;
+import frontend.ir.Use;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.terminator.JumpInstr;
@@ -29,23 +30,17 @@ public class MergeBlock {
         }
         return true;
     }
+
     private static void merge(Function function) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
-        //删除不要的块
+        //合并不要的块
         while (blk != null) {
             Instruction last = blk.getEndInstr();
-            CustomList ins = new CustomList();
-            ins.addToTail(last);
+
             if (check4merge(last)) {
+                last.removeFromList();
                 //效率太慢
                 BasicBlock nextBlk = ((JumpInstr) last).getTarget();
-                last = (Instruction) last.getPrev();
-                while (last != null) {
-                    Instruction tmp = (Instruction) last.getPrev();
-                    last.setParentBB(nextBlk);
-                    nextBlk.getInstructions().addToHead(last);
-                    last = tmp;
-                }
                 Instruction phi = (Instruction) nextBlk.getInstructions().getHead();
                 while (phi instanceof PhiInstr) {
                     ArrayList<BasicBlock> prts = ((PhiInstr) phi).getPrtBlks();
@@ -54,9 +49,15 @@ public class MergeBlock {
                     phi.removeFromList();
                     phi = (Instruction) phi.getNext();
                 }
-                blk.setInstructions(ins);
+                last = (Instruction) last.getPrev();
+                if (last != null) {
+                    //link last <-> nextblk.fisrtInstr
+                    last.linked(nextBlk.getInstructions().getHead());
+                    CustomList ins = new CustomList();
+                    blk.setInstructions(ins);
+                }
                 blk.replaceUseTo(nextBlk);
-//                blk.removeFromList();
+                blk.removeFromList();
             }
             blk = (BasicBlock) blk.getNext();
         }

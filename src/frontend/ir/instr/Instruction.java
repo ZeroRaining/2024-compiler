@@ -77,4 +77,11 @@ public abstract class Instruction extends Value {
         super.insertAfter(node);
         this.parentBB = ((Instruction) node).parentBB;
     }
+
+    @Override
+    public void setParent(CustomList.Node node) {
+        assert node instanceof Instruction;
+        this.parentBB = ((Instruction) node).parentBB;
+        super.setParent(node);
+    }
 }
