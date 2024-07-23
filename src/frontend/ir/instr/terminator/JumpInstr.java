@@ -5,7 +5,7 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.instr.Instruction;
 
-public class JumpInstr extends Instruction {
+public class JumpInstr extends Terminator {
     private BasicBlock Target;
 
     public JumpInstr(BasicBlock Target) {
@@ -58,15 +58,5 @@ public class JumpInstr extends Instruction {
             ((BasicBlock) to).getPres().add(this.getParentBB());
             ((BasicBlock) from).getPres().remove(this.getParentBB());
         }
-    }
-    
-    @Override
-    public Value operationSimplify() {
-        return null;
-    }
-    
-    @Override
-    public String myHash() {
-        return Integer.toString(this.hashCode());
     }
 }
