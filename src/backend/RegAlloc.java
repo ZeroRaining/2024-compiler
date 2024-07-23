@@ -80,7 +80,7 @@ public class RegAlloc {
             while (true) {
                 initial();
                 LivenessAnalysis(function);
-                //findLoopDepth(function);
+                findLoopDepth(function);
                 build(function);
                 makeWorkList();
                 while (!simplifyWorklist.isEmpty() || !worklistMoves.isEmpty() ||
@@ -1012,20 +1012,20 @@ public class RegAlloc {
     }
 
     private void SelectSpill() {
-        AsmOperand m = spillWorkList.iterator().next();//目前是随机选，后面再换/todo/
-//        int small = -1;
-//        AsmOperand m = null;
-//        for (AsmOperand one: spillWorkList) {
-//            if (small == -1) {
-//                m = one;
-//                small = loopDepths.get(one);
-//            } else {
-//                if (loopDepths.get(one) * (degree.get(one) + 1 ) < loopDepths.get(m)  * (degree.get(m) + 1)) {
-//                    m = one;
-//                    small = loopDepths.get(one);
-//                }
-//            }
-//        }
+        //AsmOperand m = spillWorkList.iterator().next();//目前是随机选，后面再换/todo/
+        int small = -1;
+        AsmOperand m = null;
+        for (AsmOperand one: spillWorkList) {
+            if (small == -1) {
+                m = one;
+                small = loopDepths.get(one);
+            } else {
+                if (loopDepths.get(one) * (degree.get(one) + 1 ) < loopDepths.get(m)  * (degree.get(m) + 1)) {
+                    m = one;
+                    small = loopDepths.get(one);
+                }
+            }
+        }
         spillWorkList.remove(m);
         simplifyWorklist.add(m);
         FreezeMoves(m);
