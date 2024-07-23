@@ -138,7 +138,7 @@ public class RegAlloc {
                         AsmFVirReg vreg1 = (AsmFVirReg) vreg;
                         vreg1.color = color.get(vreg);
                     }
-                    LivenessAnalysis(function);//不确定是否要这样
+                    //LivenessAnalysis(function);//不确定是否要这样//删了
 
                     addOffSet += callerSave(function);
                     addOffSet += calleeSave(function);
@@ -845,6 +845,11 @@ public class RegAlloc {
 //                }
 
                 //live.addAll(instrTail.regDef);
+                if (instrTail !=  null) {
+                    if (instrTail instanceof AsmMove && FI == 1) {
+                        int i = 0;
+                    }
+                }
                 for (AsmReg D : instrTail.regDef) {
                     if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
                         live.add(D);
