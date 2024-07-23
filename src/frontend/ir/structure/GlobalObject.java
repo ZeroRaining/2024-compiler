@@ -14,6 +14,7 @@ public class GlobalObject extends Value {
         this.name = name;
         this.dataType = dataType;
         globalObjects.put(name, this);
+        this.pointerLevel = 1;
     }
     
     public static GlobalObject getGlbObj(String name) {
