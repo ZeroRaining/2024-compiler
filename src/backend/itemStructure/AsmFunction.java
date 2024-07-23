@@ -18,8 +18,8 @@ public class AsmFunction {
     private int raSize = 0;
     private int argsSize = 0;
     boolean isTail = false;
-    List<Value> iargs = new ArrayList<>();
-    List<Value> fargs = new ArrayList<>();
+    public List<Value> iargs = new ArrayList<>();
+    public List<Value> fargs = new ArrayList<>();
 
     public AsmFunction(String name) {
         this.name = name;

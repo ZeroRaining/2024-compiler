@@ -71,6 +71,7 @@ public class RegAlloc {
     public void run(AsmModule module) {
         PreColor();
         for (AsmFunction function : module.getFunctions()) {
+            int addOffSet = 0;
             if (((AsmBlock) function.getBlocks().getHead()).getInstrs().getSize() == 0) {
                 continue;
             }
@@ -101,12 +102,12 @@ public class RegAlloc {
                         vreg1.color = color.get(vreg);
                     }
                     //不确定是否要这样
-                    callerSave(function);
-                    calleeSave(function);
+                    addOffSet += callerSave(function);
+                    addOffSet += calleeSave(function);
                     allocRealReg(function);
                     break;
                 } else {
-                    RewriteProgram(function);
+                    addOffSet += RewriteProgram(function);
                 }
             }
 
@@ -139,15 +140,16 @@ public class RegAlloc {
                     }
                     LivenessAnalysis(function);//不确定是否要这样
 
-                    callerSave(function);
-                    calleeSave(function);
+                    addOffSet += callerSave(function);
+                    addOffSet += calleeSave(function);
                     allocRealReg(function);
                     break;
                 } else {
-                    RewriteProgram(function);
+                    addOffSet += RewriteProgram(function);
                 }
             }
             allocAndRecycleSP(function);
+            changeOffset(function,  addOffSet);
             //deleteMove(function);
         }
 
@@ -165,6 +167,42 @@ public class RegAlloc {
                 }
             }
             blockHead = (AsmBlock) blockHead.getNext();
+        }
+    }
+    private void changeOffset(AsmFunction function, int addOffSet) {
+        AsmBlock firstBlock = (AsmBlock) function.getBlocks().getHead();
+        AsmInstr firstInstr = (AsmInstr) firstBlock.getInstrs().getHead();
+        while (firstInstr != null) {
+            if (firstInstr instanceof AsmL) {
+                if (firstInstr instanceof AsmLw) {
+                    if (((AsmLw) firstInstr).isPassIarg == 1) {
+                       int originOffset =  ((AsmImm32)( ((AsmLw) firstInstr).getOffset())).getValue();
+                       int newOffset = addOffSet + originOffset;
+                       FI = 0;
+                       storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1);
+                       firstInstr.removeFromList();
+                    }
+                }
+                if (firstInstr instanceof AsmLd) {
+                    if (((AsmLd) firstInstr).isPassIarg == 1) {
+                        int originOffset =  ((AsmImm32)( ((AsmLd) firstInstr).getOffset())).getValue();
+                        int newOffset = addOffSet + originOffset;
+                        FI = 0;
+                        storeDOrLoadDFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1);
+                        firstInstr.removeFromList();
+                    }
+                }
+                if (firstInstr instanceof AsmFlw) {
+                    if (((AsmFlw) firstInstr).isPassIarg == 1) {
+                        int originOffset =  ((AsmImm32)( ((AsmFlw) firstInstr).getOffset())).getValue();
+                        int newOffset = addOffSet + originOffset;
+                        FI = 1;
+                        storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1);
+                        firstInstr.removeFromList();
+                    }
+                }
+            }
+            firstInstr = (AsmInstr) firstInstr.getNext();
         }
     }
     private void allocAndRecycleSP(AsmFunction function) {

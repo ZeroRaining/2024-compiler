@@ -4,12 +4,18 @@ import backend.itemStructure.AsmImm12;
 import backend.itemStructure.AsmOperand;
 
 public class AsmLd extends AsmL {
+    public int isPassIarg = 0;
     public AsmLd(AsmOperand dst, AsmOperand src, AsmOperand offset) {
         changeDst(dst);
         changeSrc(src);
         changeOffset(offset);
     }
-
+    public AsmLd(AsmOperand dst, AsmOperand src, AsmOperand offset, int isPassIarg) {
+        changeDst(dst);
+        changeSrc(src);
+        changeOffset(offset);
+        this.isPassIarg = isPassIarg;
+    }
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("ld\t");
