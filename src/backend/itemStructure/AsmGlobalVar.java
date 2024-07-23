@@ -13,6 +13,7 @@ public class AsmGlobalVar {
     public String name = null;
     private boolean isArray = false;
     private boolean isInit = false;
+    private boolean isFloat = false;
     private int value = 0;
     private int size = 4;
     private Symbol arraySymbol = null;
@@ -21,28 +22,28 @@ public class AsmGlobalVar {
 
     //已赋值数组
     public AsmGlobalVar(Symbol symbol) {
-        this.name = symbol.getName()+"_val";
+        this.name = symbol.getName() + "_val";
         this.isArray = true;
         this.isInit = true;
         this.arraySymbol = symbol;
-        this.size= 4 * ((ArrayInitVal) symbol.getInitVal()).getLimSize();
+        this.size = 4 * ((ArrayInitVal) symbol.getInitVal()).getLimSize();
     }
 
     //已赋值变量
     public AsmGlobalVar(String name, Number number) {
-        this.name = name+"_val";
+        this.name = name + "_val";
         this.isInit = true;
         this.value = number.intValue();
     }
 
     //未赋值变量
     public AsmGlobalVar(String name) {
-        this.name = name+"_val";
+        this.name = name + "_val";
     }
 
     //未赋值数组
     public AsmGlobalVar(String name, int size) {
-        this.name = name+"_val";
+        this.name = name + "_val";
         this.size = size;
     }
 
@@ -51,31 +52,42 @@ public class AsmGlobalVar {
         this.name = ".LC" + lcCnt;
         lcCnt++;
         this.isInit = true;
+        this.isFloat = true;
         this.value = floatvar;
     }
 
     public String toString() {
-        sb.append("\t.globl\t");
-        sb.append(name);
-        sb.append("\n");
-        if (isInit)
+        if (!isFloat) {
+            sb.append("\t.globl\t");
+            sb.append(name);
+            sb.append("\n");
+        }
+
+        if (isFloat) {
+            sb.append("\t.section .rodata\n");
+            sb.append("\t.align 3\n");
+        } else if (isInit) {
             sb.append("\t.data\n");
-        else
+        } else {
             sb.append("\t.bss\n");
-        sb.append("\t.type\t");
-        sb.append(name);
-        sb.append(",\t@object\n");
-        sb.append("\t.size\t");
-        sb.append(name);
-        sb.append(",\t");
-        sb.append(size);
-        sb.append("\n");
+        }
+
+        if(!isFloat){
+            sb.append("\t.type\t");
+            sb.append(name);
+            sb.append(",\t@object\n");
+            sb.append("\t.size\t");
+            sb.append(name);
+            sb.append(",\t");
+            sb.append(size);
+            sb.append("\n");
+        }
         sb.append(name);
         sb.append(":\n");
         if (isInit) {
             if (isArray) {
                 Value initVal = arraySymbol.getInitVal();
-                printArrayInit(initVal, ((ArrayInitVal) initVal).getLimSize() );
+                printArrayInit(initVal, ((ArrayInitVal) initVal).getLimSize());
             } else {
                 sb.append("\t.word\t");
                 sb.append(value);

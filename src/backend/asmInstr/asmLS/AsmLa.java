@@ -1,6 +1,7 @@
 package backend.asmInstr.asmLS;
 
 import backend.itemStructure.AsmOperand;
+import backend.regs.AsmFVirReg;
 
 public class AsmLa extends AsmL {
     public AsmLa(AsmOperand dst, AsmOperand src) {
@@ -10,7 +11,10 @@ public class AsmLa extends AsmL {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("la\t");
+        if(dst instanceof AsmFVirReg)
+            sb.append("fla\t");
+        else
+            sb.append("la\t");
         sb.append(dst);
         sb.append(",\t");
         sb.append(src);

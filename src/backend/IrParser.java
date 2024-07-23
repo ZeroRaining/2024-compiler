@@ -1115,8 +1115,8 @@ public class IrParser {
         AsmOperand label = getFloatLabel(intVal);
         AsmOperand tmpIntReg = genTmpReg(irFunction);
         //TODO:全局变量怎么加载局部地址？
-        AsmLa asmLa = new AsmLa(tmpIntReg, label);
-        blockMap.get(bb).addInstrTail(asmLa);
+        AsmLLa asmLLa = new AsmLLa(tmpIntReg, label);
+        blockMap.get(bb).addInstrTail(asmLLa);
         AsmFlw asmFlw = new AsmFlw(tmpReg, tmpIntReg, new AsmImm12(0));
         blockMap.get(bb).addInstrTail(asmFlw);
         return tmpReg;
