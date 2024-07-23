@@ -33,6 +33,10 @@ public class AsmL extends AsmInstr {
         return src;
     }
 
+    public AsmOperand getOffset() {
+        return offset;
+    }
+
     public void ReSetSrc(AsmOperand src) {
         this.src = src;
     }

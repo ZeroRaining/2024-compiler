@@ -190,62 +190,64 @@ public class IrParser {
             AsmMove asmMove = new AsmMove(asmOperand, RegGeter.AregsFloat.get(i));
             blockMap.get(bb).addInstrHead(asmMove);
         }
+//        AsmMove asmMove = new AsmMove(, new AsmImm32(offset));
+//        blockMap.get(bb).addInstrHead()
         int offset = asmFunction.getWholeSize();
         for (int i = 8; i < iargs.size(); i++) {
             Value arg = iargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
             if (arg.getPointerLevel() != 0) {
-                if (offset >= -2048 && offset <= 2047) {
-                    AsmLd asmLd = new AsmLd(asmOperand, RegGeter.SP, new AsmImm12(offset));
+//                if (offset >= -2048 && offset <= 2047) {
+                    AsmLd asmLd = new AsmLd(asmOperand, RegGeter.SP, new AsmImm32(offset) ,1);
                     blockMap.get(bb).addInstrHead(asmLd);
                     offset += 8;
-                } else {
-                    AsmOperand tmpMove = genTmpReg(f);
-                    AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
-                    AsmOperand tmpAdd = genTmpReg(f);
-                    AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
-                    AsmLd asmLd = new AsmLd(asmOperand, tmpAdd, new AsmImm12(0));
-                    blockMap.get(bb).addInstrHead(asmLd);
-                    blockMap.get(bb).addInstrHead(asmAdd);
-                    blockMap.get(bb).addInstrHead(asmMove);
-                    offset += 8;
-                }
+//                } else {
+//                    AsmOperand tmpMove = genTmpReg(f);
+//                    AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
+//                    AsmOperand tmpAdd = genTmpReg(f);
+//                    AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
+//                    AsmLd asmLd = new AsmLd(asmOperand, tmpAdd, new AsmImm12(0), 1);
+//                    blockMap.get(bb).addInstrHead(asmLd);
+//                    blockMap.get(bb).addInstrHead(asmAdd);
+//                    blockMap.get(bb).addInstrHead(asmMove);
+//                    offset += 8;
+//                }
             } else {
-                if (offset >= -2048 && offset <= 2047) {
-                    AsmLw asmLw = new AsmLw(asmOperand, RegGeter.SP, new AsmImm12(offset));
+//                if (offset >= -2048 && offset <= 2047) {
+                    AsmLw asmLw = new AsmLw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
                     blockMap.get(bb).addInstrHead(asmLw);
                     offset += 4;
-                } else {
-                    AsmOperand tmpMove = genTmpReg(f);
-                    AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
-                    AsmOperand tmpAdd = genTmpReg(f);
-                    AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
-                    AsmLw asmLw = new AsmLw(asmOperand, tmpAdd, new AsmImm12(0));
-                    blockMap.get(bb).addInstrHead(asmLw);
-                    blockMap.get(bb).addInstrHead(asmAdd);
-                    blockMap.get(bb).addInstrHead(asmMove);
-                    offset += 4;
-                }
+//                } else {
+//                    AsmOperand tmpMove = genTmpReg(f);
+//                    AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
+//                    AsmOperand tmpAdd = genTmpReg(f);
+//                    AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
+//                    AsmLw asmLw = new AsmLw(asmOperand, tmpAdd, new AsmImm12(0));
+//                    blockMap.get(bb).addInstrHead(asmLw);
+//                    blockMap.get(bb).addInstrHead(asmAdd);
+//                    blockMap.get(bb).addInstrHead(asmMove);
+//                    offset += 4;
+//                }
             }
         }
         for (int i = 8; i < fargs.size(); i++) {
             Value arg = fargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
-            if (offset >= -2048 && offset <= 2047) {
-                AsmFlw asmFlw = new AsmFlw(asmOperand, RegGeter.SP, new AsmImm12(offset));
+//            if (offset >= -2048 && offset <= 2047) {
+                AsmFlw asmFlw = new AsmFlw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
                 blockMap.get(bb).addInstrHead(asmFlw);
                 offset += 4;
-            } else {
-                AsmOperand tmpMove = genTmpReg(f);
-                AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
-                AsmOperand tmpAdd = genTmpReg(f);
-                AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
-                AsmFlw asmFlw = new AsmFlw(asmOperand, tmpAdd, new AsmImm12(0));
-                blockMap.get(bb).addInstrHead(asmFlw);
-                blockMap.get(bb).addInstrHead(asmAdd);
-                blockMap.get(bb).addInstrHead(asmMove);
-                offset += 4;
-            }
+//            } else {
+//                AsmOperand tmpMove = genTmpReg(f);
+//                AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
+//                AsmOperand tmpAdd = genTmpReg(f);
+//                AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
+//                AsmFlw asmFlw = new AsmFlw(asmOperand, tmpAdd, new AsmImm12(0));
+//                blockMap.get(bb).addInstrHead(asmFlw);
+//                blockMap.get(bb).addInstrHead(asmAdd);
+//                blockMap.get(bb).addInstrHead(asmMove);
+//                offset += 4;
+//            }
         }
 //        offset = asmFunction.getWholeSize() - 8;
 //        if (asmFunction.getRaSize() != 0) {
