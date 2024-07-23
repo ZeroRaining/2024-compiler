@@ -5,7 +5,7 @@ import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
 
-public class BranchInstr extends Instruction {
+public class BranchInstr extends Terminator {
     private Value condition;
     private BasicBlock thenTarget;
     private BasicBlock elseTarget;
@@ -87,16 +87,6 @@ public class BranchInstr extends Instruction {
         } else {
             throw new RuntimeException();
         }
-    }
-    
-    @Override
-    public Value operationSimplify() {
-        return null;
-    }
-    
-    @Override
-    public String myHash() {
-        return Integer.toString(this.hashCode());
     }
 }
 

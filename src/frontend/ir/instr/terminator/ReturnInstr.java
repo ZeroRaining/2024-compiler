@@ -5,7 +5,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 
-public class ReturnInstr extends Instruction {
+public class ReturnInstr extends Terminator {
     private final DataType returnType;
     private Value returnValue;
     
@@ -75,15 +75,5 @@ public class ReturnInstr extends Instruction {
     public void removeFromList() {
         super.removeFromList();
         this.getParentBB().setRet(false);
-    }
-    
-    @Override
-    public Value operationSimplify() {
-        return null;
-    }
-    
-    @Override
-    public String myHash() {
-        return Integer.toString(this.hashCode());
     }
 }
