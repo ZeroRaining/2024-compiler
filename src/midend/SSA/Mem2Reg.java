@@ -117,7 +117,7 @@ public class Mem2Reg {
                 ArrayList<Value> values = new ArrayList<>();
                 ArrayList<BasicBlock> prtBlks = new ArrayList<>();
                 for (BasicBlock blk : block.getPres()) {
-                    values.add(new EmptyInstr());
+                    values.add(new EmptyInstr(DataType.VOID));
                     prtBlks.add(blk);
                 }
                 Instruction phi = new PhiInstr(curRegCnt++, instr.getDataType(), values, prtBlks);
