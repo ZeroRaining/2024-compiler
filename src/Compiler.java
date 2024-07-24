@@ -2,6 +2,7 @@ import arg.Arg;
 import backend.BackendPrinter;
 import backend.IrParser;
 import backend.RegAlloc;
+import backend.RegAllocAno;
 import backend.itemStructure.AsmModule;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Program;
@@ -78,8 +79,10 @@ public class Compiler {
         if (!arg.toSkipBackEnd()) {
             IrParser parser = new IrParser(program);
             AsmModule asmModule = parser.parse();
-            RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
-            alloc.run(asmModule);
+//            RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
+//            alloc.run(asmModule);
+            RegAllocAno allocAno = RegAllocAno.getInstance(parser.downOperandMap);
+            allocAno.run(asmModule);
             BackendPrinter backendPrinter = new BackendPrinter(asmModule, true, output);
             backendPrinter.printBackend();
         }

@@ -7,37 +7,36 @@ import backend.asmInstr.asmTermin.AsmCall;
 import backend.itemStructure.*;
 import backend.regs.*;
 import frontend.ir.Value;
-import frontend.ir.structure.BasicBlock;
-import frontend.ir.structure.Function;
 
-import java.util.*;
-import java.util.stream.Collectors;
-/*todo*/ //load指令偏移量超过32位
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Stack;
 
-public class RegAlloc {
-    private RegAlloc(HashMap<AsmOperand, Value> downOperandMap) {
+public class RegAllocAno {
+    private RegAllocAno(HashMap<AsmOperand, Value> downOperandMap) {
         // 初始化逻辑
         this.downOperandMap = downOperandMap;
     }
 
     private HashMap<AsmOperand, Value> downOperandMap;
     // 单例模式下的私有静态成员变量
-    private static RegAlloc instance = null;
+    private static RegAllocAno instance = null;
 
     // 提供一个公共的静态方法，用于获取单例对象
-    public static synchronized RegAlloc getInstance(HashMap<AsmOperand, Value> downOperandMap) {
+    public static synchronized RegAllocAno getInstance(HashMap<AsmOperand, Value> downOperandMap) {
         if (instance == null) {
-            instance = new RegAlloc(downOperandMap);
+            instance = new RegAllocAno(downOperandMap);
         }
         return instance;
     }
 
     private int FI = 0;//0代表处理Int型，1代表处理Float型
     private static int K = 27;
+    private static int procedure = 1;
 
     HashMap<AsmOperand, Integer> loopDepths = new HashMap<>();
-    private HashSet<AsmOperand> S = new HashSet<>();//暂时未用到
-    private HashSet<AsmOperand> T = new HashSet<>();
+
 
     private HashMap<AsmReg, Integer> preColored = new HashMap<>();
 
@@ -51,6 +50,8 @@ public class RegAlloc {
     private HashMap<AsmOperand, Integer> color = new HashMap<>();
     //@1
     private HashSet<AsmOperand> all = new HashSet<>(); // 临时寄存器集合
+    private HashSet<AsmReg> S = new HashSet<>();//暂时未用到
+    private HashSet<AsmReg> T = new HashSet<>();
     private HashSet<AsmOperand> simplifyWorklist = new HashSet<>();//低度数的传送无关的节点
     private HashSet<AsmOperand> freezeWorkList = new HashSet<>();//低度数的传送有关的指令
     private HashSet<AsmOperand> spillWorkList = new HashSet<>();//高度数节点
@@ -75,10 +76,45 @@ public class RegAlloc {
             if (((AsmBlock) function.getBlocks().getHead()).getInstrs().getSize() == 0) {
                 continue;
             }
+            procedure = 1;
             K = 32;
             FI = 0;
             while (true) {
                 initial();
+                LivenessAnalysis(function);
+                findLoopDepth(function);
+                build(function);
+                makeWorkList();
+                while (!simplifyWorklist.isEmpty() || !worklistMoves.isEmpty() ||
+                        !freezeWorkList.isEmpty() || !spillWorkList.isEmpty()) {
+                    if (!simplifyWorklist.isEmpty()) {
+                        simplify();
+                    } else if (!worklistMoves.isEmpty()) {
+                        Coalesce();
+                    } else if (!freezeWorkList.isEmpty()) {
+                        Freeze();
+                    } else if (!spillWorkList.isEmpty()) {
+                        SelectSpill();
+                    }
+                }
+                AssignColors();
+                if (spilledNodes.isEmpty()) {
+                    for (AsmOperand vreg : color.keySet()) {
+                        AsmVirReg vreg1 = (AsmVirReg) vreg;
+                        vreg1.color = color.get(vreg);
+                    }
+                    //不确定是否要这样
+                    break;
+                } else {
+                    addOffSet += RewriteProgram(function);
+                }
+            }
+
+            procedure = 2;
+            K = 32;
+            FI = 0;
+            while (true) {
+                initial_();
                 LivenessAnalysis(function);
                 findLoopDepth(function);
                 build(function);
@@ -111,11 +147,45 @@ public class RegAlloc {
                 }
             }
 
+            procedure = 1;
             K = 64;
             FI = 1;
-
             while (true) {
                 initial();
+                LivenessAnalysis(function);
+                findLoopDepth(function);
+                build(function);
+                makeWorkList();
+                while (!simplifyWorklist.isEmpty() || !worklistMoves.isEmpty() ||
+                        !freezeWorkList.isEmpty() || !spillWorkList.isEmpty()) {
+                    if (!simplifyWorklist.isEmpty()) {
+                        simplify();
+                    } else if (!worklistMoves.isEmpty()) {
+                        Coalesce();
+                    } else if (!freezeWorkList.isEmpty()) {
+                        Freeze();
+                    } else if (!spillWorkList.isEmpty()) {
+                        SelectSpill();
+                    }
+                }
+                AssignColors();
+                if (spilledNodes.isEmpty()) {
+                    for (AsmOperand vreg : color.keySet()) {
+                        AsmFVirReg vreg1 = (AsmFVirReg) vreg;
+                        vreg1.color = color.get(vreg);
+                    }
+                    //LivenessAnalysis(function);//不确定是否要这样//删了
+                    break;
+                } else {
+                    addOffSet += RewriteProgram(function);
+                }
+            }
+
+            procedure = 2;
+            K = 64;
+            FI = 1;
+            while (true) {
+                initial_();
                 LivenessAnalysis(function);
                 findLoopDepth(function);
                 build(function);
@@ -176,11 +246,11 @@ public class RegAlloc {
             if (firstInstr instanceof AsmL) {
                 if (firstInstr instanceof AsmLw) {
                     if (((AsmLw) firstInstr).isPassIarg == 1) {
-                       int originOffset =  ((AsmImm32)( ((AsmLw) firstInstr).getOffset())).getValue();
-                       int newOffset = addOffSet + originOffset;
-                       FI = 0;
-                       storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
-                       firstInstr.removeFromList();
+                        int originOffset =  ((AsmImm32)( ((AsmLw) firstInstr).getOffset())).getValue();
+                        int newOffset = addOffSet + originOffset;
+                        FI = 0;
+                        storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
+                        firstInstr.removeFromList();
                     }
                 }
                 if (firstInstr instanceof AsmLd) {
@@ -658,6 +728,29 @@ public class RegAlloc {
         activeMoves.clear();
         loopDepths.clear();
     }
+    private void initial_() {
+        S.clear();
+        T.clear();
+        adjList.clear();
+        adjSet.clear();
+        degree.clear();
+        moveList.clear();
+        alias.clear();
+        all.clear();
+        simplifyWorklist.clear();
+        freezeWorkList.clear();
+        spillWorkList.clear();
+        spilledNodes.clear();
+        coalescedNodes.clear();
+        selectStack.clear();
+        coalescedMoves.clear();
+        constrainedMoves.clear();
+        frozenMoves.clear();
+        worklistMoves.clear();
+        activeMoves.clear();
+        loopDepths.clear();
+    }
+
 
     private void PreColor() {
         preColored.clear();
@@ -676,7 +769,7 @@ public class RegAlloc {
         GetUseAndDef(function);
         GetBlockLiveInAndOut(function);
         GetLiveInterval(function);
-        findLiveAtCall(function);//暂时未用到
+        FillST(function);
     }
 
     private void GetUseAndDef(AsmFunction function) {
@@ -790,40 +883,67 @@ public class RegAlloc {
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
             AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
-            instrTail.LiveOut.addAll(blockHead.LiveOut);
+            HashSet<AsmReg> live = new HashSet<>();
+            live.addAll(blockHead.LiveOut);
             while (instrTail != null) {
-                if (instrTail.getNext() != null) {
-                    instrTail.LiveOut.addAll(((AsmInstr) instrTail.getNext()).LiveIn);
+                for (AsmReg D : instrTail.regDef) {
+                    if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
+                        live.add(D);
+                    }
                 }
-                instrTail.LiveIn.addAll(instrTail.LiveOut);
-                instrTail.LiveIn.removeAll(instrTail.regDef);
+                live.removeAll(instrTail.regDef);
+                for (AsmReg U : instrTail.regUse) {
+                    if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) { //不确定是否要要算上预着色的，但应该要算，所以先按算的来/todo
+                        live.add(U);
+                    }
+                }
+                instrTail.LiveIn.clear();
+                instrTail.LiveIn.addAll(live);
+                instrTail = (AsmInstr) instrTail.getPrev();
+                if (instrTail != null) {
+                    instrTail.LiveOut.clear();
+                    instrTail.LiveOut.addAll(live);
+                }
+            }
+            blockHead = (AsmBlock) blockHead.getNext();
+        }
+    }
+
+
+    private void FillST(AsmFunction function) {
+        S.clear();
+        T.clear();
+        AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
+        while (blockHead != null) {
+            S.addAll(blockHead.LiveIn);
+            S.retainAll(all);
+            AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
+            while (instrTail != null) {
+                if (instrTail.getPrev() != null && ((AsmInstr)instrTail.getPrev()) instanceof AsmCall) {
+                    S.addAll(instrTail.LiveIn);
+                    S.retainAll(all);
+                }
                 instrTail = (AsmInstr) instrTail.getPrev();
             }
             blockHead = (AsmBlock) blockHead.getNext();
         }
-    }
-
-    private void findLiveAtCall(AsmFunction function) {
-        AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
-        while (blockHead != null) {
-            AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
-            while (instrHead != null) {
-                if (instrHead instanceof AsmCall) {
-                    S.addAll(instrHead.LiveOut);
-                }
-                instrHead = (AsmInstr) instrHead.getNext();
-            }
-            blockHead = (AsmBlock) blockHead.getNext();
+        for (AsmOperand x: all) {
+            if (!S.contains(x)) T.add((AsmReg) x);
         }
-        T.addAll(all);
-        T.removeAll(S);
     }
 
     private void build(AsmFunction function) {
         //初始化邻接表
-        for (AsmOperand one : all) {
-            adjList.put(one, new HashSet<>());
-            degree.put(one, 0);
+        if (procedure == 1) {
+            for (AsmOperand one : S) {
+                adjList.put(one, new HashSet<>());
+                degree.put(one, 0);
+            }
+        } else {
+            for (AsmOperand one : T) {
+                adjList.put(one, new HashSet<>());
+                degree.put(one, 0);
+            }
         }
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
@@ -886,29 +1006,37 @@ public class RegAlloc {
                 }
                 //删除无所谓
                 instrTail = (AsmInstr) instrTail.getPrev();
-                if (instrTail != null) {
-                    instrTail.LiveOut.clear();
-                    instrTail.LiveOut.addAll(live);
-                }
             }
             blockHead = (AsmBlock) blockHead.getNext();
         }
     }
 
     private void makeWorkList() {
-        for (AsmOperand n : all) {
-            if (degree.get(n) >= K) {
-                spillWorkList.add(n);
-            } else if (moveList.containsKey(n) && !moveList.get(n).isEmpty()) {
-                freezeWorkList.add(n);
-            } else {
-                simplifyWorklist.add(n);
+        if (procedure == 1) {
+            for (AsmOperand n : S) {
+                if (degree.get(n) >= K) {
+                    spillWorkList.add(n);
+                } else if (moveList.containsKey(n) && !moveList.get(n).isEmpty()) {
+                    freezeWorkList.add(n);
+                } else {
+                    simplifyWorklist.add(n);
+                }
+            }
+        } else {
+            for (AsmOperand n : T) {
+                if (degree.get(n) >= K) {
+                    spillWorkList.add(n);
+                } else if (moveList.containsKey(n) && !moveList.get(n).isEmpty()) {
+                    freezeWorkList.add(n);
+                } else {
+                    simplifyWorklist.add(n);
+                }
             }
         }
     }
 
     private void simplify() {
-    AsmOperand n =  simplifyWorklist.iterator().next();
+        AsmOperand n =  simplifyWorklist.iterator().next();
 //        AsmOperand n ;
 //        if (simplifyWorklist.size() > 20) {
 //             n = simplifyWorklist.iterator().next();
@@ -1051,10 +1179,12 @@ public class RegAlloc {
             if (FI == 0) {
                 for (int k = 0; k < K; k++) {
                     if (k >= 6)
+                        if ((procedure == 1 && isS(k)) || (procedure == 2 && isT(k)))
                         okColors.add(k);
                 }
             } else {
                 for (int k = 32; k < K; k++) {
+                    if ((procedure == 1 && isFS(k)) || (procedure == 2 && isFT(k)))
                     okColors.add(k);
                 }
             }
@@ -1302,12 +1432,24 @@ public class RegAlloc {
             adjSet.get(b).add(l);
             adjSet.get(l).add(b);
             if (!preColored.containsKey(b)) {
-                adjList.get(b).add(l);
-                degree.put(b, degree.get(b) + 1);
+                if (procedure == 1 && S.contains(b) && (S.contains(l) || (preColored.containsKey(l) && (isS(preColored.get(l)) || isFS(preColored.get(l)))))) {
+                    adjList.get(b).add(l);
+                    degree.put(b, degree.get(b) + 1);
+                }
+                if (procedure == 2 && T.contains(b) && (T.contains(l) || (preColored.containsKey(T) && (isT(preColored.get(l)) || isFT(preColored.get(l)))))) {
+                    adjList.get(b).add(l);
+                    degree.put(b, degree.get(b) + 1);
+                }
             }
             if (!preColored.containsKey(l)) {
-                adjList.get(l).add(b);
-                degree.put(l, degree.get(l) + 1);
+                if (procedure == 1 && S.contains(l) && (S.contains(b) || (preColored.containsKey(b) && (isS(preColored.get(b)) || isFS(preColored.get(b)))))) {
+                    adjList.get(l).add(b);
+                    degree.put(l, degree.get(l) + 1);
+                }
+                if (procedure == 2 && T.contains(l) && (T.contains(b) || (preColored.containsKey(b) && (isT(preColored.get(b)) || isFT(preColored.get(b)))))) {
+                    adjList.get(l).add(b);
+                    degree.put(l, degree.get(l) + 1);
+                }
             }
         }
     }
@@ -1324,11 +1466,18 @@ public class RegAlloc {
         }
     }
 
-    private static boolean debug = false;
-
-    private void logout(String s) {
-        if (debug) {
-            System.out.println(s);
-        }
+    private boolean isS(int i) {
+        return i == 8 || i == 9 || (i <= 27 && i >= 18);
+    }
+    private boolean isT(int i) {
+        return i == 6 || i== 7 || (i >= 28 && i <= 31);
+    }
+    private boolean isFS(int i) {
+        int t = i - 32;
+        return t == 8 || t == 9 || (t <= 27 && t >= 18);
+    }
+    private boolean isFT(int i) {
+        int t = i - 32;
+        return (t >= 0 && t <= 7) || (t >= 28 && t <= 31);
     }
 }
