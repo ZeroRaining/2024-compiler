@@ -54,4 +54,8 @@ public class FNegInstr extends Instruction {
         }
         return null;
     }
+
+    public Value getValue() {
+        return value;
+    }
 }

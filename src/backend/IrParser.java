@@ -21,6 +21,7 @@ import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.terminator.*;
 import frontend.ir.instr.memop.*;
+import frontend.ir.instr.unaryop.FNegInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Program;
@@ -175,7 +176,7 @@ public class IrParser {
                 iargs.add(arg);
             }
         }
-        asmFunction.addIntAndFloatFunctions(iargs,fargs);
+        asmFunction.addIntAndFloatFunctions(iargs, fargs);
         int iargnum = Math.min(iargs.size(), 8);
         int fargnum = Math.min(fargs.size(), 8);
         for (int i = 0; i < iargnum; i++) {
@@ -198,9 +199,9 @@ public class IrParser {
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
             if (arg.getPointerLevel() != 0) {
 //                if (offset >= -2048 && offset <= 2047) {
-                    AsmLd asmLd = new AsmLd(asmOperand, RegGeter.SP, new AsmImm32(offset) ,1);
-                    blockMap.get(bb).addInstrHead(asmLd);
-                    offset += 8;
+                AsmLd asmLd = new AsmLd(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
+                blockMap.get(bb).addInstrHead(asmLd);
+                offset += 8;
 //                } else {
 //                    AsmOperand tmpMove = genTmpReg(f);
 //                    AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
@@ -214,9 +215,9 @@ public class IrParser {
 //                }
             } else {
 //                if (offset >= -2048 && offset <= 2047) {
-                    AsmLw asmLw = new AsmLw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
-                    blockMap.get(bb).addInstrHead(asmLw);
-                    offset += 4;
+                AsmLw asmLw = new AsmLw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
+                blockMap.get(bb).addInstrHead(asmLw);
+                offset += 4;
 //                } else {
 //                    AsmOperand tmpMove = genTmpReg(f);
 //                    AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
@@ -234,9 +235,9 @@ public class IrParser {
             Value arg = fargs.get(i);
             AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
 //            if (offset >= -2048 && offset <= 2047) {
-                AsmFlw asmFlw = new AsmFlw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
-                blockMap.get(bb).addInstrHead(asmFlw);
-                offset += 4;
+            AsmFlw asmFlw = new AsmFlw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
+            blockMap.get(bb).addInstrHead(asmFlw);
+            offset += 4;
 //            } else {
 //                AsmOperand tmpMove = genTmpReg(f);
 //                AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
@@ -325,12 +326,14 @@ public class IrParser {
             parseMove((MoveInstr) instr, bb, f);
         else if (instr instanceof ConversionOperation)
             parseConv((ConversionOperation) instr, bb, f);
-        else if(instr instanceof ShlInstr)
+        else if (instr instanceof ShlInstr)
             parseShl((ShlInstr) instr, bb, f);
-        else if(instr instanceof AShrInstr)
+        else if (instr instanceof AShrInstr)
             parseShr((AShrInstr) instr, bb, f);
+        else if (instr instanceof FNegInstr)
+            parseFNeg((FNegInstr) instr, bb, f);
         else
-            throw new RuntimeException("未知指令");
+            throw new RuntimeException("未知指令" + instr.print());
     }
 
     private void parseRet(ReturnInstr instr, BasicBlock bb, Function f) {
@@ -1251,5 +1254,13 @@ public class IrParser {
             AsmSra asmSra = new AsmSra(dst, src1, src2);
             asmBlock.addInstrTail(asmSra);
         }
+    }
+
+    private void parseFNeg(FNegInstr instr, BasicBlock bb, Function f) {
+        AsmBlock asmBlock = blockMap.get(bb);
+        AsmOperand dst = parseOperand(instr, 0, f, bb);
+        AsmOperand src = parseOperand(instr.getValue(), 0, f, bb);
+        AsmFneg asmFneg = new AsmFneg(dst, src);
+        asmBlock.addInstrTail(asmFneg);
     }
 }

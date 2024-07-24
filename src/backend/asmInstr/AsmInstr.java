@@ -2,6 +2,7 @@ package backend.asmInstr;
 
 import Utils.CustomList;
 import backend.asmInstr.asmBinary.AsmBinary;
+import backend.asmInstr.asmBinary.AsmFneg;
 import backend.asmInstr.asmBr.AsmBnez;
 import backend.asmInstr.asmConv.AsmFtoi;
 import backend.asmInstr.asmConv.AsmitoF;
@@ -86,6 +87,12 @@ public class AsmInstr extends CustomList.Node {
                 AsmitoF asmitoF = (AsmitoF) this;
                 asmitoF.ReSetSrc(index, newReg);
             }
+        } else if (type == "fneg") {
+            if (this.regUse.get(index) == oldReg) {
+                this.regUse.set(index, newReg);
+                AsmFneg asmFneg = (AsmFneg) this;
+                asmFneg.ReSetSrc(index, newReg);
+            }
         }
     }
     public void changeDstReg(int index ,AsmReg oldReg, AsmReg newReg) {
@@ -118,6 +125,12 @@ public class AsmInstr extends CustomList.Node {
                 this.regDef.set(index, newReg);
                 AsmitoF asmitoF = (AsmitoF) this;
                 asmitoF.ReSetDst(index, newReg);
+            }
+        } else if (type == "fneg") {
+            if (this.regDef.get(index) == oldReg) {
+                this.regDef.set(index, newReg);
+                AsmFneg asmFneg = (AsmFneg) this;
+                asmFneg.ReSetDst(index, newReg);
             }
         }
     }
