@@ -8,7 +8,10 @@ import frontend.ir.instr.Instruction;
 public class EmptyInstr extends Instruction {
     private static int cnt = 0;
     private int myCnt;
-    public EmptyInstr() {
+    private DataType dataType;
+
+    public EmptyInstr(DataType dataType) {
+        this.dataType = dataType;
         myCnt = cnt++;
     }
     
@@ -19,7 +22,7 @@ public class EmptyInstr extends Instruction {
 
     @Override
     public DataType getDataType() {
-        return null;
+        return dataType;
     }
 
     @Override

@@ -61,7 +61,7 @@ public class RemovePhi {
                 } else {
                     //src->dst, dst->c => dst =>dst'
                     // a->b, b->c => b->b' a->b b'->c
-                    Instruction tmp = new EmptyInstr();
+                    Instruction tmp = new EmptyInstr(dst.getDataType());
                     MoveInstr move1 = new MoveInstr(dst, tmp);
                     move1.insertBefore(blk.getEndInstr());
                     MoveInstr move2 = new MoveInstr(src, dst);
