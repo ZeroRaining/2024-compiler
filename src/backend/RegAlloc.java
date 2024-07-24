@@ -25,7 +25,7 @@ public class RegAlloc {
     private static RegAlloc instance = null;
 
     // 提供一个公共的静态方法，用于获取单例对象
-    public static synchronized RegAlloc getInstance(HashMap<AsmOperand, Value> downOperandMap) {
+    public static RegAlloc getInstance(HashMap<AsmOperand, Value> downOperandMap) {
         if (instance == null) {
             instance = new RegAlloc(downOperandMap);
         }
@@ -176,11 +176,11 @@ public class RegAlloc {
             if (firstInstr instanceof AsmL) {
                 if (firstInstr instanceof AsmLw) {
                     if (((AsmLw) firstInstr).isPassIarg == 1) {
-                       int originOffset =  ((AsmImm32)( ((AsmLw) firstInstr).getOffset())).getValue();
-                       int newOffset = addOffSet + originOffset;
-                       FI = 0;
-                       storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
-                       firstInstr.removeFromList();
+                        int originOffset =  ((AsmImm32)( ((AsmLw) firstInstr).getOffset())).getValue();
+                        int newOffset = addOffSet + originOffset;
+                        FI = 0;
+                        storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
+                        firstInstr.removeFromList();
                     }
                 }
                 if (firstInstr instanceof AsmLd) {
@@ -480,7 +480,7 @@ public class RegAlloc {
                                 beColored = preColored.get(save);
                             }
                         }
-                        if (FI == 0 && (beColored == 1 || (beColored >= 5 && beColored <= 7) || (beColored >= 10 && beColored <= 11) || (beColored >= 12 && beColored <= 17) || (beColored >= 28 && beColored <= 31))) {
+                        if (FI == 0 && (beColored == 1 || (beColored >= 6 && beColored <= 7) || (beColored >= 11 && beColored <= 11) || (beColored >= 12 && beColored <= 17) || (beColored >= 28 && beColored <= 31))) {
                             int spillPlace = function.getAllocaSize() + function.getArgsSize();
                             if (downOperandMap.containsKey(save) && downOperandMap.get(save).getPointerLevel() == 0) {
                                 function.addAllocaSize(4);
@@ -908,7 +908,7 @@ public class RegAlloc {
     }
 
     private void simplify() {
-    AsmOperand n =  simplifyWorklist.iterator().next();
+        AsmOperand n =  simplifyWorklist.iterator().next();
 //        AsmOperand n ;
 //        if (simplifyWorklist.size() > 20) {
 //             n = simplifyWorklist.iterator().next();
@@ -1050,7 +1050,7 @@ public class RegAlloc {
             ArrayList<Integer> okColors = new ArrayList<>(); //换成固定取色
             if (FI == 0) {
                 for (int k = 0; k < K; k++) {
-                    if (k >= 6)
+                    if (k >= 6 && k != 10 )
                         okColors.add(k);
                 }
             } else {
@@ -1301,11 +1301,11 @@ public class RegAlloc {
             }
             adjSet.get(b).add(l);
             adjSet.get(l).add(b);
-            if (!preColored.containsKey(b)) {
+            if (!preColored.containsKey(b) && (l != RegGeter.AllRegsInt.get(5)) && (l != RegGeter.AllRegsInt.get(10))) {
                 adjList.get(b).add(l);
                 degree.put(b, degree.get(b) + 1);
             }
-            if (!preColored.containsKey(l)) {
+            if (!preColored.containsKey(l) && (b != RegGeter.AllRegsInt.get(5)) && (b != RegGeter.AllRegsInt.get(10))) {
                 adjList.get(l).add(b);
                 degree.put(l, degree.get(l) + 1);
             }
