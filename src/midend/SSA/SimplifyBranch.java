@@ -33,8 +33,10 @@ public class SimplifyBranch {
                 if (cond instanceof ConstBool) {
                     last.removeFromList();
                     if (cond.getNumber().intValue() == 1) {
+                        blk.setRet(false);
                         blk.addInstruction(new JumpInstr(((BranchInstr) last).getThenTarget()));
                     } else if (cond.getNumber().intValue() == 0) {
+                        blk.setRet(false);
                         blk.addInstruction(new JumpInstr(((BranchInstr) last).getElseTarget()));
                     } else {
                         throw new RuntimeException("unexpected cond value");

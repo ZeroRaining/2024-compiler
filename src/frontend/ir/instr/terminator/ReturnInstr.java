@@ -74,6 +74,5 @@ public class ReturnInstr extends Terminator {
     @Override
     public void removeFromList() {
         super.removeFromList();
-        this.getParentBB().setRet(false);
     }
 }

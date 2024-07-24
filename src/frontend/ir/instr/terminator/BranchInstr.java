@@ -37,7 +37,6 @@ public class BranchInstr extends Terminator {
         prt.getSucs().remove(elseTarget);
         elseTarget.getPres().remove(prt);
         super.removeFromList();
-        this.getParentBB().setRet(false);
     }
 
     public Value getCond() {
