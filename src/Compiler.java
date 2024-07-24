@@ -54,8 +54,8 @@ public class Compiler {
             SimplifyBranch.execute(functions);
             MergeBlock.execute(functions);
             DeadBlockRemove.execute(functions);
-            //makeDFG
             RemoveUseLessPhi.execute(functions);
+            //makeDFG
 //            SimplifyBranch.execute(functions);
 //            MergeBlock.execute(functions);
 //            DeadBlockRemove.execute(functions);

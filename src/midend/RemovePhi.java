@@ -43,18 +43,21 @@ public class RemovePhi {
             HashSet<Value> srcSet = new HashSet<>(((PCInstr) instr).getSrcs());
             HashSet<Value> dstSet = new HashSet<>(((PCInstr) instr).getDsts());
 
-            for (int i =0; i < srcs.size(); i++){
+            for (int i = 0; i < srcs.size(); i++){
                 Value src = srcs.get(i);
                 Value dst = dsts.get(i);
                 if (src == dst) {
+                    srcs.remove(i);
+                    dsts.remove(i);
+                    i--;
                     continue;
                 }
                 if (!srcSet.contains(dst)) {
                     //TODO:insertBefore and insertAfter should be set used
                     MoveInstr move = new MoveInstr(src, dst);
                     move.insertBefore(blk.getEndInstr());
-                    srcSet.remove(src);
-                    dstSet.remove(dst);
+//                    srcSet.remove(src);
+//                    dstSet.remove(dst);
                     srcs.remove(i);
                     dsts.remove(i);
                     i--;
@@ -64,16 +67,16 @@ public class RemovePhi {
                     Instruction tmp = new EmptyInstr(dst.getDataType());
                     MoveInstr move1 = new MoveInstr(dst, tmp);
                     move1.insertBefore(blk.getEndInstr());
-                    MoveInstr move2 = new MoveInstr(src, dst);
-                    move2.insertBefore(blk.getEndInstr());
-                    srcSet.remove(src);
                     srcSet.remove(dst);
                     srcSet.add(tmp);
-                    dstSet.remove(dst);
+
+                    MoveInstr move2 = new MoveInstr(src, dst);
+                    move2.insertBefore(blk.getEndInstr());
+//                    srcSet.remove(src);
+//                    dstSet.remove(dst);
                     for (int j = i; j < srcs.size(); j++) {
                         if (srcs.get(j) == dst) {
-                            srcs.remove(j);
-                            srcs.add(j, tmp);
+                            srcs.set(j, tmp);
                         }
                     }
                     srcs.remove(i);
@@ -81,6 +84,7 @@ public class RemovePhi {
                     i--;
                 }
             }
+            assert srcs.size() == 0;
             instr.removeFromList();
             // a->b, b->c => a->b' b->c b'->b? or replace all b => b'
 //            blk = (BasicBlock) blk.getNext();
