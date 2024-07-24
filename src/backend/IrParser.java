@@ -325,6 +325,12 @@ public class IrParser {
             parseMove((MoveInstr) instr, bb, f);
         else if (instr instanceof ConversionOperation)
             parseConv((ConversionOperation) instr, bb, f);
+        else if(instr instanceof ShlInstr)
+            parseShl((ShlInstr) instr, bb, f);
+        else if(instr instanceof AShrInstr)
+            parseShr((AShrInstr) instr, bb, f);
+        else
+            throw new RuntimeException("未知指令");
     }
 
     private void parseRet(ReturnInstr instr, BasicBlock bb, Function f) {
@@ -1141,67 +1147,67 @@ public class IrParser {
     }
 
 
-    private void parseAnd(AddInstr instr, BasicBlock bb, Function f) {
-        AsmBlock asmBlock = blockMap.get(bb);
-        AsmOperand dst = parseOperand(instr, 0, f, bb);
-        AsmOperand src1 = parseOperand(instr.getOp1(), 12, f, bb);
-        AsmOperand src2 = parseOperand(instr.getOp2(), 12, f, bb);
-        if ((src1 instanceof AsmImm12) && (src2 instanceof AsmImm12)) {
-            int value1 = ((AsmImm12) src1).getValue();
-            int value2 = ((AsmImm12) src2).getValue();
-            AsmOperand imm = new AsmImm32(value1 & value2);
-            AsmMove asmMove = new AsmMove(dst, imm);
-            asmBlock.addInstrTail(asmMove);
-        } else if (src1 instanceof AsmImm12) {
-            AsmAnd asmAnd = new AsmAnd(dst, src2, src1);
-            asmBlock.addInstrTail(asmAnd);
-        } else {
-            AsmAnd asmAnd = new AsmAnd(dst, src1, src2);
-            asmBlock.addInstrTail(asmAnd);
-        }
-    }
+//    private void parseAnd( instr, BasicBlock bb, Function f) {
+//        AsmBlock asmBlock = blockMap.get(bb);
+//        AsmOperand dst = parseOperand(instr, 0, f, bb);
+//        AsmOperand src1 = parseOperand(instr.getOp1(), 12, f, bb);
+//        AsmOperand src2 = parseOperand(instr.getOp2(), 12, f, bb);
+//        if ((src1 instanceof AsmImm12) && (src2 instanceof AsmImm12)) {
+//            int value1 = ((AsmImm12) src1).getValue();
+//            int value2 = ((AsmImm12) src2).getValue();
+//            AsmOperand imm = new AsmImm32(value1 & value2);
+//            AsmMove asmMove = new AsmMove(dst, imm);
+//            asmBlock.addInstrTail(asmMove);
+//        } else if (src1 instanceof AsmImm12) {
+//            AsmAnd asmAnd = new AsmAnd(dst, src2, src1);
+//            asmBlock.addInstrTail(asmAnd);
+//        } else {
+//            AsmAnd asmAnd = new AsmAnd(dst, src1, src2);
+//            asmBlock.addInstrTail(asmAnd);
+//        }
+//    }
 
-    private void parseOr(AddInstr instr, BasicBlock bb, Function f) {
-        AsmBlock asmBlock = blockMap.get(bb);
-        AsmOperand dst = parseOperand(instr, 0, f, bb);
-        AsmOperand src1 = parseOperand(instr.getOp1(), 12, f, bb);
-        AsmOperand src2 = parseOperand(instr.getOp2(), 12, f, bb);
-        if ((src1 instanceof AsmImm12) && (src2 instanceof AsmImm12)) {
-            int value1 = ((AsmImm12) src1).getValue();
-            int value2 = ((AsmImm12) src2).getValue();
-            AsmOperand imm = new AsmImm32(value1 | value2);
-            AsmMove asmMove = new AsmMove(dst, imm);
-            asmBlock.addInstrTail(asmMove);
-        } else if (src1 instanceof AsmImm12) {
-            AsmOr asmOr = new AsmOr(dst, src2, src1);
-            asmBlock.addInstrTail(asmOr);
-        } else {
-            AsmOr asmOr = new AsmOr(dst, src1, src2);
-            asmBlock.addInstrTail(asmOr);
-        }
-    }
+//    private void parseOr(AddInstr instr, BasicBlock bb, Function f) {
+//        AsmBlock asmBlock = blockMap.get(bb);
+//        AsmOperand dst = parseOperand(instr, 0, f, bb);
+//        AsmOperand src1 = parseOperand(instr.getOp1(), 12, f, bb);
+//        AsmOperand src2 = parseOperand(instr.getOp2(), 12, f, bb);
+//        if ((src1 instanceof AsmImm12) && (src2 instanceof AsmImm12)) {
+//            int value1 = ((AsmImm12) src1).getValue();
+//            int value2 = ((AsmImm12) src2).getValue();
+//            AsmOperand imm = new AsmImm32(value1 | value2);
+//            AsmMove asmMove = new AsmMove(dst, imm);
+//            asmBlock.addInstrTail(asmMove);
+//        } else if (src1 instanceof AsmImm12) {
+//            AsmOr asmOr = new AsmOr(dst, src2, src1);
+//            asmBlock.addInstrTail(asmOr);
+//        } else {
+//            AsmOr asmOr = new AsmOr(dst, src1, src2);
+//            asmBlock.addInstrTail(asmOr);
+//        }
+//    }
 
-    private void parseXor(AddInstr instr, BasicBlock bb, Function f) {
-        AsmBlock asmBlock = blockMap.get(bb);
-        AsmOperand dst = parseOperand(instr, 0, f, bb);
-        AsmOperand src1 = parseOperand(instr.getOp1(), 12, f, bb);
-        AsmOperand src2 = parseOperand(instr.getOp2(), 12, f, bb);
-        if ((src1 instanceof AsmImm12) && (src2 instanceof AsmImm12)) {
-            int value1 = ((AsmImm12) src1).getValue();
-            int value2 = ((AsmImm12) src2).getValue();
-            AsmOperand imm = new AsmImm32(value1 ^ value2);
-            AsmMove asmMove = new AsmMove(dst, imm);
-            asmBlock.addInstrTail(asmMove);
-        } else if (src1 instanceof AsmImm12) {
-            AsmXor asmXor = new AsmXor(dst, src2, src1);
-            asmBlock.addInstrTail(asmXor);
-        } else {
-            AsmXor asmXor = new AsmXor(dst, src1, src2);
-            asmBlock.addInstrTail(asmXor);
-        }
-    }
+//    private void parseXor(AddInstr instr, BasicBlock bb, Function f) {
+//        AsmBlock asmBlock = blockMap.get(bb);
+//        AsmOperand dst = parseOperand(instr, 0, f, bb);
+//        AsmOperand src1 = parseOperand(instr.getOp1(), 12, f, bb);
+//        AsmOperand src2 = parseOperand(instr.getOp2(), 12, f, bb);
+//        if ((src1 instanceof AsmImm12) && (src2 instanceof AsmImm12)) {
+//            int value1 = ((AsmImm12) src1).getValue();
+//            int value2 = ((AsmImm12) src2).getValue();
+//            AsmOperand imm = new AsmImm32(value1 ^ value2);
+//            AsmMove asmMove = new AsmMove(dst, imm);
+//            asmBlock.addInstrTail(asmMove);
+//        } else if (src1 instanceof AsmImm12) {
+//            AsmXor asmXor = new AsmXor(dst, src2, src1);
+//            asmBlock.addInstrTail(asmXor);
+//        } else {
+//            AsmXor asmXor = new AsmXor(dst, src1, src2);
+//            asmBlock.addInstrTail(asmXor);
+//        }
+//    }
 
-    private void parseShl(AddInstr instr, BasicBlock bb, Function f) {
+    private void parseShl(ShlInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmOperand dst = parseOperand(instr, 0, f, bb);
         AsmOperand src1 = parseOperand(instr.getOp1(), 12, f, bb);
@@ -1224,7 +1230,7 @@ public class IrParser {
         }
     }
 
-    private void parseShr(AddInstr instr, BasicBlock bb, Function f) {
+    private void parseShr(AShrInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmOperand dst = parseOperand(instr, 0, f, bb);
         AsmOperand src1 = parseOperand(instr.getOp1(), 12, f, bb);
@@ -1232,18 +1238,18 @@ public class IrParser {
         if ((src1 instanceof AsmImm12) && (src2 instanceof AsmImm12)) {
             int value1 = ((AsmImm12) src1).getValue();
             int value2 = ((AsmImm12) src2).getValue();
-            AsmOperand imm = new AsmImm32(value1 >>> value2);
+            AsmOperand imm = new AsmImm32(value1 >> value2);
             AsmAdd asmAdd = new AsmAdd(dst, ZERO, imm);
             asmBlock.addInstrTail(asmAdd);
         } else if (src1 instanceof AsmImm12) {
             AsmOperand tmpReg = genTmpReg(f);
             AsmAdd asmAdd = new AsmAdd(tmpReg, ZERO, src1);
             asmBlock.addInstrTail(asmAdd);
-            AsmSrl asmSrl = new AsmSrl(dst, tmpReg, src2);
-            asmBlock.addInstrTail(asmSrl);
+            AsmSra asmSra = new AsmSra(dst, tmpReg, src2);
+            asmBlock.addInstrTail(asmSra);
         } else {
-            AsmSrl asmSrl = new AsmSrl(dst, src1, src2);
-            asmBlock.addInstrTail(asmSrl);
+            AsmSra asmSra = new AsmSra(dst, src1, src2);
+            asmBlock.addInstrTail(asmSra);
         }
     }
 }
