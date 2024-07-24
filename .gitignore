@@ -1,7 +1,9 @@
 /.idea/
 /in.sy
 /out
-/out.ll
+/*.ll
 /*.iml
 /*.s
 /src/META-INF/
+/*.out
+/*.txt
