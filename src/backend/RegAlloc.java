@@ -494,7 +494,7 @@ public class RegAlloc {
                                 storeDOrLoadDFromMemory(spillPlace, save, (AsmInstr) instrHead.getNext(), "load", 1, 0);
                             }
                         }
-                        if (FI == 1 && ((beColored <= 39 && beColored >= 32) || (beColored >= 42 && beColored <= 49) || (beColored >= 60 && beColored <= 63))) {
+                        if (FI == 1 && ((beColored <= 39 && beColored >= 32) || (beColored >= 43 && beColored <= 49) || (beColored >= 60 && beColored <= 63))) {
                             int spillPlace = function.getAllocaSize() + function.getArgsSize();
                             function.addAllocaSize(4);
                             newAllocSize += 4;
@@ -1055,6 +1055,7 @@ public class RegAlloc {
                 }
             } else {
                 for (int k = 32; k < K; k++) {
+                    if (k != 42)
                     okColors.add(k);
                 }
             }
