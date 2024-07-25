@@ -1,454 +1,164 @@
-	.globl	a11_val
-	.data
-	.type	a11_val,	@object
-	.size	a11_val,	4
-a11_val:
-	.word	0
-
-	.globl	a33_val
-	.data
-	.type	a33_val,	@object
-	.size	a33_val,	4
-a33_val:
-	.word	0
-
-	.globl	a10_val
-	.data
-	.type	a10_val,	@object
-	.size	a10_val,	4
-a10_val:
-	.word	0
-
-	.globl	a32_val
-	.data
-	.type	a32_val,	@object
-	.size	a32_val,	4
-a32_val:
-	.word	0
-
-	.globl	a13_val
-	.data
-	.type	a13_val,	@object
-	.size	a13_val,	4
-a13_val:
-	.word	0
-
-	.globl	a35_val
-	.data
-	.type	a35_val,	@object
-	.size	a35_val,	4
-a35_val:
-	.word	0
-
-	.globl	a12_val
-	.data
-	.type	a12_val,	@object
-	.size	a12_val,	4
-a12_val:
-	.word	0
-
-	.globl	a34_val
-	.data
-	.type	a34_val,	@object
-	.size	a34_val,	4
-a34_val:
-	.word	0
-
-	.globl	a15_val
-	.data
-	.type	a15_val,	@object
-	.size	a15_val,	4
-a15_val:
-	.word	0
-
-	.globl	a37_val
-	.data
-	.type	a37_val,	@object
-	.size	a37_val,	4
-a37_val:
-	.word	0
-
-	.globl	a14_val
-	.data
-	.type	a14_val,	@object
-	.size	a14_val,	4
-a14_val:
-	.word	0
-
-	.globl	a36_val
-	.data
-	.type	a36_val,	@object
-	.size	a36_val,	4
-a36_val:
-	.word	0
-
-	.globl	a17_val
-	.data
-	.type	a17_val,	@object
-	.size	a17_val,	4
-a17_val:
-	.word	0
-
-	.globl	a39_val
-	.data
-	.type	a39_val,	@object
-	.size	a39_val,	4
-a39_val:
-	.word	0
-
-	.globl	a16_val
-	.data
-	.type	a16_val,	@object
-	.size	a16_val,	4
-a16_val:
-	.word	0
-
-	.globl	a38_val
-	.data
-	.type	a38_val,	@object
-	.size	a38_val,	4
-a38_val:
-	.word	0
-
-	.globl	a19_val
-	.data
-	.type	a19_val,	@object
-	.size	a19_val,	4
-a19_val:
-	.word	0
-
-	.globl	a18_val
-	.data
-	.type	a18_val,	@object
-	.size	a18_val,	4
-a18_val:
-	.word	0
-
-	.globl	a20_val
-	.data
-	.type	a20_val,	@object
-	.size	a20_val,	4
-a20_val:
-	.word	0
-
-	.globl	a22_val
-	.data
-	.type	a22_val,	@object
-	.size	a22_val,	4
-a22_val:
-	.word	0
-
-	.globl	a21_val
-	.data
-	.type	a21_val,	@object
-	.size	a21_val,	4
-a21_val:
-	.word	0
-
-	.globl	a24_val
-	.data
-	.type	a24_val,	@object
-	.size	a24_val,	4
-a24_val:
-	.word	0
-
-	.globl	a23_val
-	.data
-	.type	a23_val,	@object
-	.size	a23_val,	4
-a23_val:
-	.word	0
-
-	.globl	a26_val
-	.data
-	.type	a26_val,	@object
-	.size	a26_val,	4
-a26_val:
-	.word	0
-
-	.globl	a25_val
-	.data
-	.type	a25_val,	@object
-	.size	a25_val,	4
-a25_val:
-	.word	0
-
-	.globl	a28_val
-	.data
-	.type	a28_val,	@object
-	.size	a28_val,	4
-a28_val:
-	.word	0
-
-	.globl	a27_val
-	.data
-	.type	a27_val,	@object
-	.size	a27_val,	4
-a27_val:
-	.word	0
-
-	.globl	a29_val
-	.data
-	.type	a29_val,	@object
-	.size	a29_val,	4
-a29_val:
-	.word	0
-
-	.globl	a0_val
-	.data
-	.type	a0_val,	@object
-	.size	a0_val,	4
-a0_val:
-	.word	0
-
-	.globl	a1_val
-	.data
-	.type	a1_val,	@object
-	.size	a1_val,	4
-a1_val:
-	.word	0
-
-	.globl	a2_val
-	.data
-	.type	a2_val,	@object
-	.size	a2_val,	4
-a2_val:
-	.word	0
-
-	.globl	a3_val
-	.data
-	.type	a3_val,	@object
-	.size	a3_val,	4
-a3_val:
-	.word	0
-
-	.globl	a4_val
-	.data
-	.type	a4_val,	@object
-	.size	a4_val,	4
-a4_val:
-	.word	0
-
-	.globl	a5_val
-	.data
-	.type	a5_val,	@object
-	.size	a5_val,	4
-a5_val:
-	.word	0
-
-	.globl	a6_val
-	.data
-	.type	a6_val,	@object
-	.size	a6_val,	4
-a6_val:
-	.word	0
-
-	.globl	a7_val
-	.data
-	.type	a7_val,	@object
-	.size	a7_val,	4
-a7_val:
-	.word	0
-
-	.globl	a8_val
-	.data
-	.type	a8_val,	@object
-	.size	a8_val,	4
-a8_val:
-	.word	0
-
-	.globl	a9_val
-	.data
-	.type	a9_val,	@object
-	.size	a9_val,	4
-a9_val:
-	.word	0
-
-	.globl	a31_val
-	.data
-	.type	a31_val,	@object
-	.size	a31_val,	4
-a31_val:
-	.word	0
-
-	.globl	a30_val
-	.data
-	.type	a30_val,	@object
-	.size	a30_val,	4
-a30_val:
-	.word	0
-
 .section	.text
 .align	1
-testParam32:
-testParam32_blk_0:
-	lw	vir45,	236(sp)
-	lw	vir49,	232(sp)
-	lw	vir54,	228(sp)
-	lw	vir35,	224(sp)
-	lw	vir58,	220(sp)
-	lw	vir40,	216(sp)
-	lw	vir51,	212(sp)
-	lw	vir62,	208(sp)
-	lw	vir39,	204(sp)
-	lw	vir42,	200(sp)
-	lw	vir44,	196(sp)
-	lw	vir53,	192(sp)
-	lw	vir48,	188(sp)
-	lw	vir60,	184(sp)
-	lw	vir57,	180(sp)
-	lw	vir46,	176(sp)
-	lw	vir64,	172(sp)
-	lw	vir61,	168(sp)
-	lw	vir59,	164(sp)
-	lw	vir41,	160(sp)
-	lw	vir43,	156(sp)
-	lw	vir52,	152(sp)
-	lw	vir38,	148(sp)
-	lw	vir55,	144(sp)
-	mv	vir65,	a7
-	mv	vir63,	a6
-	mv	vir56,	a5
-	mv	vir34,	a4
-	mv	vir37,	a3
-	mv	vir50,	a2
-	mv	vir36,	a1
-	mv	vir47,	a0
-	addi	vir0,	sp,	0
-	addi	vir1,	sp,	4
-	addi	vir2,	sp,	8
-	addi	vir3,	sp,	12
-	addi	vir4,	sp,	16
-	addi	vir5,	sp,	20
-	addi	vir6,	sp,	24
-	addi	vir7,	sp,	28
-	addi	vir8,	sp,	32
-	addi	vir9,	sp,	36
-	addi	vir10,	sp,	40
-	addi	vir11,	sp,	44
-	addi	vir12,	sp,	48
-	addi	vir13,	sp,	52
-	addi	vir14,	sp,	56
-	addi	vir15,	sp,	60
-	addi	vir16,	sp,	64
-	addi	vir17,	sp,	68
-	addi	vir18,	sp,	72
-	addi	vir19,	sp,	76
-	addi	vir20,	sp,	80
-	addi	vir21,	sp,	84
-	addi	vir22,	sp,	88
-	addi	vir23,	sp,	92
-	addi	vir24,	sp,	96
-	addi	vir25,	sp,	100
-	addi	vir26,	sp,	104
-	addi	vir27,	sp,	108
-	addi	vir28,	sp,	112
-	addi	vir29,	sp,	116
-	addi	vir30,	sp,	120
-	addi	vir31,	sp,	124
-	addi	vir32,	sp,	128
-	li	vir33,	0
-	sw	vir33,	0(vir0)
-	sw	vir34,	0(vir1)
-	sw	vir35,	0(vir2)
-	sw	vir36,	0(vir3)
-	sw	vir37,	0(vir4)
-	sw	vir38,	0(vir5)
-	sw	vir39,	0(vir6)
-	sw	vir40,	0(vir7)
-	sw	vir41,	0(vir8)
-	sw	vir42,	0(vir9)
-	sw	vir43,	0(vir10)
-	sw	vir44,	0(vir11)
-	sw	vir45,	0(vir12)
-	sw	vir46,	0(vir13)
-	sw	vir47,	0(vir14)
-	sw	vir48,	0(vir15)
-	sw	vir49,	0(vir16)
-	sw	vir50,	0(vir17)
-	sw	vir51,	0(vir18)
-	sw	vir52,	0(vir19)
-	sw	vir53,	0(vir20)
-	sw	vir54,	0(vir21)
-	sw	vir55,	0(vir22)
-	sw	vir56,	0(vir23)
-	sw	vir57,	0(vir24)
-	sw	vir58,	0(vir25)
-	sw	vir59,	0(vir26)
-	sw	vir60,	0(vir27)
-	sw	vir61,	0(vir28)
-	sw	vir62,	0(vir29)
-	sw	vir63,	0(vir30)
-	sw	vir64,	0(vir31)
-	sw	vir65,	0(vir32)
-	lw	vir66,	0(vir14)
-	lw	vir67,	0(vir3)
-	add	vir68,	vir66,	vir67
-	lw	vir69,	0(vir17)
-	add	vir70,	vir68,	vir69
-	lw	vir71,	0(vir4)
-	add	vir72,	vir70,	vir71
-	lw	vir73,	0(vir1)
-	add	vir74,	vir72,	vir73
-	lw	vir75,	0(vir23)
-	add	vir76,	vir74,	vir75
-	lw	vir77,	0(vir30)
-	add	vir78,	vir76,	vir77
-	lw	vir79,	0(vir32)
-	add	vir80,	vir78,	vir79
-	lw	vir81,	0(vir22)
-	add	vir82,	vir80,	vir81
-	lw	vir83,	0(vir5)
-	add	vir84,	vir82,	vir83
-	lw	vir85,	0(vir19)
-	add	vir86,	vir84,	vir85
-	lw	vir87,	0(vir10)
-	add	vir88,	vir86,	vir87
-	lw	vir89,	0(vir8)
-	add	vir90,	vir88,	vir89
-	lw	vir91,	0(vir26)
-	add	vir92,	vir90,	vir91
-	lw	vir93,	0(vir28)
-	add	vir94,	vir92,	vir93
-	lw	vir95,	0(vir31)
-	add	vir96,	vir94,	vir95
-	lw	vir97,	0(vir13)
-	add	vir98,	vir96,	vir97
-	lw	vir99,	0(vir24)
-	add	vir100,	vir98,	vir99
-	lw	vir101,	0(vir27)
-	sub	vir102,	vir100,	vir101
-	lw	vir103,	0(vir15)
-	sub	vir104,	vir102,	vir103
-	lw	vir105,	0(vir20)
-	sub	vir106,	vir104,	vir105
-	lw	vir107,	0(vir11)
-	sub	vir108,	vir106,	vir107
-	lw	vir109,	0(vir9)
-	sub	vir110,	vir108,	vir109
-	lw	vir111,	0(vir6)
-	add	vir112,	vir110,	vir111
-	lw	vir113,	0(vir29)
-	add	vir114,	vir112,	vir113
-	lw	vir115,	0(vir18)
-	add	vir116,	vir114,	vir115
-	lw	vir117,	0(vir7)
-	add	vir118,	vir116,	vir117
-	lw	vir119,	0(vir25)
-	add	vir120,	vir118,	vir119
-	lw	vir121,	0(vir2)
-	add	vir122,	vir120,	vir121
-	lw	vir123,	0(vir21)
-	add	vir124,	vir122,	vir123
-	lw	vir125,	0(vir16)
-	add	vir126,	vir124,	vir125
-	lw	vir127,	0(vir12)
-	add	vir128,	vir126,	vir127
-	sw	vir128,	0(vir0)
-	j	testParam32_blk_1
-testParam32_blk_1:
-	lw	vir129,	0(vir0)
-	mv	a0,	vir129
+foo:
+foo_blk_0:
+	addi	vir0 ,	sp,	0
+	addi	vir1 ,	sp,	4
+	addi	vir2 ,	sp,	68
+	addi	vir3 ,	sp,	72
+	addi	vir4 ,	sp,	76
+	addi	vir5 ,	sp,	80
+	addi	vir6 ,	sp,	84
+	addi	vir7 ,	sp,	88
+	addi	vir8 ,	sp,	92
+	addi	vir9 ,	sp,	96
+	addi	vir10 ,	sp,	100
+	addi	vir11 ,	sp,	104
+	addi	vir12 ,	sp,	108
+	addi	vir13 ,	sp,	112
+	addi	vir14 ,	sp,	116
+	addi	vir15 ,	sp,	120
+	addi	vir16 ,	sp,	124
+	addi	vir17 ,	sp,	128
+	addi	vir18 ,	sp,	132
+	addi	vir19 ,	sp,	136
+	li	vir20 ,	0
+	sw	vir20 ,	0(vir0 )
+	mv	vir21 ,	vir1 
+	mv	vir22 ,	vir21 
+	mv	a0,	vir22 
+	li	a1,	0
+	li	a2,	64
+	call	memset
+	mv	zero,	zero
+	mv	vir23 ,	vir1 
+	addi	vir23 ,	vir23 ,	4
+	li	vir24 ,	1
+	sw	vir24 ,	0(vir23 )
+	mv	vir25 ,	vir1 
+	addi	vir25 ,	vir25 ,	8
+	li	vir26 ,	2
+	sw	vir26 ,	0(vir25 )
+	mv	vir27 ,	vir1 
+	addi	vir27 ,	vir27 ,	12
+	li	vir28 ,	3
+	sw	vir28 ,	0(vir27 )
+	mv	vir29 ,	vir1 
+	addi	vir29 ,	vir29 ,	20
+	li	vir30 ,	1
+	sw	vir30 ,	0(vir29 )
+	mv	vir31 ,	vir1 
+	addi	vir31 ,	vir31 ,	24
+	li	vir32 ,	2
+	sw	vir32 ,	0(vir31 )
+	mv	vir33 ,	vir1 
+	addi	vir33 ,	vir33 ,	28
+	li	vir34 ,	3
+	sw	vir34 ,	0(vir33 )
+	mv	vir35 ,	vir1 
+	addi	vir35 ,	vir35 ,	36
+	li	vir36 ,	1
+	sw	vir36 ,	0(vir35 )
+	mv	vir37 ,	vir1 
+	addi	vir37 ,	vir37 ,	40
+	li	vir38 ,	2
+	sw	vir38 ,	0(vir37 )
+	mv	vir39 ,	vir1 
+	addi	vir39 ,	vir39 ,	44
+	li	vir40 ,	3
+	sw	vir40 ,	0(vir39 )
+	mv	vir41 ,	vir1 
+	addi	vir41 ,	vir41 ,	52
+	li	vir42 ,	1
+	sw	vir42 ,	0(vir41 )
+	mv	vir43 ,	vir1 
+	addi	vir43 ,	vir43 ,	56
+	li	vir44 ,	2
+	sw	vir44 ,	0(vir43 )
+	mv	vir45 ,	vir1 
+	addi	vir45 ,	vir45 ,	60
+	li	vir46 ,	3
+	sw	vir46 ,	0(vir45 )
+	li	vir47 ,	3
+	sw	vir47 ,	0(vir2 )
+	li	vir48 ,	7
+	sw	vir48 ,	0(vir3 )
+	li	vir49 ,	5
+	sw	vir49 ,	0(vir4 )
+	li	vir50 ,	6
+	sw	vir50 ,	0(vir5 )
+	li	vir51 ,	1
+	sw	vir51 ,	0(vir6 )
+	li	vir52 ,	0
+	sw	vir52 ,	0(vir7 )
+	li	vir53 ,	3
+	sw	vir53 ,	0(vir8 )
+	li	vir54 ,	5
+	sw	vir54 ,	0(vir9 )
+	li	vir55 ,	4
+	sw	vir55 ,	0(vir10 )
+	li	vir56 ,	2
+	sw	vir56 ,	0(vir11 )
+	li	vir57 ,	7
+	sw	vir57 ,	0(vir12 )
+	li	vir58 ,	9
+	sw	vir58 ,	0(vir13 )
+	li	vir59 ,	8
+	sw	vir59 ,	0(vir14 )
+	li	vir60 ,	1
+	sw	vir60 ,	0(vir15 )
+	li	vir61 ,	4
+	sw	vir61 ,	0(vir16 )
+	li	vir62 ,	6
+	sw	vir62 ,	0(vir17 )
+	lw	vir63 ,	0(vir2 )
+	lw	vir64 ,	0(vir3 )
+	add	vir65 ,	vir63 ,	vir64 
+	lw	vir66 ,	0(vir4 )
+	add	vir67 ,	vir65 ,	vir66 
+	lw	vir68 ,	0(vir5 )
+	add	vir69 ,	vir67 ,	vir68 
+	lw	vir70 ,	0(vir6 )
+	add	vir71 ,	vir69 ,	vir70 
+	lw	vir72 ,	0(vir7 )
+	add	vir73 ,	vir71 ,	vir72 
+	lw	vir74 ,	0(vir8 )
+	add	vir75 ,	vir73 ,	vir74 
+	lw	vir76 ,	0(vir9 )
+	add	vir77 ,	vir75 ,	vir76 
+	sw	vir77 ,	0(vir18 )
+	lw	vir78 ,	0(vir10 )
+	lw	vir79 ,	0(vir11 )
+	add	vir80 ,	vir78 ,	vir79 
+	lw	vir81 ,	0(vir12 )
+	add	vir82 ,	vir80 ,	vir81 
+	lw	vir83 ,	0(vir13 )
+	add	vir84 ,	vir82 ,	vir83 
+	lw	vir85 ,	0(vir14 )
+	add	vir86 ,	vir84 ,	vir85 
+	lw	vir87 ,	0(vir15 )
+	add	vir88 ,	vir86 ,	vir87 
+	lw	vir89 ,	0(vir16 )
+	add	vir90 ,	vir88 ,	vir89 
+	lw	vir91 ,	0(vir17 )
+	add	vir92 ,	vir90 ,	vir91 
+	sw	vir92 ,	0(vir19 )
+	lw	vir93 ,	0(vir18 )
+	lw	vir94 ,	0(vir19 )
+	add	vir95 ,	vir93 ,	vir94 
+	lw	vir96 ,	0(vir2 )
+	mv	vir97 ,	vir96 
+	mv	vir98 ,	vir1 
+	li	vir99 ,	4
+	mul	vir97 ,	vir97 ,	vir99 
+	add	vir98 ,	vir98 ,	vir97 
+	lw	vir100 ,	0(vir98 )
+	add	vir101 ,	vir95 ,	vir100 
+	sw	vir101 ,	0(vir0 )
+	j	foo_blk_1
+foo_blk_1:
+	lw	vir102 ,	0(vir0 )
+	mv	a0,	vir102 
 	ret
 .section	.text.startup
 .align	1
@@ -483,462 +193,176 @@ li	t5,	0
 li	t6,	0
 
 main_blk_0:
-	addi	vir130,	sp,	128
-	li	vir131,	0
-	sw	vir131,	0(vir130)
-	la	vir132,	a0_val
-	li	vir133,	0
-	sw	vir133,	0(vir132)
-	la	vir134,	a1_val
-	li	vir135,	1
-	sw	vir135,	0(vir134)
-	la	vir136,	a2_val
-	li	vir137,	2
-	sw	vir137,	0(vir136)
-	la	vir138,	a3_val
-	li	vir139,	3
-	sw	vir139,	0(vir138)
-	la	vir140,	a4_val
-	li	vir141,	4
-	sw	vir141,	0(vir140)
-	la	vir142,	a5_val
-	li	vir143,	5
-	sw	vir143,	0(vir142)
-	la	vir144,	a6_val
-	li	vir145,	6
-	sw	vir145,	0(vir144)
-	la	vir146,	a7_val
-	li	vir147,	7
-	sw	vir147,	0(vir146)
-	la	vir148,	a8_val
-	li	vir149,	8
-	sw	vir149,	0(vir148)
-	la	vir150,	a9_val
-	li	vir151,	9
-	sw	vir151,	0(vir150)
-	la	vir152,	a10_val
-	li	vir153,	0
-	sw	vir153,	0(vir152)
-	la	vir154,	a11_val
-	li	vir155,	1
-	sw	vir155,	0(vir154)
-	la	vir156,	a12_val
-	li	vir157,	2
-	sw	vir157,	0(vir156)
-	la	vir158,	a13_val
-	li	vir159,	3
-	sw	vir159,	0(vir158)
-	la	vir160,	a14_val
-	li	vir161,	4
-	sw	vir161,	0(vir160)
-	la	vir162,	a15_val
-	li	vir163,	5
-	sw	vir163,	0(vir162)
-	la	vir164,	a16_val
-	li	vir165,	6
-	sw	vir165,	0(vir164)
-	la	vir166,	a17_val
-	li	vir167,	7
-	sw	vir167,	0(vir166)
-	la	vir168,	a18_val
-	li	vir169,	8
-	sw	vir169,	0(vir168)
-	la	vir170,	a19_val
-	li	vir171,	9
-	sw	vir171,	0(vir170)
-	la	vir172,	a20_val
-	li	vir173,	0
-	sw	vir173,	0(vir172)
-	la	vir174,	a21_val
-	li	vir175,	1
-	sw	vir175,	0(vir174)
-	la	vir176,	a22_val
-	li	vir177,	2
-	sw	vir177,	0(vir176)
-	la	vir178,	a23_val
-	li	vir179,	3
-	sw	vir179,	0(vir178)
-	la	vir180,	a24_val
-	li	vir181,	4
-	sw	vir181,	0(vir180)
-	la	vir182,	a25_val
-	li	vir183,	5
-	sw	vir183,	0(vir182)
-	la	vir184,	a26_val
-	li	vir185,	6
-	sw	vir185,	0(vir184)
-	la	vir186,	a27_val
-	li	vir187,	7
-	sw	vir187,	0(vir186)
-	la	vir188,	a28_val
-	li	vir189,	8
-	sw	vir189,	0(vir188)
-	la	vir190,	a29_val
-	li	vir191,	9
-	sw	vir191,	0(vir190)
-	la	vir192,	a30_val
-	li	vir193,	0
-	sw	vir193,	0(vir192)
-	la	vir194,	a31_val
-	li	vir195,	1
-	sw	vir195,	0(vir194)
-	la	vir196,	a32_val
-	li	vir197,	4
-	sw	vir197,	0(vir196)
-	la	vir198,	a33_val
-	li	vir199,	5
-	sw	vir199,	0(vir198)
-	la	vir200,	a34_val
-	li	vir201,	6
-	sw	vir201,	0(vir200)
-	la	vir202,	a35_val
-	li	vir203,	7
-	sw	vir203,	0(vir202)
-	la	vir204,	a36_val
-	li	vir205,	8
-	sw	vir205,	0(vir204)
-	la	vir206,	a37_val
-	li	vir207,	9
-	sw	vir207,	0(vir206)
-	la	vir208,	a38_val
-	li	vir209,	0
-	sw	vir209,	0(vir208)
-	la	vir210,	a39_val
-	li	vir211,	1
-	sw	vir211,	0(vir210)
-	la	vir212,	a0_val
-	lw	vir213,	0(vir212)
-	la	vir214,	a1_val
-	lw	vir215,	0(vir214)
-	la	vir216,	a2_val
-	lw	vir217,	0(vir216)
-	la	vir218,	a3_val
-	lw	vir219,	0(vir218)
-	la	vir220,	a4_val
-	lw	vir221,	0(vir220)
-	la	vir222,	a5_val
-	lw	vir223,	0(vir222)
-	la	vir224,	a6_val
-	lw	vir225,	0(vir224)
-	la	vir226,	a7_val
-	lw	vir227,	0(vir226)
-	mv	a0,	vir213
-	mv	a1,	vir215
-	mv	a2,	vir217
-	mv	a3,	vir219
-	mv	a4,	vir221
-	mv	a5,	vir223
-	mv	a6,	vir225
-	mv	a7,	vir227
-	call	testParam8
-	mv	vir228,	a0
-	la	vir229,	a0_val
-	sw	vir228,	0(vir229)
-	la	vir230,	a0_val
-	lw	vir231,	0(vir230)
-	mv	a0,	vir231
+	addi	vir103 ,	sp,	0
+	addi	vir104 ,	sp,	4
+	addi	vir105 ,	sp,	8
+	addi	vir106 ,	sp,	12
+	addi	vir107 ,	sp,	16
+	addi	vir108 ,	sp,	20
+	addi	vir109 ,	sp,	24
+	addi	vir110 ,	sp,	28
+	addi	vir111 ,	sp,	32
+	addi	vir112 ,	sp,	36
+	addi	vir113 ,	sp,	40
+	addi	vir114 ,	sp,	44
+	addi	vir115 ,	sp,	48
+	addi	vir116 ,	sp,	52
+	addi	vir117 ,	sp,	56
+	addi	vir118 ,	sp,	60
+	addi	vir119 ,	sp,	64
+	addi	vir120 ,	sp,	68
+	addi	vir121 ,	sp,	72
+	addi	vir122 ,	sp,	76
+	addi	vir123 ,	sp,	80
+	addi	vir124 ,	sp,	84
+	addi	vir125 ,	sp,	88
+	addi	vir126 ,	sp,	92
+	addi	vir127 ,	sp,	96
+	addi	vir128 ,	sp,	100
+	addi	vir129 ,	sp,	104
+	addi	vir130 ,	sp,	108
+	addi	vir131 ,	sp,	112
+	li	vir132 ,	0
+	sw	vir132 ,	0(vir103 )
+	li	vir133 ,	3
+	sw	vir133 ,	0(vir104 )
+	li	vir134 ,	7
+	sw	vir134 ,	0(vir105 )
+	li	vir135 ,	5
+	sw	vir135 ,	0(vir106 )
+	li	vir136 ,	6
+	sw	vir136 ,	0(vir107 )
+	li	vir137 ,	1
+	sw	vir137 ,	0(vir108 )
+	li	vir138 ,	0
+	sw	vir138 ,	0(vir109 )
+	li	vir139 ,	3
+	sw	vir139 ,	0(vir110 )
+	li	vir140 ,	5
+	sw	vir140 ,	0(vir111 )
+	li	vir141 ,	4
+	sw	vir141 ,	0(vir112 )
+	li	vir142 ,	2
+	sw	vir142 ,	0(vir113 )
+	li	vir143 ,	7
+	sw	vir143 ,	0(vir114 )
+	li	vir144 ,	9
+	sw	vir144 ,	0(vir115 )
+	li	vir145 ,	8
+	sw	vir145 ,	0(vir116 )
+	li	vir146 ,	1
+	sw	vir146 ,	0(vir117 )
+	li	vir147 ,	4
+	sw	vir147 ,	0(vir118 )
+	li	vir148 ,	6
+	sw	vir148 ,	0(vir119 )
+	lw	vir149 ,	0(vir104 )
+	lw	vir150 ,	0(vir105 )
+	add	vir151 ,	vir149 ,	vir150 
+	lw	vir152 ,	0(vir106 )
+	add	vir153 ,	vir151 ,	vir152 
+	lw	vir154 ,	0(vir107 )
+	add	vir155 ,	vir153 ,	vir154 
+	lw	vir156 ,	0(vir108 )
+	add	vir157 ,	vir155 ,	vir156 
+	lw	vir158 ,	0(vir109 )
+	add	vir159 ,	vir157 ,	vir158 
+	lw	vir160 ,	0(vir110 )
+	add	vir161 ,	vir159 ,	vir160 
+	lw	vir162 ,	0(vir111 )
+	add	vir163 ,	vir161 ,	vir162 
+	sw	vir163 ,	0(vir120 )
+	lw	vir164 ,	0(vir112 )
+	lw	vir165 ,	0(vir113 )
+	add	vir166 ,	vir164 ,	vir165 
+	lw	vir167 ,	0(vir114 )
+	add	vir168 ,	vir166 ,	vir167 
+	lw	vir169 ,	0(vir115 )
+	add	vir170 ,	vir168 ,	vir169 
+	lw	vir171 ,	0(vir116 )
+	add	vir172 ,	vir170 ,	vir171 
+	lw	vir173 ,	0(vir117 )
+	add	vir174 ,	vir172 ,	vir173 
+	lw	vir175 ,	0(vir118 )
+	add	vir176 ,	vir174 ,	vir175 
+	lw	vir177 ,	0(vir119 )
+	add	vir178 ,	vir176 ,	vir177 
+	sw	vir178 ,	0(vir121 )
+	lw	vir179 ,	0(vir120 )
+	call	foo
+	mv	vir180 ,	a0
+	add	vir181 ,	vir179 ,	vir180 
+	sw	vir181 ,	0(vir120 )
+	li	vir182 ,	4
+	sw	vir182 ,	0(vir122 )
+	li	vir183 ,	7
+	sw	vir183 ,	0(vir123 )
+	li	vir184 ,	2
+	sw	vir184 ,	0(vir124 )
+	li	vir185 ,	5
+	sw	vir185 ,	0(vir125 )
+	li	vir186 ,	8
+	sw	vir186 ,	0(vir126 )
+	li	vir187 ,	0
+	sw	vir187 ,	0(vir127 )
+	li	vir188 ,	6
+	sw	vir188 ,	0(vir128 )
+	li	vir189 ,	3
+	sw	vir189 ,	0(vir129 )
+	lw	vir190 ,	0(vir121 )
+	call	foo
+	mv	vir191 ,	a0
+	add	vir192 ,	vir190 ,	vir191 
+	sw	vir192 ,	0(vir121 )
+	lw	vir193 ,	0(vir112 )
+	sw	vir193 ,	0(vir104 )
+	lw	vir194 ,	0(vir113 )
+	sw	vir194 ,	0(vir105 )
+	lw	vir195 ,	0(vir114 )
+	sw	vir195 ,	0(vir106 )
+	lw	vir196 ,	0(vir115 )
+	sw	vir196 ,	0(vir107 )
+	lw	vir197 ,	0(vir116 )
+	sw	vir197 ,	0(vir108 )
+	lw	vir198 ,	0(vir117 )
+	sw	vir198 ,	0(vir109 )
+	lw	vir199 ,	0(vir118 )
+	sw	vir199 ,	0(vir110 )
+	lw	vir200 ,	0(vir119 )
+	sw	vir200 ,	0(vir111 )
+	lw	vir201 ,	0(vir122 )
+	lw	vir202 ,	0(vir123 )
+	add	vir203 ,	vir201 ,	vir202 
+	lw	vir204 ,	0(vir124 )
+	add	vir205 ,	vir203 ,	vir204 
+	lw	vir206 ,	0(vir125 )
+	add	vir207 ,	vir205 ,	vir206 
+	lw	vir208 ,	0(vir126 )
+	add	vir209 ,	vir207 ,	vir208 
+	lw	vir210 ,	0(vir127 )
+	add	vir211 ,	vir209 ,	vir210 
+	lw	vir212 ,	0(vir128 )
+	add	vir213 ,	vir211 ,	vir212 
+	lw	vir214 ,	0(vir129 )
+	add	vir215 ,	vir213 ,	vir214 
+	sw	vir215 ,	0(vir130 )
+	lw	vir216 ,	0(vir120 )
+	lw	vir217 ,	0(vir121 )
+	add	vir218 ,	vir216 ,	vir217 
+	lw	vir219 ,	0(vir130 )
+	add	vir220 ,	vir218 ,	vir219 
+	sw	vir220 ,	0(vir131 )
+	lw	vir221 ,	0(vir131 )
+	mv	a0,	vir221 
 	call	putint
 	mv	zero,	zero
 	li	a0,	10
 	call	putch
 	mv	zero,	zero
-	la	vir232,	a32_val
-	lw	vir233,	0(vir232)
-	la	vir234,	a33_val
-	lw	vir235,	0(vir234)
-	la	vir236,	a34_val
-	lw	vir237,	0(vir236)
-	la	vir238,	a35_val
-	lw	vir239,	0(vir238)
-	la	vir240,	a36_val
-	lw	vir241,	0(vir240)
-	la	vir242,	a37_val
-	lw	vir243,	0(vir242)
-	la	vir244,	a38_val
-	lw	vir245,	0(vir244)
-	la	vir246,	a39_val
-	lw	vir247,	0(vir246)
-	la	vir248,	a8_val
-	lw	vir249,	0(vir248)
-	la	vir250,	a9_val
-	lw	vir251,	0(vir250)
-	la	vir252,	a10_val
-	lw	vir253,	0(vir252)
-	la	vir254,	a11_val
-	lw	vir255,	0(vir254)
-	la	vir256,	a12_val
-	lw	vir257,	0(vir256)
-	la	vir258,	a13_val
-	lw	vir259,	0(vir258)
-	la	vir260,	a14_val
-	lw	vir261,	0(vir260)
-	la	vir262,	a15_val
-	lw	vir263,	0(vir262)
-	mv	a0,	vir233
-	mv	a1,	vir235
-	mv	a2,	vir237
-	mv	a3,	vir239
-	mv	a4,	vir241
-	mv	a5,	vir243
-	mv	a6,	vir245
-	mv	a7,	vir247
-	sw	vir249,	0(sp)
-	sw	vir251,	4(sp)
-	sw	vir253,	8(sp)
-	sw	vir255,	12(sp)
-	sw	vir257,	16(sp)
-	sw	vir259,	20(sp)
-	sw	vir261,	24(sp)
-	sw	vir263,	28(sp)
-	call	testParam16
-	mv	vir264,	a0
-	la	vir265,	a0_val
-	sw	vir264,	0(vir265)
-	la	vir266,	a0_val
-	lw	vir267,	0(vir266)
-	mv	a0,	vir267
-	call	putint
-	mv	zero,	zero
-	li	a0,	10
-	call	putch
-	mv	zero,	zero
-	la	vir268,	a0_val
-	lw	vir269,	0(vir268)
-	la	vir270,	a1_val
-	lw	vir271,	0(vir270)
-	la	vir272,	a2_val
-	lw	vir273,	0(vir272)
-	la	vir274,	a3_val
-	lw	vir275,	0(vir274)
-	la	vir276,	a4_val
-	lw	vir277,	0(vir276)
-	la	vir278,	a5_val
-	lw	vir279,	0(vir278)
-	la	vir280,	a6_val
-	lw	vir281,	0(vir280)
-	la	vir282,	a7_val
-	lw	vir283,	0(vir282)
-	la	vir284,	a8_val
-	lw	vir285,	0(vir284)
-	la	vir286,	a9_val
-	lw	vir287,	0(vir286)
-	la	vir288,	a10_val
-	lw	vir289,	0(vir288)
-	la	vir290,	a11_val
-	lw	vir291,	0(vir290)
-	la	vir292,	a12_val
-	lw	vir293,	0(vir292)
-	la	vir294,	a13_val
-	lw	vir295,	0(vir294)
-	la	vir296,	a14_val
-	lw	vir297,	0(vir296)
-	la	vir298,	a15_val
-	lw	vir299,	0(vir298)
-	la	vir300,	a16_val
-	lw	vir301,	0(vir300)
-	la	vir302,	a17_val
-	lw	vir303,	0(vir302)
-	la	vir304,	a18_val
-	lw	vir305,	0(vir304)
-	la	vir306,	a19_val
-	lw	vir307,	0(vir306)
-	la	vir308,	a20_val
-	lw	vir309,	0(vir308)
-	la	vir310,	a21_val
-	lw	vir311,	0(vir310)
-	la	vir312,	a22_val
-	lw	vir313,	0(vir312)
-	la	vir314,	a23_val
-	lw	vir315,	0(vir314)
-	la	vir316,	a24_val
-	lw	vir317,	0(vir316)
-	la	vir318,	a25_val
-	lw	vir319,	0(vir318)
-	la	vir320,	a26_val
-	lw	vir321,	0(vir320)
-	la	vir322,	a27_val
-	lw	vir323,	0(vir322)
-	la	vir324,	a28_val
-	lw	vir325,	0(vir324)
-	la	vir326,	a29_val
-	lw	vir327,	0(vir326)
-	la	vir328,	a30_val
-	lw	vir329,	0(vir328)
-	la	vir330,	a31_val
-	lw	vir331,	0(vir330)
-	mv	a0,	vir269
-	mv	a1,	vir271
-	mv	a2,	vir273
-	mv	a3,	vir275
-	mv	a4,	vir277
-	mv	a5,	vir279
-	mv	a6,	vir281
-	mv	a7,	vir283
-	sw	vir285,	0(sp)
-	sw	vir287,	4(sp)
-	sw	vir289,	8(sp)
-	sw	vir291,	12(sp)
-	sw	vir293,	16(sp)
-	sw	vir295,	20(sp)
-	sw	vir297,	24(sp)
-	sw	vir299,	28(sp)
-	sw	vir301,	32(sp)
-	sw	vir303,	36(sp)
-	sw	vir305,	40(sp)
-	sw	vir307,	44(sp)
-	sw	vir309,	48(sp)
-	sw	vir311,	52(sp)
-	sw	vir313,	56(sp)
-	sw	vir315,	60(sp)
-	sw	vir317,	64(sp)
-	sw	vir319,	68(sp)
-	sw	vir321,	72(sp)
-	sw	vir323,	76(sp)
-	sw	vir325,	80(sp)
-	sw	vir327,	84(sp)
-	sw	vir329,	88(sp)
-	sw	vir331,	92(sp)
-	call	testParam32
-	mv	vir332,	a0
-	la	vir333,	a0_val
-	sw	vir332,	0(vir333)
-	la	vir334,	a0_val
-	lw	vir335,	0(vir334)
-	mv	a0,	vir335
-	call	putint
-	mv	zero,	zero
-	li	vir336,	0
-	sw	vir336,	0(vir130)
+	li	vir222 ,	0
+	sw	vir222 ,	0(vir103 )
 	j	main_blk_1
 main_blk_1:
-	lw	vir337,	0(vir130)
-	mv	a0,	vir337
-	ret
-.section	.text
-.align	1
-testParam8:
-testParam8_blk_0:
-	mv	vir354,	a7
-	mv	vir349,	a6
-	mv	vir350,	a5
-	mv	vir351,	a4
-	mv	vir353,	a3
-	mv	vir348,	a2
-	mv	vir355,	a1
-	mv	vir352,	a0
-	addi	vir338,	sp,	0
-	addi	vir339,	sp,	4
-	addi	vir340,	sp,	8
-	addi	vir341,	sp,	12
-	addi	vir342,	sp,	16
-	addi	vir343,	sp,	20
-	addi	vir344,	sp,	24
-	addi	vir345,	sp,	28
-	addi	vir346,	sp,	32
-	li	vir347,	0
-	sw	vir347,	0(vir338)
-	sw	vir348,	0(vir339)
-	sw	vir349,	0(vir340)
-	sw	vir350,	0(vir341)
-	sw	vir351,	0(vir342)
-	sw	vir352,	0(vir343)
-	sw	vir353,	0(vir344)
-	sw	vir354,	0(vir345)
-	sw	vir355,	0(vir346)
-	lw	vir356,	0(vir343)
-	lw	vir357,	0(vir346)
-	add	vir358,	vir356,	vir357
-	lw	vir359,	0(vir339)
-	add	vir360,	vir358,	vir359
-	lw	vir361,	0(vir344)
-	add	vir362,	vir360,	vir361
-	lw	vir363,	0(vir342)
-	add	vir364,	vir362,	vir363
-	lw	vir365,	0(vir341)
-	add	vir366,	vir364,	vir365
-	lw	vir367,	0(vir340)
-	add	vir368,	vir366,	vir367
-	lw	vir369,	0(vir345)
-	add	vir370,	vir368,	vir369
-	sw	vir370,	0(vir338)
-	j	testParam8_blk_1
-testParam8_blk_1:
-	lw	vir371,	0(vir338)
-	mv	a0,	vir371
-	ret
-.section	.text
-.align	1
-testParam16:
-testParam16_blk_0:
-	lw	vir402,	108(sp)
-	lw	vir394,	104(sp)
-	lw	vir398,	100(sp)
-	lw	vir397,	96(sp)
-	lw	vir395,	92(sp)
-	lw	vir400,	88(sp)
-	lw	vir405,	84(sp)
-	lw	vir392,	80(sp)
-	mv	vir390,	a7
-	mv	vir396,	a6
-	mv	vir393,	a5
-	mv	vir404,	a4
-	mv	vir391,	a3
-	mv	vir401,	a2
-	mv	vir403,	a1
-	mv	vir399,	a0
-	addi	vir372,	sp,	0
-	addi	vir373,	sp,	4
-	addi	vir374,	sp,	8
-	addi	vir375,	sp,	12
-	addi	vir376,	sp,	16
-	addi	vir377,	sp,	20
-	addi	vir378,	sp,	24
-	addi	vir379,	sp,	28
-	addi	vir380,	sp,	32
-	addi	vir381,	sp,	36
-	addi	vir382,	sp,	40
-	addi	vir383,	sp,	44
-	addi	vir384,	sp,	48
-	addi	vir385,	sp,	52
-	addi	vir386,	sp,	56
-	addi	vir387,	sp,	60
-	addi	vir388,	sp,	64
-	li	vir389,	0
-	sw	vir389,	0(vir372)
-	sw	vir390,	0(vir373)
-	sw	vir391,	0(vir374)
-	sw	vir392,	0(vir375)
-	sw	vir393,	0(vir376)
-	sw	vir394,	0(vir377)
-	sw	vir395,	0(vir378)
-	sw	vir396,	0(vir379)
-	sw	vir397,	0(vir380)
-	sw	vir398,	0(vir381)
-	sw	vir399,	0(vir382)
-	sw	vir400,	0(vir383)
-	sw	vir401,	0(vir384)
-	sw	vir402,	0(vir385)
-	sw	vir403,	0(vir386)
-	sw	vir404,	0(vir387)
-	sw	vir405,	0(vir388)
-	lw	vir406,	0(vir382)
-	lw	vir407,	0(vir386)
-	add	vir408,	vir406,	vir407
-	lw	vir409,	0(vir384)
-	add	vir410,	vir408,	vir409
-	lw	vir411,	0(vir374)
-	sub	vir412,	vir410,	vir411
-	lw	vir413,	0(vir387)
-	sub	vir414,	vir412,	vir413
-	lw	vir415,	0(vir376)
-	sub	vir416,	vir414,	vir415
-	lw	vir417,	0(vir379)
-	sub	vir418,	vir416,	vir417
-	lw	vir419,	0(vir373)
-	sub	vir420,	vir418,	vir419
-	sw	vir420,	0(vir372)
-	j	testParam16_blk_1
-testParam16_blk_1:
-	lw	vir421,	0(vir372)
-	mv	a0,	vir421
+	lw	vir223 ,	0(vir103 )
+	mv	a0,	vir223 
 	ret
