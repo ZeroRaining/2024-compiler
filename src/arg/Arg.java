@@ -48,7 +48,7 @@ public class Arg {
         String src = "in.sy";
         String asm = "output.s";
         String ll  = null;
-        int optLevel = 0;
+        int optLevel = 1;
         boolean printIR = false;
         boolean skipBackEnd = false;
         boolean time = false;
