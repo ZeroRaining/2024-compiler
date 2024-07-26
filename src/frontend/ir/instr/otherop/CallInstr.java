@@ -4,6 +4,8 @@ import frontend.ir.DataType;
 import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.lib.LibFunc;
+import frontend.ir.structure.Function;
 
 import java.util.List;
 
@@ -31,6 +33,10 @@ public class CallInstr extends Instruction {
         // todo 函数也要作为 value 被 use，而且要考虑一下怎么处理库函数
     }
     
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new CallInstr(parentFunc.getAndAddRegIndex(), returnType, funcDef, rParams);
+    }
     
     @Override
     public Number getNumber() {
@@ -82,6 +88,10 @@ public class CallInstr extends Instruction {
     
     public List<Value> getRParams() {
         return rParams;
+    }
+    
+    public boolean callsLibFunc() {
+        return this.funcDef instanceof LibFunc;
     }
 
     public FuncDef getFuncDef() {

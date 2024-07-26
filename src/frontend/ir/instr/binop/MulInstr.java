@@ -16,6 +16,11 @@ public class MulInstr extends BinaryOperation implements Swappable {
         assert op2.getDataType() == DataType.INT;
         trySwapOp();
     }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new MulInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    }
 
     public void swapOp() {
         Value tmp = op1;

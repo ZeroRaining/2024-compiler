@@ -7,6 +7,7 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
 public class Program {
     private final SymTab globalSymTab = new SymTab();
     private final HashMap<String, Function> functions = new HashMap<>();
+    private final ArrayList<Function> functionList = new ArrayList<>();
     
     public Program(Ast ast) {
         if (ast == null) {
@@ -28,7 +30,9 @@ public class Program {
                 if (globalSymTab.hasSym(funcName)) {
                     throw new RuntimeException("函数命名与全局变量名重复");
                 }
-                functions.put(funcName, new Function((Ast.FuncDef) compUnit, globalSymTab));
+                Function newFunc = new Function((Ast.FuncDef) compUnit, globalSymTab);
+                functions.put(funcName, newFunc);
+                functionList.add(newFunc);
             } else if (compUnit instanceof Ast.Decl) {
                 globalSymTab.parseNewSymbols((Ast.Decl) compUnit);
             } else {
@@ -56,8 +60,13 @@ public class Program {
     public List<Symbol> getGlobalVars() {
         return globalSymTab.getSymbolList();
     }
+    
     public HashMap<String, Function> getFunctions(){
         return functions;
+    }
+    
+    public ArrayList<Function> getFunctionList() {
+        return functionList;
     }
 
     private void writeGlobalDecl(Writer writer) throws IOException {

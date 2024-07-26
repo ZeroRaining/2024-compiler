@@ -28,7 +28,6 @@ import frontend.ir.symbols.Symbol;
 import frontend.lexer.Token;
 import frontend.lexer.TokenType;
 import frontend.syntax.Ast;
-import midend.SSA.Mem2Reg;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -44,16 +43,18 @@ public class Procedure {
     private final Stack<BasicBlock> whileBegins;
     private final Stack<BasicBlock> whileEnds;
     private final ArrayList<Value> fParamValueList = new ArrayList<>();
+    private final HashSet<Function> myCallee;
 
-    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block, SymTab funcSymTab) {
+    public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block,
+                     SymTab funcSymTab, HashSet<Function> myCallee) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        BasicBlock firstBasicBlock = new BasicBlock(curDepth);
-        firstBasicBlock.setLabelCnt(curBlkIndex++);
+        this.myCallee = myCallee;
+        BasicBlock firstBasicBlock = new BasicBlock(curDepth, curBlkIndex++);
         basicBlocks.addToTail(firstBasicBlock);
         curBlock = firstBasicBlock;
-        retBlock = new BasicBlock(curDepth);
+        retBlock = new BasicBlock(curDepth, curBlkIndex++);
         whileBegins = new Stack<>();
         whileEnds = new Stack<>();
         HashMap<Symbol, FParam> symbol2FParam = new HashMap<>();
@@ -81,7 +82,6 @@ public class Procedure {
             throw new RuntimeException("会不会写函数啊，小老弟？！");
         }
         curBlock = retBlock;
-        curBlock.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(curBlock);
         if (returnType != DataType.VOID) {
             //空串表示用于存返回值的变量
@@ -196,8 +196,7 @@ public class Procedure {
             throw new RuntimeException("continue in wrong position");
         }
         curBlock.addInstruction(new JumpInstr(whileBegins.peek()));
-        curBlock = new BasicBlock(curDepth);
-        curBlock.setLabelCnt(curBlkIndex++);
+        curBlock = new BasicBlock(curDepth, curBlkIndex++);
         basicBlocks.addToTail(curBlock);
     }
 
@@ -206,27 +205,24 @@ public class Procedure {
             throw new RuntimeException("break in wrong position");
         }
         curBlock.addInstruction(new JumpInstr(whileEnds.peek()));
-        curBlock = new BasicBlock(curDepth);
-        curBlock.setLabelCnt(curBlkIndex++);
+        curBlock = new BasicBlock(curDepth, curBlkIndex++);
         basicBlocks.addToTail(curBlock);
     }
 
 
     private void dealWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
-        BasicBlock condBlk = new BasicBlock(curDepth);
-        BasicBlock bodyBlk = new BasicBlock(curDepth);
-        BasicBlock endBlk = new BasicBlock(curDepth);
+        BasicBlock condBlk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock bodyBlk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock endBlk = new BasicBlock(curDepth, curBlkIndex++);
 
         curBlock.addInstruction(new JumpInstr(condBlk));//要为condBlk新建一个块吗
 
-        condBlk.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(condBlk);
         curBlock = condBlk;
         Value cond = calculateLOr(item.cond, bodyBlk, endBlk, symTab);
         curBlock.addInstruction(new BranchInstr(cond, bodyBlk, endBlk));
 
         //fixme：if和while同时创建一个新end块，会导致没有语句
-        bodyBlk.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(bodyBlk);
         curBlock = bodyBlk;
         whileBegins.push(condBlk);
@@ -237,7 +233,6 @@ public class Procedure {
         whileBegins.pop();
         whileEnds.pop();
 
-        endBlk.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(endBlk);
         curBlock.addInstruction(new JumpInstr(condBlk));
         curBlock = endBlk;
@@ -245,28 +240,23 @@ public class Procedure {
 
     private void dealIf(Ast.IfStmt ifStmt, DataType returnType, SymTab symTab) {
         boolean hasElseBlk = ifStmt.elseStmt != null;
-        BasicBlock thenBlk = new BasicBlock(curDepth);
-        BasicBlock elseBlk = new BasicBlock(curDepth);
-        BasicBlock endBlk = hasElseBlk ? new BasicBlock(curDepth) : elseBlk;
+        BasicBlock thenBlk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock elseBlk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock endBlk = hasElseBlk ? new BasicBlock(curDepth, curBlkIndex++) : elseBlk;
 
         Value cond = calculateLOr(ifStmt.condition, thenBlk, elseBlk, symTab);
 
         curBlock.addInstruction(new BranchInstr(cond, thenBlk, elseBlk));
 
-        thenBlk.setLabelCnt(curBlkIndex++);
         basicBlocks.addToTail(thenBlk);
         curBlock = thenBlk;
         dealStmt(ifStmt.thenStmt, returnType, new SymTab(symTab));
         BasicBlock thenTmpBlk = curBlock;//curBlk可能会改变，但是为了正常插入语句，需要保存
         if (hasElseBlk) {
-            elseBlk.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(elseBlk);
             curBlock = elseBlk;
             dealStmt(ifStmt.elseStmt, returnType, new SymTab(symTab));
-            endBlk.setLabelCnt(curBlkIndex++);
             curBlock.addInstruction(new JumpInstr(endBlk));
-        } else {
-            endBlk.setLabelCnt(curBlkIndex++);
         }
 
         thenTmpBlk.addInstruction(new JumpInstr(endBlk));
@@ -461,7 +451,7 @@ public class Procedure {
         if (bin.getOps().isEmpty()) {
             nextBlk = falseBlk;
         } else {
-            nextBlk = new BasicBlock(curDepth);
+            nextBlk = new BasicBlock(curDepth, curBlkIndex++);
         }
         Value condValue = transform2i1(calculateLAnd(bin.getFirstExp(), nextBlk, symTab));
         //如果不是最后一个，则新建一个块作为false块，给land用，下次的解析在新建的块里
@@ -472,12 +462,11 @@ public class Procedure {
             assert op.getType() == TokenType.LOR;
             curBlock.addInstruction(new BranchInstr(condValue, trueBlk, nextBlk));
             curBlock = nextBlk;
-            curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
             if (i == bin.getOps().size() - 1) {
                 nextBlk = falseBlk;
             } else {
-                nextBlk = new BasicBlock(curDepth);
+                nextBlk = new BasicBlock(curDepth, curBlkIndex++);
             }
             condValue = transform2i1(calculateLAnd(nextExp, nextBlk, symTab));
         }
@@ -510,13 +499,12 @@ public class Procedure {
         Value condValue = transform2i1(calculateExpr(bin.getFirstExp(), symTab, false));
 
         for (int i = 0; i < bin.getOps().size(); i++) {
-            nextBlk = new BasicBlock(curDepth);
+            nextBlk = new BasicBlock(curDepth, curBlkIndex++);
             Token op = bin.getOps().get(i);
             Ast.Exp nextExp = bin.getRestExps().get(i);
             assert op.getType() == TokenType.LAND;
             curBlock.addInstruction(new BranchInstr(condValue, nextBlk, falseBlk));
             curBlock = nextBlk;
-            curBlock.setLabelCnt(curBlkIndex++);
             basicBlocks.addToTail(curBlock);
             condValue = transform2i1(calculateExpr(nextExp, symTab, false));
         }
@@ -811,6 +799,7 @@ public class Procedure {
             if (myFunc == null) {
                 throw new RuntimeException("不是哥们，你这是什么函数啊？" + name);
             }
+            myCallee.add(myFunc);
             List<Ast.FuncFParam> fParams = myFunc.getFParams();
             funcParamConv(fParams, rParams);
             callInstr = Function.makeCall(curRegIndex++, name, rParams);
@@ -867,5 +856,9 @@ public class Procedure {
     
     public int getAndAddRegIndex() {
         return this.curRegIndex++;
+    }
+    
+    public int getAndAddBlkIndex() {
+        return this.curBlkIndex++;
     }
 }

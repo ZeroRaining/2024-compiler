@@ -1,6 +1,8 @@
 package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
+import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 import frontend.ir.symbols.Symbol;
 
 public class StoreInstr extends MemoryOperation {
@@ -20,6 +22,15 @@ public class StoreInstr extends MemoryOperation {
         this.ptr = ptr;
         setUse(value);
         setUse(ptr);
+    }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        if (ptr == null) {
+            return new StoreInstr(this.value, this.symbol);
+        } else {
+            return new StoreInstr(this.value, this.symbol, this.ptr);
+        }
     }
 
     //store.getValue = value in storeInstr

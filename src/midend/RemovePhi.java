@@ -17,8 +17,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 public class RemovePhi {
-    private static int blkCnt = 0;
-
     public static void phi2move(HashSet<Function> functions) {
         for (Function function : functions) {
             removePhi(function);
@@ -92,7 +90,6 @@ public class RemovePhi {
     }
 
     private static void removePhi(Function function) {
-        blkCnt = ((BasicBlock)function.getBasicBlocks().getTail()).getLabelCnt() + 1;
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         while (blk != null) {
             if (!(blk.getInstructions().getHead() instanceof PhiInstr)) {
@@ -116,15 +113,14 @@ public class RemovePhi {
                         }
                     } else if (pre.getSucs().size() == 2){
                         BranchInstr branch = (BranchInstr) pre.getEndInstr();
-                        BasicBlock newBlk = new BasicBlock(pre.getDepth());
+                        BasicBlock newBlk = new BasicBlock(pre.getDepth(), function.getAndAddBlkIndex());
                         newBlk.insertAfter(pre);
                         branch.modifyUse(blk, newBlk);
-                        newBlk.setLabelCnt(blkCnt++);
                         PCInstr pc = new PCInstr();
                         pc.addPC(src, phi);
                         newBlk.addInstruction(pc);
                         newBlk.addInstruction(new JumpInstr(blk));
-                    } else if (pre.getSucs().size() != 0){
+                    } else if (!pre.getSucs().isEmpty()){
                         DEBUG.dbgPrint(pre.value2string());
                         DEBUG.dbgPrint2("sucs size: " + pre.getSucs());
                         throw new RuntimeException("too many sucs");

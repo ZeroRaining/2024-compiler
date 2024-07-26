@@ -5,6 +5,7 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 import java.util.Objects;
 
@@ -54,7 +55,12 @@ public class FNegInstr extends Instruction {
         }
         return null;
     }
-
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new FNegInstr(parentFunc.getAndAddRegIndex(), value);
+    }
+    
     public Value getValue() {
         return value;
     }

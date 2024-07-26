@@ -1,6 +1,8 @@
 package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
+import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 import frontend.ir.symbols.Symbol;
 
 public class LoadInstr extends MemoryOperation {
@@ -20,6 +22,15 @@ public class LoadInstr extends MemoryOperation {
         this.ptr = ptr;
         setUse(ptr);
         this.pointerLevel = ptr.getPointerLevel() - 1;
+    }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        if (ptr == null) {
+            return new LoadInstr(parentFunc.getAndAddRegIndex(), this.symbol);
+        } else {
+            return new LoadInstr(parentFunc.getAndAddRegIndex(), this.symbol, ptr);
+        }
     }
     
     @Override

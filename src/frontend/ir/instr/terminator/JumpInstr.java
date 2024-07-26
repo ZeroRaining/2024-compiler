@@ -4,6 +4,7 @@ import frontend.ir.Value;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 public class JumpInstr extends Terminator {
     private BasicBlock Target;
@@ -28,7 +29,12 @@ public class JumpInstr extends Terminator {
         Target.getPres().remove(prt);
         super.removeFromList();
     }
-
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new JumpInstr(Target);
+    }
+    
     public BasicBlock getTarget() {
         return Target;
     }

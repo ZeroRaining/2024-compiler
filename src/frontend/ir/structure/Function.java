@@ -22,6 +22,8 @@ public class Function extends Value implements FuncDef {
     private final Procedure procedure;
     private final SymTab symTab;
     private final List<Ast.FuncFParam> fParams;
+    private final HashSet<Function> myImmediateCallee = new HashSet<>(); // 被 this 直接调用的自定义函数列表
+    private final HashSet<Function> allCallee = new HashSet<>(); // 本函数执行过程中会调用（包括间接调用）的所有函数，可能包括自己
 
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
         if (funcDef == null) {
@@ -44,7 +46,8 @@ public class Function extends Value implements FuncDef {
         }
         fParams = funcDef.getFParams();
         FUNCTION_MAP.put(name, this);
-        procedure = new Procedure(returnType, fParams, funcDef.getBody(), symTab);
+        procedure = new Procedure(returnType, fParams, funcDef.getBody(), symTab, myImmediateCallee);
+        initAllCallee();
     }
     
     public static Function getFunction(String name) {
@@ -209,5 +212,58 @@ public class Function extends Value implements FuncDef {
     
     public int getAndAddRegIndex() {
         return this.procedure.getAndAddRegIndex();
+    }
+    
+    public int getAndAddBlkIndex() {
+        return this.procedure.getAndAddBlkIndex();
+    }
+    
+    public boolean isRecursive() {
+        return this.allCallee.contains(this);
+    }
+    
+    private void initAllCallee() {
+        for (Function callee : myImmediateCallee) {
+            if (callee != this) {
+                this.allCallee.addAll(callee.allCallee);
+            }
+            this.allCallee.add(callee);
+        }
+    }
+    
+    public ArrayList<BasicBlock> func2blocks(int curDepth) {
+        ArrayList<BasicBlock> bbs = new ArrayList<>();
+        HashMap<Value, Value> old2new = new HashMap<>();
+        BasicBlock curBB = (BasicBlock) this.procedure.getBasicBlocks().getHead();
+        while (curBB != null) {
+            BasicBlock newBB = new BasicBlock(curDepth + curBB.getDepth(), this.getAndAddBlkIndex());
+            old2new.put(curBB, newBB);
+            bbs.add(newBB);
+            
+            Instruction curIns = (Instruction) curBB.getInstructions().getHead();
+            while (curIns != null) {
+                Instruction newIns = curIns.cloneShell(this);
+                newBB.addInstruction(newIns);
+                old2new.put(curIns, newIns);
+                curIns = (Instruction) curIns.getNext();
+            }
+            
+            curBB = (BasicBlock) curBB.getNext();
+        }
+        
+        for (BasicBlock newBB : bbs) {
+            Instruction newIns = (Instruction) newBB.getInstructions().getHead();
+            while (newIns != null) {
+                ArrayList<Value> usedValues = newIns.getUseValueList();
+                for (Value toReplace : usedValues) {
+                    if (!old2new.containsKey(toReplace)) {
+                        throw new RuntimeException("使用了未曾设想的 value");
+                    }
+                    newIns.modifyValue(toReplace, old2new.get(toReplace));
+                }
+                newIns = (Instruction) newIns.getNext();
+            }
+        }
+        return bbs;
     }
 }

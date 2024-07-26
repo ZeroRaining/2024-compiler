@@ -3,6 +3,8 @@ package frontend.ir.instr.binop;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 
@@ -11,6 +13,11 @@ public class SubInstr extends BinaryOperation {
         super(result, op1, op2, "sub", DataType.INT);
         assert op1.getDataType() == DataType.INT;
         assert op2.getDataType() == DataType.INT;
+    }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new SubInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
     }
     
     @Override

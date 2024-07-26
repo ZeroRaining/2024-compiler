@@ -2,6 +2,9 @@ package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
+import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
+import frontend.ir.structure.GlobalObject;
 import frontend.ir.symbols.Symbol;
 
 import java.util.ArrayList;
@@ -57,6 +60,19 @@ public class GEPInstr extends MemoryOperation {
         setUse(base);
         for (Value value : indexList) {
             setUse(value);
+        }
+    }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        if (ptrVal instanceof GlobalObject || ptrVal instanceof AllocaInstr) {
+            return new GEPInstr(parentFunc.getAndAddRegIndex(), indexList, symbol);
+        } else if (ptrVal instanceof GEPInstr) {
+            return new GEPInstr(parentFunc.getAndAddRegIndex(), (GEPInstr) ptrVal);
+        } else if (ptrVal instanceof LoadInstr) {
+            return new GEPInstr(parentFunc.getAndAddRegIndex(), (LoadInstr) ptrVal, indexList);
+        } else {
+            throw new RuntimeException("GEP 的指针基址还有什么其它可能吗？");
         }
     }
 

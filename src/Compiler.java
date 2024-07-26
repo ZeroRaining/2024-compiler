@@ -34,6 +34,11 @@ public class Compiler {
         Ast ast = new Parser(tokenList).parseAst();
         // 生成 IR
         Program program = new Program(ast);
+        
+//        if (arg.getOptLevel() == 1) {
+//            FI.doFI(program.getFunctionList());     // todo: 函数内联，未来可能要加一些限制，不一定全内联
+//        }
+        
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
         DeadBlockRemove.execute(functions);
         DFG.doDFG(functions);
