@@ -3,6 +3,8 @@ package frontend.ir.instr.terminator;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.otherop.PCInstr;
+import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
@@ -75,6 +77,7 @@ public class BranchInstr extends Terminator {
 
     @Override
     public void modifyValue(Value from, Value to) {
+        System.out.println(this.print() + " try to replace " + from + " to " + to);
         if (condition == from) {
             condition = to;
         } else if (thenTarget == from) {
