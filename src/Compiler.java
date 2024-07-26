@@ -68,6 +68,8 @@ public class Compiler {
         
         // 打印 IR
         if (arg.toPrintIR()) {
+            Function.blkLabelReorder();
+            
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
             program.printIR(irWriter);
             irWriter.close();

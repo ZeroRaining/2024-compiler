@@ -21,7 +21,7 @@ import java.util.Objects;
 
 public class BasicBlock extends Value {
     private CustomList instructions = new CustomList();
-    private final int labelCnt;
+    private int labelCnt;
     private int depth;
     private boolean isRet;
     private HashSet<BasicBlock> pres;
@@ -81,6 +81,11 @@ public class BasicBlock extends Value {
     public void setDoms(HashSet<BasicBlock> doms) {
         this.doms = doms;
     }
+    
+    public void setLabelCnt(int labelCnt) {
+        this.labelCnt = labelCnt;
+    }
+    
     public HashSet<BasicBlock> getIDoms() {
         return iDoms;
     }

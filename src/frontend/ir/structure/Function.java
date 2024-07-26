@@ -266,4 +266,15 @@ public class Function extends Value implements FuncDef {
         }
         return bbs;
     }
+    
+    public static void blkLabelReorder() {
+        for (Function function : FUNCTION_MAP.values()) {
+            int label = 0;
+            BasicBlock curBB = (BasicBlock) function.procedure.getBasicBlocks().getHead();
+            while (curBB != null) {
+                curBB.setLabelCnt(label++);
+                curBB = (BasicBlock) curBB.getNext();
+            }
+        }
+    }
 }
