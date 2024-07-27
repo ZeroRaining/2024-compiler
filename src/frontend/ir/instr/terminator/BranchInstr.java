@@ -1,5 +1,6 @@
 package frontend.ir.instr.terminator;
 
+import debug.DEBUG;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
@@ -72,6 +73,7 @@ public class BranchInstr extends Terminator {
 
     @Override
     public void modifyValue(Value from, Value to) {
+        DEBUG.dbgPrint(this.print() + " try to replace " + from + " to " + to);
         if (condition == from) {
             condition = to;
         } else if (thenTarget == from) {

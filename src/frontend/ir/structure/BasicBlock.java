@@ -5,6 +5,7 @@ import debug.DEBUG;
 import frontend.ir.DataType;
 import frontend.ir.Use;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.otherop.PCInstr;
@@ -12,13 +13,9 @@ import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 
-import javax.tools.JavaCompiler;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class BasicBlock extends Value {
     private CustomList instructions = new CustomList();
@@ -241,5 +238,25 @@ public class BasicBlock extends Value {
     public PCInstr getPc() {
         assert instructions.getHead() instanceof PCInstr;
         return (PCInstr) instructions.getHead();
+    }
+
+    public BasicBlock clone4while(Function preFunc) {
+        BasicBlock newBlk = new BasicBlock(depth, preFunc.getAndAddBlkIndex());
+        HashMap<Value, Value> old2new = new HashMap<>();
+        Instruction instr = (Instruction) this.getInstructions().getHead();
+        while (instr != null) {
+            Instruction newIns = instr.cloneShell(preFunc);
+            for (Value value : instr.getUseValueList()) {
+                if (!(value instanceof ConstValue) && !(value instanceof GlobalObject)) {
+                    Value newValue = old2new.get(value);
+                    assert newValue == null;
+                    newIns.modifyUse(value, newValue);
+                }
+            }
+            newBlk.addInstruction(newIns);
+            old2new.put(instr, newIns);
+            instr = (Instruction) instr.getNext();
+        }
+        return newBlk;
     }
 }
