@@ -4,6 +4,7 @@ import Utils.CustomList;
 import frontend.ir.Use;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.Value;
+import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 
@@ -63,6 +64,10 @@ public abstract class Instruction extends Value {
             use.removeFromList();
         }
     }
+    
+    public void removeFromListWithUseRemain() {
+        super.removeFromList();
+    }
 
     public ArrayList<Value> getUseValueList() {
         return useValueList;
@@ -87,4 +92,6 @@ public abstract class Instruction extends Value {
         this.parentBB = ((Instruction) node).parentBB;
         super.setParent(node);
     }
+    
+    public abstract Instruction cloneShell(Function parentFunc);
 }

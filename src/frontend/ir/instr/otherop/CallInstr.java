@@ -4,7 +4,10 @@ import frontend.ir.DataType;
 import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.lib.LibFunc;
+import frontend.ir.structure.Function;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,7 +20,9 @@ public class CallInstr extends Instruction {
     private final FuncDef funcDef;
     
     public CallInstr(Integer result, DataType returnType, FuncDef funcDef, List<Value> rParams) {
-        assert (returnType == DataType.VOID && result == null) || (returnType != DataType.VOID && result != null);
+        if (!((returnType == DataType.VOID && result == null) || (returnType != DataType.VOID && result != null))) {
+            throw new RuntimeException();
+        }
         if (rParams == null) {
             throw new NullPointerException();
         }
@@ -31,6 +36,14 @@ public class CallInstr extends Instruction {
         // todo 函数也要作为 value 被 use，而且要考虑一下怎么处理库函数
     }
     
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        if (this.returnType == DataType.VOID) {
+            return new CallInstr(null, returnType, funcDef, new ArrayList<>(rParams));
+        } else {
+            return new CallInstr(parentFunc.getAndAddRegIndex(), returnType, funcDef, new ArrayList<>(rParams));
+        }
+    }
     
     @Override
     public Number getNumber() {
@@ -82,6 +95,10 @@ public class CallInstr extends Instruction {
     
     public List<Value> getRParams() {
         return rParams;
+    }
+    
+    public boolean callsLibFunc() {
+        return this.funcDef instanceof LibFunc;
     }
 
     public FuncDef getFuncDef() {

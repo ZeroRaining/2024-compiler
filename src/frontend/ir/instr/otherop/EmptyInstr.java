@@ -4,11 +4,12 @@ import debug.DEBUG;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 public class EmptyInstr extends Instruction {
     private static int cnt = 0;
-    private int myCnt;
-    private DataType dataType;
+    private final int myCnt;
+    private final DataType dataType;
 
     public EmptyInstr(DataType dataType) {
         this.dataType = dataType;
@@ -46,6 +47,11 @@ public class EmptyInstr extends Instruction {
     @Override
     public Value operationSimplify() {
         return null;
+    }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new EmptyInstr(this.dataType);
     }
     
     @Override

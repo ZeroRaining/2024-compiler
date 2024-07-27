@@ -4,7 +4,8 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstBool;
 import frontend.ir.constvalue.ConstFloat;
-import frontend.ir.constvalue.ConstInt;
+import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 public class FCmpInstr extends Cmp {
     
@@ -13,6 +14,11 @@ public class FCmpInstr extends Cmp {
         if (op1.getDataType() != DataType.FLOAT || op2.getDataType() != DataType.FLOAT) {
             throw new RuntimeException("浮点数比较必须是两个浮点数之间");
         }
+    }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new FCmpInstr(parentFunc.getAndAddRegIndex(), cond, op1, op2);
     }
     
     @Override

@@ -3,6 +3,8 @@ package frontend.ir.instr.binop;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
+import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 
@@ -24,6 +26,11 @@ public class AddInstr extends BinaryOperation implements Swappable {
             res = mergeConst((ConstInt) op2, op1);
         }
         return res;
+    }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new AddInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
     }
     
     private Value mergeConst(ConstInt constInt, Value nonConst) {

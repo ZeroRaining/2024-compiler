@@ -3,7 +3,10 @@ package frontend.ir.instr.terminator;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.otherop.PCInstr;
+import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.structure.BasicBlock;
+import frontend.ir.structure.Function;
 
 public class BranchInstr extends Terminator {
     private Value condition;
@@ -38,7 +41,12 @@ public class BranchInstr extends Terminator {
         elseTarget.getPres().remove(prt);
         super.removeFromList();
     }
-
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new BranchInstr(condition, thenTarget, elseTarget);
+    }
+    
     public Value getCond() {
         return condition;
     }
@@ -49,11 +57,6 @@ public class BranchInstr extends Terminator {
 
     public BasicBlock getElseTarget() {
         return elseTarget;
-    }
-
-    @Override
-    public Number getNumber() {
-        throw new RuntimeException("no value in branch");
     }
 
     @Override

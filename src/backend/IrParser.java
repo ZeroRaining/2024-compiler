@@ -410,7 +410,7 @@ public class IrParser {
         //dst                    addr
         AsmBlock asmBlock = blockMap.get(bb);
         Symbol addr = instr.getSymbol();
-        if (instr.getPtr() == null && addr.isGlobal()) {
+        if (instr.getPtr() instanceof GlobalObject && addr.isGlobal()) {
             AsmOperand laReg = genTmpReg(f);
             AsmOperand dst = parseOperand(instr, 0, f, bb);
             AsmOperand src = parseGlobalToOperand(addr, bb);
@@ -459,7 +459,7 @@ public class IrParser {
         //sw s0,0(s1)
         AsmBlock asmBlock = blockMap.get(bb);
         Symbol addr = instr.getSymbol();
-        if (instr.getPtr() == null && addr.isGlobal()) {
+        if (instr.getPtr() instanceof GlobalObject && addr.isGlobal()) {
             AsmOperand laReg = genTmpReg(f);
             AsmOperand addrOp = parseGlobalToOperand(addr, bb);
             AsmLa asmLa = new AsmLa(laReg, addrOp);
@@ -581,7 +581,7 @@ public class IrParser {
             } else {
                 AsmOperand left = parseOperand(op1, 0, f, bb);
                 AsmOperand right = parseOperand(op2, 0, f, bb);
-                AsmFle asmFle = new AsmFle(dst, right, left);
+                AsmFle asmFle = new AsmFle(dst, left, right);
                 asmBlock.addInstrTail(asmFle);
             }
         } else if (cond == CmpCond.GT) {
@@ -990,9 +990,6 @@ public class IrParser {
         } else if (instr.getOpName().equals("sitofp")) {
             AsmitoF asmitoF = new AsmitoF(dst, src);
             asmBlock.addInstrTail(asmitoF);
-        } else if (instr.getOpName().equals("zext")) {
-            AsmMove asmMove = new AsmMove(dst, src);
-            asmBlock.addInstrTail(asmMove);
         } else {
             AsmMove asmMove = new AsmMove(dst, src);
             asmBlock.addInstrTail(asmMove);

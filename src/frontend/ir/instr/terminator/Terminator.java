@@ -10,6 +10,11 @@ public abstract class Terminator extends Instruction {
     }
     
     @Override
+    public Number getNumber() {
+        return -1;
+    }
+    
+    @Override
     public String myHash() {
         return Integer.toString(this.hashCode());
     }

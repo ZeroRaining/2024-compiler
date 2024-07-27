@@ -34,10 +34,17 @@ public class Compiler {
         Ast ast = new Parser(tokenList).parseAst();
         // 生成 IR
         Program program = new Program(ast);
+        
+        if (arg.getOptLevel() == 1) {
+            FI.doFI(program.getFunctionList());     // todo: 函数内联，未来可能要加一些限制，不一定全内联
+        }
+        
+        program.removeUselessFunc();
+        
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
         DeadBlockRemove.execute(functions);
         DFG.doDFG(functions);
-        
+
         // 开启优化
         if (arg.toTime()) {
             optimizeStartTime = System.currentTimeMillis();
@@ -51,8 +58,9 @@ public class Compiler {
             SimplifyBranch.execute(functions);
             MergeBlock.execute(functions);
             DeadBlockRemove.execute(functions);
-            //makeDFG
             RemoveUseLessPhi.execute(functions);
+            
+            //makeDFG
 //            SimplifyBranch.execute(functions);
 //            MergeBlock.execute(functions);
 //            DeadBlockRemove.execute(functions);
@@ -60,16 +68,18 @@ public class Compiler {
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
         }
-        
+        RemovePhi.phi2move(functions);
+
         // 打印 IR
         if (arg.toPrintIR()) {
+//            Function.blkLabelReorder();
+            
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
             program.printIR(irWriter);
             irWriter.close();
         }
         
         if (arg.getOptLevel() == 1 && !arg.toSkipBackEnd()) {
-            RemovePhi.phi2move(functions);
         }
         
         // 运行后端

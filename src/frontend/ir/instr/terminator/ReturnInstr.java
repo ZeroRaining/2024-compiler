@@ -4,6 +4,7 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 public class ReturnInstr extends Terminator {
     private final DataType returnType;
@@ -30,8 +31,12 @@ public class ReturnInstr extends Terminator {
     }
     
     @Override
-    public Integer getNumber() {
-        return -1;
+    public Instruction cloneShell(Function parentFunc) {
+        if (returnType == DataType.VOID) {
+            return new ReturnInstr(DataType.VOID);
+        } else {
+            return  new ReturnInstr(returnType, returnValue);
+        }
     }
     
     @Override

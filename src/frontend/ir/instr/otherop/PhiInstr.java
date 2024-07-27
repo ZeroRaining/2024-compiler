@@ -6,6 +6,7 @@ import frontend.ir.constvalue.ConstInt;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
+import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -98,7 +99,12 @@ public class PhiInstr extends Instruction {
     public Value operationSimplify() {
         return null;
     }
-
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new PhiInstr(parentFunc.getAndAddRegIndex(), type, new ArrayList<>(values), new ArrayList<>(prtBlks));
+    }
+    
     public boolean canSimplify() {
         Value value = values.get(0);
         if (!(value instanceof ConstValue)) {

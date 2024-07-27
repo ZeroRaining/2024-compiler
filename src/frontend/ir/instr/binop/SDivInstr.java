@@ -17,6 +17,11 @@ public class SDivInstr extends BinaryOperation {
     }
     
     @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new SDivInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    }
+    
+    @Override
     public Value operationSimplify() {
         if (op1 instanceof ConstInt && op2 instanceof ConstInt) {
             return new ConstInt(((ConstInt) op1).getNumber() / ((ConstInt) op2).getNumber());

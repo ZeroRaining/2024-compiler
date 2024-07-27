@@ -149,11 +149,12 @@ public class RegAlloc {
                 }
             }
             allocAndRecycleSP(function);
-            changeOffset(function,  addOffSet);
+            changeOffset(function, addOffSet);
             //deleteMove(function);
         }
 
     }
+
     private void deleteMove(AsmFunction function) {
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
@@ -169,15 +170,17 @@ public class RegAlloc {
             blockHead = (AsmBlock) blockHead.getNext();
         }
     }
+
     private void changeOffset(AsmFunction function, int addOffSet) {
         AsmBlock firstBlock = (AsmBlock) function.getBlocks().getHead();
         AsmInstr firstInstr = (AsmInstr) firstBlock.getInstrs().getHead();
+        int stackAddOffset = (addOffSet % 8 == 0) ? addOffSet : addOffSet + 4;
         while (firstInstr != null) {
             if (firstInstr instanceof AsmL) {
                 if (firstInstr instanceof AsmLw) {
                     if (((AsmLw) firstInstr).isPassIarg == 1) {
-                        int originOffset =  ((AsmImm32)( ((AsmLw) firstInstr).getOffset())).getValue();
-                        int newOffset = addOffSet + originOffset;
+                        int originOffset = ((AsmImm32) (((AsmLw) firstInstr).getOffset())).getValue();
+                        int newOffset = stackAddOffset + originOffset;
                         FI = 0;
                         storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
                         firstInstr.removeFromList();
@@ -185,8 +188,8 @@ public class RegAlloc {
                 }
                 if (firstInstr instanceof AsmLd) {
                     if (((AsmLd) firstInstr).isPassIarg == 1) {
-                        int originOffset =  ((AsmImm32)( ((AsmLd) firstInstr).getOffset())).getValue();
-                        int newOffset = addOffSet + originOffset;
+                        int originOffset = ((AsmImm32) (((AsmLd) firstInstr).getOffset())).getValue();
+                        int newOffset = stackAddOffset + originOffset;
                         FI = 0;
                         storeDOrLoadDFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
                         firstInstr.removeFromList();
@@ -194,8 +197,8 @@ public class RegAlloc {
                 }
                 if (firstInstr instanceof AsmFlw) {
                     if (((AsmFlw) firstInstr).isPassIarg == 1) {
-                        int originOffset =  ((AsmImm32)( ((AsmFlw) firstInstr).getOffset())).getValue();
-                        int newOffset = addOffSet + originOffset;
+                        int originOffset = ((AsmImm32) (((AsmFlw) firstInstr).getOffset())).getValue();
+                        int newOffset = stackAddOffset + originOffset;
                         FI = 1;
                         storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
                         firstInstr.removeFromList();
@@ -205,6 +208,7 @@ public class RegAlloc {
             firstInstr = (AsmInstr) firstInstr.getNext();
         }
     }
+
     private void allocAndRecycleSP(AsmFunction function) {
         int offset = 0;
         offset = function.getWholeSize() - 8;
@@ -708,6 +712,7 @@ public class RegAlloc {
             blockHead = (AsmBlock) blockHead.getNext();
         }
     }
+
     private void findLoopDepth(AsmFunction function) {
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
@@ -717,7 +722,7 @@ public class RegAlloc {
             while (InsHead != null) {
                 for (AsmReg one : InsHead.regUse) {
                     if (CanBeAddToRun(one)) {
-                        defanduse.putIfAbsent(one,0);
+                        defanduse.putIfAbsent(one, 0);
                         int cur = defanduse.get(one);
                         cur++;
                         defanduse.put(one, cur);
@@ -725,7 +730,7 @@ public class RegAlloc {
                 }
                 for (AsmReg one : InsHead.regDef) {
                     if (CanBeAddToRun(one)) {
-                        defanduse.putIfAbsent(one,0);
+                        defanduse.putIfAbsent(one, 0);
                         int cur = defanduse.get(one);
                         cur++;
                         defanduse.put(one, cur);
@@ -744,6 +749,7 @@ public class RegAlloc {
             blockHead = (AsmBlock) blockHead.getNext();
         }
     }
+
     private void GetBlockLiveInAndOut(AsmFunction function) {
         //初始化block and instr 的LiveIn和LiveOut
         {
@@ -773,10 +779,9 @@ public class RegAlloc {
                 }
                 //NewLiveIn <- Union (LiveUse[B_i], (LiveOut[B_i] – Def[B_i]));
                 HashSet<AsmReg> NewLiveIn = new HashSet<>();
-                NewLiveIn.addAll(blockTail.getUse());
                 NewLiveIn.addAll(blockTail.LiveOut);
                 NewLiveIn.removeAll(blockTail.getDef());
-
+                NewLiveIn.addAll(blockTail.getUse());
                 if (!NewLiveIn.equals(blockTail.LiveIn)) {
                     changed = true;
                     blockTail.LiveIn = NewLiveIn;
@@ -859,7 +864,7 @@ public class RegAlloc {
 //                }
 
                 //live.addAll(instrTail.regDef);
-                if (instrTail !=  null) {
+                if (instrTail != null) {
                     if (instrTail instanceof AsmMove && FI == 1) {
                         int i = 0;
                     }
@@ -908,7 +913,7 @@ public class RegAlloc {
     }
 
     private void simplify() {
-        AsmOperand n =  simplifyWorklist.iterator().next();
+        AsmOperand n = simplifyWorklist.iterator().next();
 //        AsmOperand n ;
 //        if (simplifyWorklist.size() > 20) {
 //             n = simplifyWorklist.iterator().next();
@@ -1050,13 +1055,13 @@ public class RegAlloc {
             ArrayList<Integer> okColors = new ArrayList<>(); //换成固定取色
             if (FI == 0) {
                 for (int k = 0; k < K; k++) {
-                    if (k >= 6 && k != 10 )
+                    if (k >= 6 && k != 10)
                         okColors.add(k);
                 }
             } else {
                 for (int k = 32; k < K; k++) {
                     if (k != 42)
-                    okColors.add(k);
+                        okColors.add(k);
                 }
             }
             for (AsmOperand w : adjList.get(n)) {

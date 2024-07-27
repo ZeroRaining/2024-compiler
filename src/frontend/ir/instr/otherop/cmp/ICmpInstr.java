@@ -5,6 +5,8 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstBool;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
+import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 public class ICmpInstr extends Cmp {
     public ICmpInstr(int result, CmpCond cond, Value op1, Value op2) {
@@ -12,6 +14,11 @@ public class ICmpInstr extends Cmp {
         if (op1.getDataType() != DataType.INT || op2.getDataType() != DataType.INT) {
             throw new RuntimeException("整数比较必须是两个三十二位整数之间");
         }
+    }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new ICmpInstr(parentFunc.getAndAddRegIndex(), cond, op1, op2);
     }
     
     @Override

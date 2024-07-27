@@ -14,11 +14,8 @@ import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 
 public class RemovePhi {
-    private static int blkCnt = 0;
-
     public static void phi2move(HashSet<Function> functions) {
         for (Function function : functions) {
             removePhi(function);
@@ -43,18 +40,21 @@ public class RemovePhi {
             HashSet<Value> srcSet = new HashSet<>(((PCInstr) instr).getSrcs());
             HashSet<Value> dstSet = new HashSet<>(((PCInstr) instr).getDsts());
 
-            for (int i =0; i < srcs.size(); i++){
+            for (int i = 0; i < srcs.size(); i++){
                 Value src = srcs.get(i);
                 Value dst = dsts.get(i);
                 if (src == dst) {
+                    srcs.remove(i);
+                    dsts.remove(i);
+                    i--;
                     continue;
                 }
                 if (!srcSet.contains(dst)) {
                     //TODO:insertBefore and insertAfter should be set used
                     MoveInstr move = new MoveInstr(src, dst);
                     move.insertBefore(blk.getEndInstr());
-                    srcSet.remove(src);
-                    dstSet.remove(dst);
+//                    srcSet.remove(src);
+//                    dstSet.remove(dst);
                     srcs.remove(i);
                     dsts.remove(i);
                     i--;
@@ -64,16 +64,16 @@ public class RemovePhi {
                     Instruction tmp = new EmptyInstr(dst.getDataType());
                     MoveInstr move1 = new MoveInstr(dst, tmp);
                     move1.insertBefore(blk.getEndInstr());
-                    MoveInstr move2 = new MoveInstr(src, dst);
-                    move2.insertBefore(blk.getEndInstr());
-                    srcSet.remove(src);
                     srcSet.remove(dst);
                     srcSet.add(tmp);
-                    dstSet.remove(dst);
+
+                    MoveInstr move2 = new MoveInstr(src, dst);
+                    move2.insertBefore(blk.getEndInstr());
+//                    srcSet.remove(src);
+//                    dstSet.remove(dst);
                     for (int j = i; j < srcs.size(); j++) {
                         if (srcs.get(j) == dst) {
-                            srcs.remove(j);
-                            srcs.add(j, tmp);
+                            srcs.set(j, tmp);
                         }
                     }
                     srcs.remove(i);
@@ -81,14 +81,25 @@ public class RemovePhi {
                     i--;
                 }
             }
+            assert srcs.size() == 0;
             instr.removeFromList();
             // a->b, b->c => a->b' b->c b'->b? or replace all b => b'
 //            blk = (BasicBlock) blk.getNext();
         }
     }
 
+    private static BasicBlock createMidBlk(BranchInstr branch, int cnt, BasicBlock blk) {
+        BasicBlock pre = branch.getParentBB();
+        BasicBlock newBlk = new BasicBlock(pre.getDepth(), cnt);
+        newBlk.insertAfter(pre);
+        newBlk.setLabelCnt(cnt);
+        branch.modifyUse(blk, newBlk);
+        newBlk.addInstruction(new PCInstr());
+        newBlk.addInstruction(new JumpInstr(blk));
+        return newBlk;
+    }
+
     private static void removePhi(Function function) {
-        blkCnt = ((BasicBlock)function.getBasicBlocks().getTail()).getLabelCnt() + 1;
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         while (blk != null) {
             if (!(blk.getInstructions().getHead() instanceof PhiInstr)) {
@@ -112,14 +123,26 @@ public class RemovePhi {
                         }
                     } else if (pre.getSucs().size() == 2){
                         BranchInstr branch = (BranchInstr) pre.getEndInstr();
-                        BasicBlock newBlk = new BasicBlock(pre.getDepth());
-                        newBlk.insertAfter(pre);
-                        branch.modifyUse(blk, newBlk);
-                        newBlk.setLabelCnt(blkCnt++);
-                        PCInstr pc = new PCInstr();
+                        BasicBlock newBlk;
+                        if (branch.getThenTarget() == blk) {
+                            newBlk = createMidBlk(branch, function.getAndAddBlkIndex(), blk);
+                            pre.setNewTrue(newBlk);
+                        } else if (branch.getElseTarget() == blk) {
+                            newBlk = createMidBlk(branch, function.getAndAddBlkIndex(), blk);
+                            pre.setNewFalse(newBlk);
+                        } else {
+                            BasicBlock newTrue = pre.getNewTrue();
+                            BasicBlock newFalse = pre.getNewFalse();
+                            if (newTrue != null && newTrue.getSucs().contains(blk)) {
+                                newBlk = newTrue;
+                            } else if (newFalse != null && newFalse.getSucs().contains(blk)) {
+                                newBlk = newFalse;
+                            } else {
+                                throw new RuntimeException("illegal branch");
+                            }
+                        }
+                        PCInstr pc = newBlk.getPc();
                         pc.addPC(src, phi);
-                        newBlk.addInstruction(pc);
-                        newBlk.addInstruction(new JumpInstr(blk));
                     } else if (pre.getSucs().size() != 0){
                         DEBUG.dbgPrint(pre.value2string());
                         DEBUG.dbgPrint2("sucs size: " + pre.getSucs());

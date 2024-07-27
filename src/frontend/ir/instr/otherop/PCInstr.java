@@ -3,6 +3,7 @@ package frontend.ir.instr.otherop;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 
@@ -56,5 +57,10 @@ public class PCInstr extends Instruction {
     @Override
     public Value operationSimplify() {
         return null;
+    }
+    
+    @Override
+    public Instruction cloneShell(Function parentFunc) {
+        return new PCInstr();
     }
 }
