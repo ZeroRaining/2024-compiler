@@ -7,6 +7,7 @@ import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -101,8 +102,8 @@ public class PhiInstr extends Instruction {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new PhiInstr(parentFunc.getAndAddRegIndex(), type, new ArrayList<>(values), new ArrayList<>(prtBlks));
+    public Instruction cloneShell(Procedure procedure) {
+        return new PhiInstr(procedure.getAndAddRegIndex(), type, new ArrayList<>(values), new ArrayList<>(prtBlks));
     }
     
     public boolean canSimplify() {

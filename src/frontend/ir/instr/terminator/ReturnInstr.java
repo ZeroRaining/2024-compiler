@@ -5,6 +5,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class ReturnInstr extends Terminator {
     private final DataType returnType;
@@ -31,7 +32,7 @@ public class ReturnInstr extends Terminator {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
+    public Instruction cloneShell(Procedure procedure) {
         if (returnType == DataType.VOID) {
             return new ReturnInstr(DataType.VOID);
         } else {

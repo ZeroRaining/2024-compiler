@@ -5,6 +5,7 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.DataType;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class JumpInstr extends Terminator {
     private BasicBlock Target;
@@ -31,7 +32,7 @@ public class JumpInstr extends Terminator {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
+    public Instruction cloneShell(Procedure procedure) {
         return new JumpInstr(Target);
     }
     

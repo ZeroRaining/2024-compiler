@@ -4,6 +4,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 /**
  * 目前这个指令就是用来 i32 -> i64 的，也就是用于普通整数转成偏移量的操作
@@ -14,8 +15,8 @@ public class Sext extends ConversionOperation{
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new Sext(parentFunc.getAndAddRegIndex(), this.value);
+    public Instruction cloneShell(Procedure procedure) {
+        return new Sext(procedure.getAndAddRegIndex(), this.value);
     }
     
     @Override

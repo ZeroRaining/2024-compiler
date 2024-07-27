@@ -5,6 +5,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class FAddInstr extends BinaryOperation implements Swappable {
     public FAddInstr(int result, Value op1, Value op2) {
@@ -14,8 +15,8 @@ public class FAddInstr extends BinaryOperation implements Swappable {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new FAddInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    public Instruction cloneShell(Procedure procedure) {
+        return new FAddInstr(procedure.getAndAddRegIndex(), this.op1, this.op2);
     }
     
     @Override

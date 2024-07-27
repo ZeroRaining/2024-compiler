@@ -6,6 +6,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class Fp2Si extends ConversionOperation {
     public Fp2Si(int result, Value value) {
@@ -13,8 +14,8 @@ public class Fp2Si extends ConversionOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new Fp2Si(parentFunc.getAndAddRegIndex(), this.value);
+    public Instruction cloneShell(Procedure procedure) {
+        return new Fp2Si(procedure.getAndAddRegIndex(), this.value);
     }
     
     @Override

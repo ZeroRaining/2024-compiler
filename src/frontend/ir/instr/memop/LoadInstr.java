@@ -3,6 +3,7 @@ package frontend.ir.instr.memop;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
 
 public class LoadInstr extends MemoryOperation {
@@ -26,8 +27,8 @@ public class LoadInstr extends MemoryOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new LoadInstr(parentFunc.getAndAddRegIndex(), this.symbol, ptr);
+    public Instruction cloneShell(Procedure procedure) {
+        return new LoadInstr(procedure.getAndAddRegIndex(), this.symbol, ptr);
     }
     
     @Override

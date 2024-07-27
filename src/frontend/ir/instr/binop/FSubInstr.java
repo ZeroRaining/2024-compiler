@@ -5,6 +5,7 @@ import frontend.ir.instr.Instruction;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class FSubInstr extends BinaryOperation {
     public FSubInstr(int result, Value op1, Value op2) {
@@ -14,8 +15,8 @@ public class FSubInstr extends BinaryOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new FSubInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    public Instruction cloneShell(Procedure procedure) {
+        return new FSubInstr(procedure.getAndAddRegIndex(), this.op1, this.op2);
     }
     
     @Override

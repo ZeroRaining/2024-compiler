@@ -3,6 +3,7 @@ package frontend.ir.instr.memop;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
 
 public class StoreInstr extends MemoryOperation {
@@ -26,7 +27,7 @@ public class StoreInstr extends MemoryOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
+    public Instruction cloneShell(Procedure procedure) {
         return new StoreInstr(this.value, this.symbol, this.ptr);
     }
 

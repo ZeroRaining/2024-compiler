@@ -6,6 +6,7 @@ import frontend.ir.constvalue.ConstBool;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 /**
  * 目前认为这个指令就是用来从 i1 拓展到 i32 的。
@@ -16,8 +17,8 @@ public class Zext extends ConversionOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new Zext(parentFunc.getAndAddRegIndex(), this.value);
+    public Instruction cloneShell(Procedure procedure) {
+        return new Zext(procedure.getAndAddRegIndex(), this.value);
     }
     
     @Override

@@ -223,7 +223,7 @@ public class Procedure {
         Value cond = calculateLOr(item.cond, bodyBlk, endBlk, symTab);
         curBlock.addInstruction(new BranchInstr(cond, bodyBlk, endBlk));
 
-        BasicBlock cond2Blk = cond1Blk.clone4while(parentFunc);
+        BasicBlock cond2Blk = cond1Blk.clone4while(this);
 
         //fixme：if和while同时创建一个新end块，会导致没有语句
         basicBlocks.addToTail(bodyBlk);

@@ -5,6 +5,7 @@ import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.GlobalObject;
+import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
 
 import java.util.ArrayList;
@@ -80,13 +81,13 @@ public class GEPInstr extends MemoryOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
+    public Instruction cloneShell(Procedure procedure) {
         if (ptrVal instanceof GlobalObject || ptrVal instanceof AllocaInstr) {
-            return new GEPInstr(parentFunc.getAndAddRegIndex(), new ArrayList<>(indexList), ptrVal, symbol);
+            return new GEPInstr(procedure.getAndAddRegIndex(), new ArrayList<>(indexList), ptrVal, symbol);
         } else if (ptrVal instanceof GEPInstr) {
-            return new GEPInstr(parentFunc.getAndAddRegIndex(), (GEPInstr) ptrVal);
+            return new GEPInstr(procedure.getAndAddRegIndex(), (GEPInstr) ptrVal);
         } else if (ptrVal instanceof LoadInstr) {
-            return new GEPInstr(parentFunc.getAndAddRegIndex(), (LoadInstr) ptrVal, new ArrayList<>(indexList));
+            return new GEPInstr(procedure.getAndAddRegIndex(), (LoadInstr) ptrVal, new ArrayList<>(indexList));
         } else {
             throw new RuntimeException("GEP 的指针基址还有什么其它可能吗？");
         }

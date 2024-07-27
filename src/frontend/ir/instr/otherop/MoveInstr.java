@@ -4,6 +4,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class MoveInstr extends Instruction {
     private Value src;
@@ -65,7 +66,7 @@ public class MoveInstr extends Instruction {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
+    public Instruction cloneShell(Procedure procedure) {
         return new MoveInstr(src, dst);
     }
 }

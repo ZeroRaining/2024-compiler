@@ -5,6 +5,7 @@ import frontend.ir.Use;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.Value;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 
@@ -93,5 +94,9 @@ public abstract class Instruction extends Value {
         super.setParent(node);
     }
     
-    public abstract Instruction cloneShell(Function parentFunc);
+    public Instruction cloneShell(Function parentFunc) {
+        return this.cloneShell(parentFunc.getProcedure());
+    }
+    
+    public abstract Instruction cloneShell(Procedure procedure);
 }

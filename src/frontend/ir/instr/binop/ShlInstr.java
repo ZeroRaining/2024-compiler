@@ -5,6 +5,7 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class ShlInstr extends BinaryOperation {
     public ShlInstr(int result, Value op1, Value op2) {
@@ -14,8 +15,8 @@ public class ShlInstr extends BinaryOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new ShlInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    public Instruction cloneShell(Procedure procedure) {
+        return new ShlInstr(procedure.getAndAddRegIndex(), this.op1, this.op2);
     }
     
     @Override

@@ -5,6 +5,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 
@@ -18,8 +19,8 @@ public class MulInstr extends BinaryOperation implements Swappable {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new MulInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    public Instruction cloneShell(Procedure procedure) {
+        return new MulInstr(procedure.getAndAddRegIndex(), this.op1, this.op2);
     }
 
     public void swapOp() {

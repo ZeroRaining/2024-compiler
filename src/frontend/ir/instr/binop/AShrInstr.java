@@ -5,6 +5,7 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class AShrInstr extends BinaryOperation {
     public AShrInstr(int result, Value op1, Value op2) {
@@ -14,8 +15,8 @@ public class AShrInstr extends BinaryOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new AShrInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    public Instruction cloneShell(Procedure procedure) {
+        return new AShrInstr(procedure.getAndAddRegIndex(), this.op1, this.op2);
     }
     
     @Override
