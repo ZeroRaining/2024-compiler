@@ -7,10 +7,7 @@ import frontend.syntax.Ast;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class Program {
     private final SymTab globalSymTab = new SymTab();
@@ -87,5 +84,16 @@ public class Program {
             writer.append(symbol.getInitVal().value2string()).append("\n");
         }
         writer.append("\n");
+    }
+    
+    public void removeUselessFunc() {
+        Iterator<Function> iterator = functionList.iterator();
+        while (iterator.hasNext()) {
+            Function function = iterator.next();
+            if (function.noUse()) {
+                iterator.remove();
+                functions.remove(function.getName());
+            }
+        }
     }
 }

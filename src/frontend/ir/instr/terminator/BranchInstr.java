@@ -60,11 +60,6 @@ public class BranchInstr extends Terminator {
     }
 
     @Override
-    public Number getNumber() {
-        throw new RuntimeException("no value in branch");
-    }
-
-    @Override
     public DataType getDataType() {
         throw new RuntimeException("no data type");
     }
@@ -77,7 +72,6 @@ public class BranchInstr extends Terminator {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        System.out.println(this.print() + " try to replace " + from + " to " + to);
         if (condition == from) {
             condition = to;
         } else if (thenTarget == from) {

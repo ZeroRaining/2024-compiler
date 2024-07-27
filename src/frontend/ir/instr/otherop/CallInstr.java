@@ -7,6 +7,7 @@ import frontend.ir.instr.Instruction;
 import frontend.ir.lib.LibFunc;
 import frontend.ir.structure.Function;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,7 +20,9 @@ public class CallInstr extends Instruction {
     private final FuncDef funcDef;
     
     public CallInstr(Integer result, DataType returnType, FuncDef funcDef, List<Value> rParams) {
-        assert (returnType == DataType.VOID && result == null) || (returnType != DataType.VOID && result != null);
+        if (!((returnType == DataType.VOID && result == null) || (returnType != DataType.VOID && result != null))) {
+            throw new RuntimeException();
+        }
         if (rParams == null) {
             throw new NullPointerException();
         }
@@ -35,7 +38,11 @@ public class CallInstr extends Instruction {
     
     @Override
     public Instruction cloneShell(Function parentFunc) {
-        return new CallInstr(parentFunc.getAndAddRegIndex(), returnType, funcDef, rParams);
+        if (this.returnType == DataType.VOID) {
+            return new CallInstr(null, returnType, funcDef, new ArrayList<>(rParams));
+        } else {
+            return new CallInstr(parentFunc.getAndAddRegIndex(), returnType, funcDef, new ArrayList<>(rParams));
+        }
     }
     
     @Override

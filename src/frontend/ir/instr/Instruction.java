@@ -64,6 +64,10 @@ public abstract class Instruction extends Value {
             use.removeFromList();
         }
     }
+    
+    public void removeFromListWithUseRemain() {
+        super.removeFromList();
+    }
 
     public ArrayList<Value> getUseValueList() {
         return useValueList;

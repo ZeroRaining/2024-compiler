@@ -410,7 +410,7 @@ public class IrParser {
         //dst                    addr
         AsmBlock asmBlock = blockMap.get(bb);
         Symbol addr = instr.getSymbol();
-        if (instr.getPtr() == null && addr.isGlobal()) {
+        if (instr.getPtr() instanceof GlobalObject && addr.isGlobal()) {
             AsmOperand laReg = genTmpReg(f);
             AsmOperand dst = parseOperand(instr, 0, f, bb);
             AsmOperand src = parseGlobalToOperand(addr, bb);
@@ -459,7 +459,7 @@ public class IrParser {
         //sw s0,0(s1)
         AsmBlock asmBlock = blockMap.get(bb);
         Symbol addr = instr.getSymbol();
-        if (instr.getPtr() == null && addr.isGlobal()) {
+        if (instr.getPtr() instanceof GlobalObject && addr.isGlobal()) {
             AsmOperand laReg = genTmpReg(f);
             AsmOperand addrOp = parseGlobalToOperand(addr, bb);
             AsmLa asmLa = new AsmLa(laReg, addrOp);

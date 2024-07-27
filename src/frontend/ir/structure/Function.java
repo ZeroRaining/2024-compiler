@@ -4,8 +4,10 @@ import Utils.CustomList;
 import frontend.ir.DataType;
 import frontend.ir.FuncDef;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.CallInstr;
+import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 import frontend.lexer.TokenType;
@@ -24,6 +26,7 @@ public class Function extends Value implements FuncDef {
     private final List<Ast.FuncFParam> fParams;
     private final HashSet<Function> myImmediateCallee = new HashSet<>(); // 被 this 直接调用的自定义函数列表
     private final HashSet<Function> allCallee = new HashSet<>(); // 本函数执行过程中会调用（包括间接调用）的所有函数，可能包括自己
+    private int calledCnt = 0;
 
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
         if (funcDef == null) {
@@ -117,7 +120,7 @@ public class Function extends Value implements FuncDef {
     }
     
     public List<Value> getFParamValueList() {
-        return this.procedure.getFParamSymbolList();
+        return this.procedure.getFParamValueList();
     }
 
     public CustomList getBasicBlocks() {
@@ -231,18 +234,25 @@ public class Function extends Value implements FuncDef {
         }
     }
     
-    public ArrayList<BasicBlock> func2blocks(int curDepth) {
+    public ArrayList<BasicBlock> func2blocks(int curDepth, List<Value> rParams, Function caller) {
         ArrayList<BasicBlock> bbs = new ArrayList<>();
         HashMap<Value, Value> old2new = new HashMap<>();
+        
+        // 准备替换参数
+        List<Value> fParamValueList = this.procedure.getFParamValueList();
+        for (int i = 0; i < fParamValueList.size(); i++) {
+            old2new.put(fParamValueList.get(i), rParams.get(i));
+        }
+        
         BasicBlock curBB = (BasicBlock) this.procedure.getBasicBlocks().getHead();
         while (curBB != null) {
-            BasicBlock newBB = new BasicBlock(curDepth + curBB.getDepth(), this.getAndAddBlkIndex());
+            BasicBlock newBB = new BasicBlock(curDepth + curBB.getDepth(), caller.getAndAddBlkIndex());
             old2new.put(curBB, newBB);
             bbs.add(newBB);
             
             Instruction curIns = (Instruction) curBB.getInstructions().getHead();
             while (curIns != null) {
-                Instruction newIns = curIns.cloneShell(this);
+                Instruction newIns = curIns.cloneShell(caller);
                 newBB.addInstruction(newIns);
                 old2new.put(curIns, newIns);
                 curIns = (Instruction) curIns.getNext();
@@ -254,17 +264,27 @@ public class Function extends Value implements FuncDef {
         for (BasicBlock newBB : bbs) {
             Instruction newIns = (Instruction) newBB.getInstructions().getHead();
             while (newIns != null) {
-                ArrayList<Value> usedValues = newIns.getUseValueList();
+                ArrayList<Value> usedValues = new ArrayList<>(newIns.getUseValueList());
                 for (Value toReplace : usedValues) {
                     if (!old2new.containsKey(toReplace)) {
-                        throw new RuntimeException("使用了未曾设想的 value");
+                        if (newIns instanceof ReturnInstr && toReplace == newBB) {
+                            continue;
+                        }
+                        if (!(toReplace instanceof ConstValue) && !(toReplace instanceof GlobalObject)) {
+                            throw new RuntimeException("使用了未曾设想的 value");
+                        }
+                    } else {
+                        newIns.modifyUse(toReplace, old2new.get(toReplace));
                     }
-                    newIns.modifyValue(toReplace, old2new.get(toReplace));
                 }
                 newIns = (Instruction) newIns.getNext();
             }
         }
         return bbs;
+    }
+    
+    public void allocaRearrangement() {
+        this.procedure.allocaRearrangement();
     }
     
     public static void blkLabelReorder() {
@@ -276,5 +296,20 @@ public class Function extends Value implements FuncDef {
                 curBB = (BasicBlock) curBB.getNext();
             }
         }
+    }
+    
+    public void addCall() {
+        this.calledCnt++;
+    }
+    
+    public void minusCall() {
+        this.calledCnt--;
+    }
+    
+    public boolean noUse() {
+        if (this.name.equals("main")) {
+            return false;
+        }
+        return this.calledCnt == 0;
     }
 }

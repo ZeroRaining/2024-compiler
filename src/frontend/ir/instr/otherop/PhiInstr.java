@@ -102,7 +102,7 @@ public class PhiInstr extends Instruction {
     
     @Override
     public Instruction cloneShell(Function parentFunc) {
-        return new PhiInstr(parentFunc.getAndAddRegIndex(), type, values, prtBlks);
+        return new PhiInstr(parentFunc.getAndAddRegIndex(), type, new ArrayList<>(values), new ArrayList<>(prtBlks));
     }
     
     public boolean canSimplify() {

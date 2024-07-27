@@ -35,14 +35,16 @@ public class Compiler {
         // 生成 IR
         Program program = new Program(ast);
         
-//        if (arg.getOptLevel() == 1) {
-//            FI.doFI(program.getFunctionList());     // todo: 函数内联，未来可能要加一些限制，不一定全内联
-//        }
+        if (arg.getOptLevel() == 1) {
+            FI.doFI(program.getFunctionList());     // todo: 函数内联，未来可能要加一些限制，不一定全内联
+        }
+        
+        program.removeUselessFunc();
         
         HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
         DeadBlockRemove.execute(functions);
         DFG.doDFG(functions);
-        
+
         // 开启优化
         if (arg.toTime()) {
             optimizeStartTime = System.currentTimeMillis();
@@ -57,6 +59,7 @@ public class Compiler {
             MergeBlock.execute(functions);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
+            
             //makeDFG
 //            SimplifyBranch.execute(functions);
 //            MergeBlock.execute(functions);
@@ -69,7 +72,7 @@ public class Compiler {
 
         // 打印 IR
         if (arg.toPrintIR()) {
-            Function.blkLabelReorder();
+//            Function.blkLabelReorder();
             
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
             program.printIR(irWriter);
