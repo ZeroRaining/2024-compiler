@@ -8,6 +8,7 @@ import backend.asmInstr.asmConv.AsmFtoi;
 import backend.asmInstr.asmConv.AsmitoF;
 import backend.asmInstr.asmLS.AsmL;
 import backend.asmInstr.asmLS.AsmS;
+import backend.itemStructure.AsmBlock;
 import backend.itemStructure.AsmOperand;
 import backend.regs.AsmReg;
 
@@ -25,6 +26,7 @@ public class AsmInstr extends CustomList.Node {
     public ArrayList<AsmReg> regUse = new ArrayList<>();
 
     private String type;
+    public AsmBlock parent;
 
     public AsmInstr(String type) {
         this.type = type;

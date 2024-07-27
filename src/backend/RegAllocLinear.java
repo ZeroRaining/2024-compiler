@@ -1,11 +1,11 @@
 package backend;
 
+import Utils.CustomList;
 import backend.asmInstr.AsmInstr;
+import backend.asmInstr.asmBinary.AsmAdd;
+import backend.asmInstr.asmLS.*;
 import backend.asmInstr.asmTermin.AsmCall;
-import backend.itemStructure.AsmBlock;
-import backend.itemStructure.AsmFunction;
-import backend.itemStructure.AsmModule;
-import backend.itemStructure.AsmOperand;
+import backend.itemStructure.*;
 import backend.regs.*;
 import frontend.ir.Value;
 
@@ -16,10 +16,10 @@ public class RegAllocLinear {
         // 初始化逻辑
         this.downOperandMap = downOperandMap;
     }
+    private static int newAllocSize = 0;
     private HashMap<AsmOperand, Value> downOperandMap;
     private static RegAllocLinear instance = null;
     private HashSet<AsmOperand> all = new HashSet<>();
-    private HashMap<AsmOperand, Interval> intervals = new HashMap<>();
     private List<Interval> sortedIntervals = new ArrayList<>();
     private Stack<Integer> freeRegisters = new Stack<>();
     // 提供一个公共的静态方法，用于获取单例对象
@@ -29,198 +29,44 @@ public class RegAllocLinear {
         }
         return instance;
     }
-//    private int FI = 0;
-//    HashMap<AsmOperand, Integer> loopDepths = new HashMap<>();
-//    private void LivenessAnalysis(AsmFunction function) {
-//        GetUseAndDef(function);
-//        GetBlockLiveInAndOut(function);
-//        GetLiveInterval(function);
-//    }
-//    private void GetUseAndDef(AsmFunction function) {
-//        all.clear();
-//        AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
-//        while (blockHead != null) {
-//            blockHead.getDef().clear();
-//            blockHead.getUse().clear();
-//            AsmInstr InsHead = (AsmInstr) blockHead.getInstrs().getHead();
-//            while (InsHead != null) {
-//                for (AsmReg one : InsHead.regUse) {
-//                    if (CanBeAddToRun(one) || (one instanceof AsmPhyReg && FI == 0) || (one instanceof AsmFPhyReg && FI == 1)) {
-//                        if (!blockHead.getDef().contains(one)) {
-//                            blockHead.getUse().add(one);
-//                            if (CanBeAddToRun(one)) all.add(one);
-//                        }
-//                    }
-//                }
-//                for (AsmReg one : InsHead.regDef) {
-//                    if (CanBeAddToRun(one) || (one instanceof AsmPhyReg && FI == 0) || (one instanceof AsmFPhyReg && FI == 1)) {
-//                        if (!blockHead.getDef().contains(one)) {
-//                            blockHead.getDef().add(one);
-//                            if (CanBeAddToRun(one)) all.add(one);
-//                        }
-//                    }
-//                }
-//                InsHead = (AsmInstr) InsHead.getNext();
-//            }
-//            blockHead = (AsmBlock) blockHead.getNext();
-//        }
-//    }
-//    private void GetBlockLiveInAndOut(AsmFunction function) {
-//        //初始化block and instr 的LiveIn和LiveOut
-//        {
-//            AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
-//            while (blockHead != null) {
-//                blockHead.LiveIn.clear();
-//                blockHead.LiveOut.clear();
-//                AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
-//                while (instrHead != null) {
-//                    instrHead.LiveIn.clear();
-//                    instrHead.LiveOut.clear();
-//                    instrHead = (AsmInstr) instrHead.getNext();
-//                }
-//                blockHead = (AsmBlock) blockHead.getNext();
-//            }
-//        }
-//        boolean changed = true;
-//        while (changed) {
-//            changed = false;
-//            AsmBlock blockTail = (AsmBlock) function.getBlocks().getTail();
-//            while (blockTail != null) {
-//                //LiveOut[B_i] <- Union (LiveIn[s]) where s belongs to succ(B_i) ;
-//                for (AsmBlock succBlock : blockTail.sucs) {
-//                    for (AsmReg one : succBlock.LiveIn) {
-//                        blockTail.LiveOut.add(one);
-//                    }
-//                }
-//                //NewLiveIn <- Union (LiveUse[B_i], (LiveOut[B_i] – Def[B_i]));
-//                HashSet<AsmReg> NewLiveIn = new HashSet<>();
-//                NewLiveIn.addAll(blockTail.getUse());
-//                NewLiveIn.addAll(blockTail.LiveOut);
-//                NewLiveIn.removeAll(blockTail.getDef());
-//
-//                if (!NewLiveIn.equals(blockTail.LiveIn)) {
-//                    changed = true;
-//                    blockTail.LiveIn = NewLiveIn;
-//                }
-//                blockTail = (AsmBlock) blockTail.getPrev();
-//            }
-//        }
-//    }
-//    private void GetLiveInterval(AsmFunction function) {
-//        AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
-//        while (blockHead != null) {
-//            AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
-//            HashSet<AsmReg> live = new HashSet<>();
-//            live.addAll(blockHead.LiveOut);
-//            while (instrTail != null) {
-//                for (AsmReg D : instrTail.regDef) {
-//                    if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
-//                        live.add(D);
-//                    }
-//                }
-//                live.removeAll(instrTail.regDef);
-//                for (AsmReg U : instrTail.regUse) {
-//                    if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) { //不确定是否要要算上预着色的，但应该要算，所以先按算的来/todo
-//                        live.add(U);
-//                    }
-//                }
-//                instrTail.LiveIn.clear();
-//                instrTail.LiveIn.addAll(live);
-//                instrTail = (AsmInstr) instrTail.getPrev();
-//                if (instrTail != null) {
-//                    instrTail.LiveOut.clear();
-//                    instrTail.LiveOut.addAll(live);
-//                }
-//            }
-//            blockHead = (AsmBlock) blockHead.getNext();
-//        }
-//    }
-//    private boolean CanBeAddToRun(AsmOperand m) {
-//        if ((m instanceof AsmVirReg && FI == 0) || (m instanceof AsmFVirReg && FI == 1)) {
-//            return true;
-//        }
-////       else if ((m instanceof AsmPhyReg && FI == 0) || (m instanceof AsmFPhyReg && FI == 1)) {
-////           return true;
-////       }
-//        else {
-//            return false;
-//        }
-//    }
-//    // 新增的代码部分
 
-//    private void LinearScanRegisterAllocation(AsmFunction function) {
-//        // 初始化空闲寄存器池
-//        for (int i = 6; i < 32; i++) {// 假设我们有个寄存器
-//            if (i != 10)
-//            freeRegisters.push(i);
-//        }
-//
-//        // 按照起始点对活跃区间进行排序
-//        sortedIntervals.sort(Comparator.comparingInt(Interval::getStart));
-//
-//        // 线性扫描
-//        List<Interval> active = new ArrayList<>();
-//        for (Interval interval : sortedIntervals) {
-//            ExpireOldIntervals(active, interval);
-//            if (active.size() == 26) { // 假设我们有32个寄存器
-//                SpillAtInterval(active, interval);
-//            } else {
-//                interval.setColor(freeRegisters.pop());
-//                active.add(interval);
-//                active.sort(Comparator.comparingInt(Interval::getEnd));
-//            }
-//        }
-//    }
-
-//    private void ExpireOldIntervals(List<Interval> active, Interval current) {
-//        Iterator<Interval> iterator = active.iterator();
-//        while (iterator.hasNext()) {
-//            Interval interval = iterator.next();
-//            if (interval.getEnd() >= current.getStart()) {
-//                return;
-//            }
-//            iterator.remove();
-//            freeRegisters.push(interval.getColor());
-//        }
-//    }
-
-//    private void SpillAtInterval(List<Interval> active, Interval current) {
-//        // Find the interval with the latest end time that is not a physical register
-//        Interval spill = null;
-//        for (Interval interval : active) {
-//            if (!(interval.getRegister() instanceof AsmPhyReg)) {
-//                if (spill == null || interval.getEnd() > spill.getEnd()) {
-//                    spill = interval;
-//                }
-//            }
-//        }
-//
-//        // If no suitable interval to spill, spill the current interval
-//        if (spill == null) {
-//            current.setSpilled(true);
-//            return;
-//        }
-//
-//        // Spill the selected interval
-//        if (spill.getEnd() > current.getEnd()) {
-//            current.setColor(spill.getColor());
-//            spill.setSpilled(true);
-//            active.remove(spill);
-//            active.add(current);
-//            active.sort(Comparator.comparingInt(Interval::getEnd));
-//        } else {
-//            current.setSpilled(true);
-//        }
-//    }
 
     // 你需要实现的Interval类
     private class Interval {
+        public int type; // 0非固定区间， 1固定区间，不可split，不可spill
         private AsmOperand register;
-        private int color = -1;
+        private int assignedReg = -1;
+        public int assignedSpill = 0;
         public ArrayList<Range> RangeList = new ArrayList<>();
         public ArrayList<UsePostion> UsePostionList = new ArrayList<>();
+        public Interval splitParent = null;
+        public ArrayList<Interval> splitChildren = new ArrayList<>();
         public Interval(AsmOperand register) {
             this.register = register;
+            if (register instanceof AsmVirReg || register instanceof AsmFVirReg) {
+                type = 0;
+            } else if (register instanceof AsmPhyReg || register instanceof AsmFPhyReg) {
+                type = 1;
+                if (register instanceof AsmPhyReg) {
+                    assignedReg = RegGeter.nameToIndexInt.get(register.toString());
+                } else {
+                    assignedReg = RegGeter.nameToIndexFloat.get(register.toString()) + 32;
+                }
+            }
+        }
+        public Interval(AsmOperand register, Interval splitParent) {
+            this.register = register;
+            this.splitParent = splitParent;
+            if (register instanceof AsmVirReg || register instanceof AsmFVirReg) {
+                type = 0;
+            } else if (register instanceof AsmPhyReg || register instanceof AsmFPhyReg) {
+                type = 1;
+                if (register instanceof AsmPhyReg) {
+                    assignedReg = RegGeter.nameToIndexInt.get(register.toString());
+                } else {
+                    assignedReg = RegGeter.nameToIndexFloat.get(register.toString()) + 32;
+                }
+            }
         }
         public void addRange(int from, int to) {
             Range newRange = new Range(from, to);
@@ -263,12 +109,61 @@ public class RegAllocLinear {
 
             RangeList = mergedRanges;
         }
-
+        private boolean cover(int position) {
+            for (Range range : RangeList) {
+                if (range.from <= position && range.to >= position) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public Interval child_at(int position) {
+            if (cover(position)) {
+                return this;// todo
+            }
+            for (Interval child: splitChildren) {
+                if (child.cover(position)) {
+                    return child;
+                }
+            }
+            return null;
+        }
         public void add_use_pos(int pos, int kind) {
             UsePostionList.add(new UsePostion(pos,kind));
         }
+        public void printRanges() {
+            // Find the maximum 'to' value to determine the size of the output
+            int maxTo = 0;
+            for (Range range : RangeList) {
+                maxTo = Math.max(maxTo, range.to);
+            }
+
+            // Create an array to represent the output line
+            char[] line = new char[maxTo + 1];
+            java.util.Arrays.fill(line, ' ');
+
+            // Mark ranges with '*'
+            for (Range range : RangeList) {
+                for (int i = range.from; i <= range.to; i++) {
+                    line[i] = '*';
+                }
+            }
+            for (UsePostion usePostion : UsePostionList) {
+                line[usePostion.position] = '&';
+            }
+
+            // Convert the line to a string and print it
+            int totalLength = 25;
+            // 获取注册器字符串，并在末尾加上冒号
+            String registerStr = register.toString() + ":";
+            // 使用 String.format 生成指定长度的字符串，并用空格填充
+            String format = String.format("%-" + totalLength + "s", registerStr);
+            System.out.print(format);
+            System.out.println(new String(line));
+        }
 
     }
+    //from包含，to不包含（todo 注意检查这个逻辑
     private class Range {
         public int from;
         public int to;
@@ -280,10 +175,19 @@ public class RegAllocLinear {
 
     private class UsePostion {
         public int position;
-        public int use_kind;
+        public int kind;
         public UsePostion(int position, int use_kind) {
             this.position = position;
-            this.use_kind = use_kind;
+            this.kind = use_kind;
+        }
+    }
+    private class Move extends AsmInstr {
+        public Interval src;
+        public Interval dst;
+        public Move(Interval src, Interval dst) {
+            super("DefineMove");
+            this.src = src;
+            this.dst = dst;
         }
     }
 
@@ -319,6 +223,7 @@ public class RegAllocLinear {
             blockPreNum.put(blockHead, blockHead.pres.size());
             blockHead = (AsmBlock) blockHead.getNext();
         }
+        newAllocSize = 0;
     }
     private void COMPUTE_BLOCK_ORDER(AsmFunction function) {
         this.blockWorkList.clear();
@@ -351,12 +256,17 @@ public class RegAllocLinear {
 //            end for
 //    end for
     HashMap<AsmInstr, Integer> instrsId = new HashMap<>();
+    HashMap<Integer, AsmInstr> idInstrs = new HashMap<>();
     private void NUMBER_OPERATIONS() {
+        idInstrs.clear();
+        instrsId.clear();
         int next_id = 0;
         for (AsmBlock block: blocks) {
             AsmInstr instrHead = (AsmInstr) block.getInstrs().getHead();
             while (instrHead != null) {
+                instrHead.parent = block;
                 instrsId.put(instrHead,next_id);
+                idInstrs.put(next_id, instrHead);
                 next_id+=2;
                 instrHead = (AsmInstr) instrHead.getNext();
             }
@@ -497,17 +407,26 @@ public class RegAllocLinear {
     }
     private HashMap<AsmReg, Interval> IntIntervals = new HashMap<>();
     private HashMap<AsmReg, Interval> FloatIntervals = new HashMap<>();
+    private boolean PhyCanBeAdd(AsmOperand opr){
+        if (opr == RegGeter.AllRegsInt.get(10) || opr != RegGeter.AllRegsInt.get(5) || opr != RegGeter.AllRegsInt.get(0) || opr != RegGeter.AllRegsInt.get(1) || opr != RegGeter.AllRegsInt.get(2) || opr != RegGeter.AllRegsInt.get(3) || opr != RegGeter.AllRegsInt.get(4)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
     private  void  BUILD_INTERVALS() {
+        IntIntervals.clear();
+        FloatIntervals.clear();
         for (int b = blocks.size() - 1; b >= 0; b--) {
             AsmBlock blockTail = blocks.get(b);
             int block_from = instrsId.get((AsmInstr) blockTail.getInstrs().getHead());
             int block_to = instrsId.get((AsmInstr) blockTail.getInstrTail()) + 2;
             for (AsmOperand opr: blockTail.LiveOut) {
-                if ((opr instanceof AsmPhyReg ) || opr instanceof AsmVirReg) {
+                if ((opr instanceof AsmPhyReg && PhyCanBeAdd(opr)) || opr instanceof AsmVirReg) {
                     IntIntervals.putIfAbsent((AsmReg) opr, new Interval(opr));
                     IntIntervals.get(opr).addRange(block_from, block_to);
                 }
-                if (opr instanceof AsmFPhyReg || opr instanceof AsmFVirReg) {
+                if (opr instanceof AsmFPhyReg && opr != RegGeter.AllRegsFloat.get(10) || opr instanceof AsmFVirReg) {
                     FloatIntervals.putIfAbsent((AsmReg) opr, new Interval(opr));
                     FloatIntervals.get(opr).addRange(block_from, block_to);
                 }
@@ -516,20 +435,20 @@ public class RegAllocLinear {
             while (instrTail != null) {
                 if (instrTail instanceof AsmCall) {
                     for (int i = 0; i < 32; i++) {
-                        if (i == 1 || (i >= 5 && i <= 7) || (i >= 11 && i <= 11) || (i >= 12 && i <= 17) || (i >= 28 && i <= 31)) {
+                        if ((i >= 6 && i <= 7) || (i >= 11 && i <= 11) || (i >= 12 && i <= 17) || (i >= 28 && i <= 31)) {
                             IntIntervals.putIfAbsent(RegGeter.AllRegsInt.get(i), new Interval(RegGeter.AllRegsInt.get(i)));
                             IntIntervals.get(RegGeter.AllRegsInt.get(i)).addRange(instrsId.get(instrTail), instrsId.get(instrTail) + 1);
                         }
                     }
                     for (int i = 32; i < 64; i++) {
-                        if ((i <= 39 && i >= 32) || (i >= 42 && i <= 49) || (i >= 60 && i <= 63)) {
+                        if ((i <= 39 && i >= 32) || (i >= 43 && i <= 49) || (i >= 60 && i <= 63)) {
                             FloatIntervals.putIfAbsent(RegGeter.AllRegsFloat.get(i - 32), new Interval(RegGeter.AllRegsFloat.get(i - 32)));
                             FloatIntervals.get(RegGeter.AllRegsFloat.get(i-32)).addRange(instrsId.get(instrTail), instrsId.get(instrTail) + 1);
                         }
                     }
                 }
                 for (AsmOperand opr: instrTail.regDef) {
-                    if (opr instanceof AsmPhyReg || opr instanceof AsmVirReg) {
+                    if ((opr instanceof AsmPhyReg && PhyCanBeAdd(opr)) || opr instanceof AsmVirReg) {
                         IntIntervals.putIfAbsent((AsmReg) opr, new Interval(opr));
                         if (IntIntervals.get(opr).RangeList.isEmpty()) {
                             IntIntervals.get(opr).addRange(instrsId.get(instrTail), instrsId.get(instrTail) + 1); //todo 不确定
@@ -537,17 +456,22 @@ public class RegAllocLinear {
                         IntIntervals.get(opr).RangeList.get(0).from = instrsId.get(instrTail);
                         IntIntervals.get(opr).add_use_pos(instrsId.get(instrTail), 1);
                     }
-                    if (opr instanceof AsmFPhyReg || opr instanceof AsmFVirReg) {
+                    if ((opr instanceof AsmFPhyReg && opr != RegGeter.AllRegsFloat.get(10)) || opr instanceof AsmFVirReg) {
                         FloatIntervals.putIfAbsent((AsmReg) opr, new Interval(opr));
                         FloatIntervals.get(opr).RangeList.get(0).from = instrsId.get(instrTail);
                         FloatIntervals.get(opr).add_use_pos(instrsId.get(instrTail), 1);
                     }
                 }
                 for (AsmOperand opr: instrTail.regUse) {
-                    if (opr instanceof AsmPhyReg || opr instanceof AsmVirReg) {
+                    if ((opr instanceof AsmPhyReg && PhyCanBeAdd(opr)) || opr instanceof AsmVirReg) {
                         IntIntervals.putIfAbsent((AsmReg) opr, new Interval(opr));
                         IntIntervals.get(opr).addRange(block_from, instrsId.get(instrTail));
                         IntIntervals.get(opr).add_use_pos(instrsId.get(instrTail), 1);
+                    }
+                    if ((opr instanceof AsmFPhyReg && opr != RegGeter.AllRegsFloat.get(10)) || opr instanceof AsmFVirReg) {
+                        FloatIntervals.putIfAbsent((AsmReg) opr, new Interval(opr));
+                        FloatIntervals.get(opr).RangeList.get(0).from = instrsId.get(instrTail);
+                        FloatIntervals.get(opr).add_use_pos(instrsId.get(instrTail), 1);
                     }
                 }
                 instrTail = (AsmInstr) instrTail.getPrev();
@@ -601,11 +525,729 @@ public class RegAllocLinear {
         unhandled.clear();
         active.clear();
         inactive.clear();
+        unhandled.addAll(args);
+        Collections.sort(unhandled, new Comparator<Interval>() {
+            @Override
+            public int compare(Interval o1, Interval o2) {
+                return Integer.compare(o1.RangeList.get(0).from, o2.RangeList.get(0).from);
+            }
+        });
 
     }
-    private void WALK_INTERVALS() {
+    private void WALK_INTERVALS(ArrayList<Interval> args, AsmFunction function,int type) {
+        initial_(args);
+        while (!unhandled.isEmpty()) {
+            Interval current = unhandled.remove(0);
+            int position = current.RangeList.get(0).from;
+            // 检查active中的区间
+            Iterator<Interval> activeIterator = active.iterator();
+            while (activeIterator.hasNext()) {
+                Interval it = activeIterator.next();
+                if (it.RangeList.get(it.RangeList.size()).to < position) {
+                    activeIterator.remove();
+                    // move it to handled (not implemented, assumed to be a separate collection)
+                } else if (!it.cover(position)) {
+                    activeIterator.remove();
+                    inactive.add(it);
+                }
+            }
+            // 检查inactive中的区间
+            for (int i = 0; i < inactive.size(); i++) {
+                Interval it = inactive.get(i);
+                if (it.RangeList.get(it.RangeList.size()).to < position) {
+                    inactive.remove(i);
+                } else if (it.cover(position)) {
+                    inactive.remove(i);
+                    active.add(it);
+                }
+            }
+
+            // 为current分配寄存器
+            boolean allocation = TRY_ALLOCATE_FREE_REG(current, type);
+            if (!allocation) {
+                ALLOCATE_BLOCKED_REG(current, function, type);
+            }
+
+            if (current.assignedReg != -1) {
+                active.add(current);
+            }
+        }
+    }
+
+//    {
+//        TRY_ALLOCATE_FREE_REG
+//        // 将所有物理寄存器的 free_pos 设置为最大整数，表示所有寄存器初始状态均可用
+//        set free_pos of all physical registers to max_int
+//
+//        // 遍历 active 集合中的每个区间
+//        for each interval it in active do
+//        // 将这些区间对应的寄存器的 free_pos 设置为 0，表示这些寄存器当前正在使用，不能分配给 current 区间
+//        set_free_pos(it, 0)
+//        end for
+//
+//        // 遍历与 current 相交的 inactive 集合中的每个区间
+//        for each interval it in inactive intersecting with current do
+//        // 将这些区间的下一个与 current 区间相交的位置设置为 free_pos
+//        // 表示这些寄存器在相交前是可用的，但在相交之后就不能再用了
+//        set_free_pos(it, next intersection of it with current)
+//        end for
+//
+//        // 找到 free_pos 最高的寄存器
+//        reg = register with highest free_pos
+//
+//        // 检查 free_pos[reg] 是否为 0
+//        if free_pos[reg] = 0 then
+//        // 分配失败，没有可用的寄存器而不发生溢出
+//        return false
+// else if free_pos[reg] > current.last_range.to then
+//        // 寄存器在整个 current 区间生命周期内可用
+//        // 将寄存器分配给 current 区间
+//        assign register reg to interval current
+// else
+//        // 寄存器在 current 区间的前一部分可用
+//        // 将寄存器分配给 current 区间的前一部分
+//        assign register reg to interval current
+//        // 在 free_pos[reg] 之前的最优位置将 current 区间分割开
+//        split current at optimal position before free_pos[reg]
+//        end if
+//    }
+    private HashMap<Integer, Integer> free_pos; // <寄存器编号，free_pos>
+    private boolean TRY_ALLOCATE_FREE_REG(Interval current, int type) {
+        free_pos.clear();
+        // 寄存器分配的逻辑实现
+        if (type == 0) { // 整数型
+            for (int i = 0 ; i < 32; i++) {
+                if (PhyCanBeAdd(RegGeter.AllRegsInt.get(i))) {
+                    free_pos.put(i, 2147483647);
+                }
+            }
+        } else {
+            for (int i = 32 ; i < 64; i++) {
+                if (i != 42) {
+                    free_pos.put(i, 2147483647);
+                }
+            }
+        }
+        for (Interval it: active){
+            free_pos.put(it.assignedReg, 0);
+        }
+        for (Interval it: inactive){
+            if (intersects(it, current)) {
+               int pos = findNextIntersection(it, current);
+               free_pos.put(it.assignedReg, pos);
+            }
+        }
+        ///自己加的
+        if (current.type == 1) {
+            int freePos = free_pos.get(current.assignedReg);
+            if (freePos == 0) {
+                return false;
+            } else if (freePos > current.RangeList.get(current.RangeList.size()).to) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        ///
+        int alloc = RegisterWithMaxFreePos();
+        if (free_pos.get(alloc) == 0) {
+            return false;
+        } else if (free_pos.get(alloc) > current.RangeList.get(current.RangeList.size()).to) {
+            current.assignedReg = alloc;
+        } else {
+            current.assignedReg = alloc;
+            Interval newInterval = splitInterval(current, free_pos.get(alloc));
+            GenerateMove(current, newInterval, newInterval.RangeList.get(0).from,0);
+        }
+        return true;
+    }
+
+    private boolean intersects(Interval it, Interval current) {
+        // 检查两个区间是否相交
+        for (Range r1 : it.RangeList) {
+            for (Range r2 : current.RangeList) {
+                if (r1.from < r2.to && r2.from < r1.to) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private int findNextIntersection(Interval it, Interval current) {
+        // 找到 it 区间和 current 区间的下一个交点位置
+        int nextIntersection = Integer.MAX_VALUE;
+        for (Range r1 : it.RangeList) {
+            for (Range r2 : current.RangeList) {
+                if (r1.from < r2.to && r2.from < r1.to) {
+                    int intersectionPoint = Math.max(r1.from, r2.from);
+                    if (intersectionPoint > current.RangeList.get(0).from) {
+                        nextIntersection = Math.min(nextIntersection, intersectionPoint);
+                    }
+                }
+            }
+        }
+        return nextIntersection;
+    }
+    public Integer RegisterWithMaxFreePos() {
+        Integer maxRegister = null;
+        int maxFreePos = Integer.MIN_VALUE;
+
+        for (Map.Entry<Integer, Integer> entry : free_pos.entrySet()) {
+            if (entry.getValue() > maxFreePos) {
+                maxFreePos = entry.getValue();
+                maxRegister = entry.getKey();
+            }
+        }
+
+        return maxRegister;
+    }
+    public Interval splitInterval(Interval current, int splitPoint) {
+        // 检查是否需要分割，如果分割点在当前区间的有效范围之外，则无需分割。
+        if (splitPoint <= current.RangeList.get(0).from || splitPoint >= current.RangeList.get(current.RangeList.size() - 1).to) {
+            return null; // 如果分割点在当前区间的范围之外，则不进行分割
+        }
+        Interval newInterval;
+        // 创建新的子区间，从分割点开始
+        if (current.splitParent == null) {
+            newInterval = new Interval(current.register, current);
+        } else {
+            newInterval = new Interval(current.register, current.splitParent);
+        }
+        // 分割当前区间的范围和使用位置
+        ArrayList<Range> updatedRanges = new ArrayList<>();
+        ArrayList<UsePostion> updatedUsePositions = new ArrayList<>();
+        for (Range range : current.RangeList) {
+            if (range.to <= splitPoint) {
+                // 当前范围在分割点之前
+                updatedRanges.add(range);
+            } else if (range.from < splitPoint) {
+                // 当前范围在分割点中断
+                updatedRanges.add(new Range(range.from, splitPoint));
+                newInterval.addRange(splitPoint, range.to);
+            } else {
+                // 当前范围在分割点之后
+                newInterval.addRange(range.from, range.to);
+            }
+        }
+        // 处理使用位置
+        for (UsePostion usePos : current.UsePostionList) {
+            if (usePos.position < splitPoint) {
+                updatedUsePositions.add(usePos);
+            } else {
+                newInterval.add_use_pos(usePos.position, usePos.kind);
+            }
+        }
+        current.RangeList = updatedRanges;
+        current.UsePostionList = updatedUsePositions;
+        if (current.splitParent == null) {
+            int insertPos = Collections.binarySearch(current.splitChildren, newInterval, Comparator.comparingInt(o -> o.RangeList.get(0).from));
+            if (insertPos < 0) {
+                insertPos = -insertPos - 1;
+            }
+            current.splitChildren.add(insertPos,newInterval);
+        } else {
+            int insertPos = Collections.binarySearch(current.splitParent.splitChildren, newInterval, Comparator.comparingInt(o -> o.RangeList.get(0).from));
+            if (insertPos < 0) {
+                insertPos = -insertPos - 1;
+            }
+            current.splitParent.splitChildren.add(insertPos,newInterval);
+        }
+        int insertPos = Collections.binarySearch(unhandled, newInterval, Comparator.comparingInt(o -> o.RangeList.get(0).from));
+        if (insertPos < 0) {
+            insertPos = -insertPos - 1;
+        }
+        unhandled.add(insertPos, newInterval);
+        return newInterval;
+    }
+    public void GenerateMove(Interval src, Interval dst, int insertPlace, int foreOrback) {
+        Move newMove = new Move(src,dst);
+        if (foreOrback == 0) {
+            newMove.insertBefore(idInstrs.get(insertPlace));
+        } else {
+            newMove.insertAfter(idInstrs.get(insertPlace));
+        }
+    }
+
+//    {
+//        // 初始化所有物理寄存器的 use_pos 和 block_pos 为最大整数值
+//        set use_pos and block_pos of all physical registers to max_int
+//
+//// 对于每个非固定的活动区间
+//        for each non-fixed interval it in active do
+//        // 设置它们在 current.first_range.from 之后的下一个使用位置
+//        set_use_pos(it, next usage of it after current.first_range.from)
+//        end for
+//
+//// 对于每个与 current 相交的非固定的非活动区间
+//        for each non-fixed interval it in inactive intersecting with current do
+//        // 设置它们在 current.first_range.from 之后的下一个使用位置
+//        set_use_pos(it, next usage of it after current.first_range.from)
+//        end for
+//
+//// 对于每个固定的活动区间
+//        for each fixed interval it in active do
+//        // 将它们的阻塞位置设置为 0
+//        set_block_pos(it, 0)
+//        end for
+//
+//// 对于每个与 current 相交的固定的非活动区间
+//        for each fixed interval it in inactive intersecting with current do
+//        // 设置它们与 current 相交的下一个位置为阻塞位置
+//        set_block_pos(it, next intersection of it with current)
+//        end for
+//
+//// 选择 use_pos 最大的寄存器
+//        reg = register with highest use_pos
+//
+//        if use_pos[reg] < first usage of current then
+//        // 所有活动和非活动区间都在 current 之前使用，所以最好溢出 current 自身
+//        assign spill slot to current
+//        // 在第一个需要寄存器的位置之前的最优位置将 current 分割开
+//        split current at optimal position before first use position that requires a register
+//else if block_pos[reg] > current.last_range.to then
+//        // 溢出使寄存器在整个 current 期间都是空闲的
+//        assign register reg to interval current
+//        // 分割并溢出与 reg 相交的活动和非活动区间
+//        split and spill intersecting active and inactive intervals for reg
+//else
+//        // 溢出使寄存器在 current 区间的前一部分是空闲的
+//        assign register reg to interval current
+//        // 在 block_pos[reg] 之前的最优位置将 current 区间分割开
+//        split current at optimal position before block_pos[reg]
+//        // 分割并溢出与 reg 相交的活动和非活动区间
+//        split and spill intersecting active and inactive intervals for reg
+//        end if
+//    }
+    HashMap<Integer, Integer> use_pos = new HashMap<>();
+    HashMap<Integer, Integer> block_pos = new HashMap<>();
+
+    private void ALLOCATE_BLOCKED_REG(Interval current, AsmFunction function,int type) {//这边type指整数与浮点
+
+        use_pos.clear();
+        block_pos.clear();
+        if (type == 0) { // 整数型
+            for (int i = 0 ; i < 32; i++) {
+                if (PhyCanBeAdd(RegGeter.AllRegsInt.get(i))) {
+                    use_pos.put(i, 2147483647);
+                    block_pos.put(i, 2147483647);
+                }
+            }
+        } else {
+            for (int i = 32 ; i < 64; i++) {
+                if (i != 42) {
+                    use_pos.put(i, 2147483647);
+                    block_pos.put(i, 2147483647);
+                }
+            }
+        }
+        if (current.type == 1) {
+            Interval needSpill = null;
+            for (Interval one: inactive) {
+                if (one.assignedReg == current.assignedReg) {
+                    needSpill = one;
+                }
+            }
+            for (Interval one: active) {
+                if (one.assignedReg == current.assignedReg) {
+                    needSpill = one;
+                }
+            }
+            Interval newInterval = splitInterval(needSpill, current.RangeList.get(0).from);
+            GenerateMove(current,newInterval, newInterval.RangeList.get(0).from, 0);
+            int spillPlace = assignSpillSlot(function);
+            newInterval.assignedSpill = spillPlace;
+            newInterval.assignedReg = -1;
+            Interval newnewInterval = splitInterval(newInterval, newInterval.UsePostionList.get(0).position);
+            GenerateMove(newInterval, newnewInterval, newnewInterval.RangeList.get(0).from, 0);
+            //扔进unhandled
+            int insertPos = Collections.binarySearch(unhandled, newnewInterval, Comparator.comparingInt(o -> o.RangeList.get(0).from));
+            if (insertPos < 0) {
+                insertPos = -insertPos - 1;
+            }
+            unhandled.add(insertPos, newnewInterval);
+        }
+        for (Interval non_fixed: active) {
+            if (non_fixed.type == 0) {
+                use_pos.put(non_fixed.assignedReg, findNextUsageAfter(non_fixed, current.RangeList.get(0).from));
+            }
+        }
+        for (Interval non_fixed: inactive){
+            if (intersects(non_fixed, current) && non_fixed.type == 0) {
+                use_pos.put(non_fixed.assignedReg, findNextUsageAfter(non_fixed, current.RangeList.get(0).from));
+            }
+        }
+        for (Interval fixed: active) {
+            if (fixed.type == 1) {
+                block_pos.put(fixed.assignedReg, 0);
+                use_pos.put(fixed.assignedReg, 0);
+            }
+        }
+        for (Interval fixed: inactive){
+            if (intersects(fixed, current) && fixed.type == 1) {
+                block_pos.put(fixed.assignedReg, findNextIntersection(fixed, current));
+                if (findNextIntersection(fixed, current) < use_pos.get(fixed.assignedReg)) {
+                    use_pos.put(fixed.assignedReg, findNextIntersection(fixed, current));
+                }
+            }
+        }
+        int alloc = findRegisterWithHighestUsePos();
+        if (use_pos.get(alloc) < current.UsePostionList.get(0).position) {
+            int spillPlace = assignSpillSlot(function);
+            current.assignedSpill = spillPlace;
+            current.assignedReg = -1;
+            Interval newInterval = splitInterval(current, current.UsePostionList.get(0).position);
+            GenerateMove(current, newInterval, newInterval.RangeList.get(0).from, 0);
+            //扔进unhandled
+            int insertPos = Collections.binarySearch(unhandled, newInterval, Comparator.comparingInt(o -> o.RangeList.get(0).from));
+            if (insertPos < 0) {
+                insertPos = -insertPos - 1;
+            }
+            unhandled.add(insertPos, newInterval);
+        } else if (block_pos.get(alloc) > current.RangeList.get(current.RangeList.size()).to){
+            current.assignedReg = alloc;
+            Interval needSpill = null;
+            for (Interval one: inactive) {
+                if (one.assignedReg == alloc) {
+                    needSpill = one;
+                }
+            }
+            for (Interval one: active) {
+                if (one.assignedReg == alloc) {
+                    needSpill = one;
+                }
+            }
+            Interval newInterval = splitInterval(needSpill, current.RangeList.get(0).from);
+            GenerateMove(current,newInterval, newInterval.RangeList.get(0).from, 0);
+            int spillPlace = assignSpillSlot(function);
+            newInterval.assignedSpill = spillPlace;
+            newInterval.assignedReg = -1;
+            Interval newnewInterval = splitInterval(newInterval, newInterval.UsePostionList.get(0).position);
+            GenerateMove(newInterval, newnewInterval, newnewInterval.RangeList.get(0).from, 0);
+            //扔进unhandled
+            int insertPos = Collections.binarySearch(unhandled, newnewInterval, Comparator.comparingInt(o -> o.RangeList.get(0).from));
+            if (insertPos < 0) {
+                insertPos = -insertPos - 1;
+            }
+            unhandled.add(insertPos, newnewInterval);
+        } else {
+            current.assignedReg = alloc;
+            Interval newCurrent = splitInterval(current, block_pos.get(alloc));
+            GenerateMove(current, newCurrent, newCurrent.RangeList.get(0).from, 0);
+
+            Interval needSpill = null;
+            for (Interval one: inactive) {
+                if (one.assignedReg == alloc) {
+                    needSpill = one;
+                }
+            }
+            for (Interval one: active) {
+                if (one.assignedReg == alloc) {
+                    needSpill = one;
+                }
+            }
+            Interval newInterval = splitInterval(needSpill, current.RangeList.get(0).from);
+            GenerateMove(needSpill,newInterval, newInterval.RangeList.get(0).from, 0);
+            Interval newnewInterval = splitInterval(newInterval, newInterval.UsePostionList.get(0).position);
+            GenerateMove(newInterval, newnewInterval, newnewInterval.RangeList.get(0).from, 0);
+            int spillPlace = assignSpillSlot(function);
+            newInterval.assignedSpill = spillPlace;
+            newInterval.assignedReg = -1;
+
+            //扔进unhandled
+            int insertPos = Collections.binarySearch(unhandled, newnewInterval, Comparator.comparingInt(o -> o.RangeList.get(0).from));
+            if (insertPos < 0) {
+                insertPos = -insertPos - 1;
+            }
+            unhandled.add(insertPos, newnewInterval);
+            insertPos = Collections.binarySearch(unhandled, newCurrent, Comparator.comparingInt(o -> o.RangeList.get(0).from));
+            if (insertPos < 0) {
+                insertPos = -insertPos - 1;
+            }
+            unhandled.add(insertPos, newCurrent);
+        }
+    }
+    private int findNextUsageAfter(Interval interval, int position) {
+        // 遍历 UsePostionList 找到第一个大于指定位置的使用位置
+        for (UsePostion usePos : interval.UsePostionList) {
+            if (usePos.position > position) {
+                return usePos.position;
+            }
+        }
+        // 如果没有找到，返回最大整数表示没有下一个使用位置
+        return Integer.MAX_VALUE;
+    }
+    private int findRegisterWithHighestUsePos() {
+        int maxUsePos = Integer.MIN_VALUE;
+        int registerWithMaxUsePos = -1;
+
+        for (Map.Entry<Integer, Integer> entry : use_pos.entrySet()) {
+            int reg = entry.getKey();
+            int pos = entry.getValue();
+
+            if (pos > maxUsePos) {
+                maxUsePos = pos;
+                registerWithMaxUsePos = reg;
+            }
+        }
+
+        return registerWithMaxUsePos;
+    }
+    private int assignSpillSlot(AsmFunction function) {
+        // Assign a spill slot (memory location) to the current interval
+        int spillSlot = function.getAllocaSize() + function.getArgsSize();
+        function.addAllocaSize(8);
+        newAllocSize += 8;
+        return spillSlot;
+    }
+
+    private void storeOrLoadInt(int spillPlace, AsmReg reg, AsmInstr nowInstr, String type, int foreOrBack) {
+        if (spillPlace >= -2048 && spillPlace <= 2047) {
+            AsmImm12 place = new AsmImm12(spillPlace);
+            if (type.equals("store")) {
+                if (foreOrBack == 0) {
+                    AsmSd store = new AsmSd(reg, RegGeter.SP, place);
+                    store.insertBefore(nowInstr);
+                } else {
+                    AsmSd store = new AsmSd(reg, RegGeter.SP, place);
+                    store.insertAfter(nowInstr);
+                }
+            } else if (type.equals("load")) {
+                if (foreOrBack == 0) {
+                        AsmLd load = new AsmLd(reg, RegGeter.SP, place);
+                        load.insertBefore(nowInstr);
+                } else {
+                        AsmLd load = new AsmLd(reg, RegGeter.SP, place);
+                        instrsId.put(load, instrsId.get(nowInstr) - 1);
+                        idInstrs.put(instrsId.get(nowInstr) - 1, load);
+                        load.insertAfter(nowInstr);
+                }
+            }
+        } else {
+            AsmReg tmpMove = RegGeter.AllRegsInt.get(5);
+            AsmReg tmpAdd = RegGeter.AllRegsInt.get(5);
+            AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(spillPlace));
+            AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
+            if (foreOrBack == 0) {
+                asmMove.insertBefore(nowInstr);
+                asmAdd.insertBefore(nowInstr);
+                if (type.equals("load")) {
+                    AsmLd load = new AsmLd(reg, tmpAdd, new AsmImm12(0));
+                    load.insertBefore(nowInstr);
+                } else if (type.equals("store")) {
+                    AsmSd store = new AsmSd(reg, tmpAdd, new AsmImm12(0));
+                    store.insertBefore(nowInstr);
+                }
+            } else {
+                if (type.equals("load")) {
+                    AsmLd load = new AsmLd(reg, tmpAdd, new AsmImm12(0));
+                    load.insertAfter(nowInstr);
+                } else if (type.equals("store")) {
+                    AsmSd store = new AsmSd(reg, tmpAdd, new AsmImm12(0));
+                    store.insertAfter(nowInstr);
+                }
+                asmAdd.insertAfter(nowInstr);
+                asmMove.insertAfter(nowInstr);
+            }
+        }
 
     }
+
+    private void storeOrLoadFloat(int spillPlace, AsmReg reg, AsmInstr nowInstr, String type, int foreOrBack) {
+        if (spillPlace >= -2048 && spillPlace <= 2047) {
+            AsmImm12 place = new AsmImm12(spillPlace);
+            if (type.equals("store")) {
+                if (foreOrBack == 0) {
+                    AsmFsd store = new AsmFsd(reg, RegGeter.SP, place);
+                    store.insertBefore(nowInstr);
+                } else {
+                    AsmFsd store = new AsmFsd(reg, RegGeter.SP, place);
+                    store.insertAfter(nowInstr);
+                }
+            } else if (type.equals("load")) {
+                if (foreOrBack == 0) {
+                    AsmFld load = new AsmFld(reg, RegGeter.SP, place);
+                    load.insertBefore(nowInstr);
+                } else {
+                    AsmFld load = new AsmFld(reg, RegGeter.SP, place);
+                    load.insertAfter(nowInstr);
+                }
+            }
+        } else {
+            AsmReg tmpMove = RegGeter.AllRegsInt.get(5);
+            AsmReg tmpAdd = RegGeter.AllRegsInt.get(5);
+            AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(spillPlace));
+            AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
+            if (foreOrBack == 0) {
+                asmMove.insertBefore(nowInstr);
+                asmAdd.insertBefore(nowInstr);
+                if (type.equals("load")) {
+                    AsmFld load = new AsmFld(reg, tmpAdd, new AsmImm12(0));
+                    load.insertBefore(nowInstr);
+                } else if (type.equals("store")) {
+                    AsmFsd store = new AsmFsd(reg, tmpAdd, new AsmImm12(0));
+                    store.insertBefore(nowInstr);
+                }
+            } else {
+                if (type.equals("load")) {
+                    AsmFld load = new AsmFld(reg, tmpAdd, new AsmImm12(0));
+                    load.insertAfter(nowInstr);
+                } else if (type.equals("store")) {
+                    AsmFsd store = new AsmFsd(reg, tmpAdd, new AsmImm12(0));
+                    store.insertAfter(nowInstr);
+                }
+                asmAdd.insertAfter(nowInstr);
+                asmMove.insertAfter(nowInstr);
+            }
+        }
+
+    }
+
+//    {
+//        // 解析数据流
+//        MoveResolver resolver // 用于在低级中间表示 (LIR) 中排序和插入移动指令
+//        for each block from in blocks do
+//        for each successor to of from do
+//        // 收集在块 from 和 to 之间必要的所有解决移动指令
+//        for each operand opr in to.live_in do
+//        Interval parent_interval = intervals[opr]
+//        Interval from_interval = parent_interval.child_at(from.last_op.id)
+//        Interval to_interval = parent_interval.child_at(to.first_op.id)
+//        if from_interval ≠ to_interval then
+//        // 区间在块 from 和块 to 之间的边界被分割
+//        resolver.add_mapping(from_interval, to_interval)
+//        end if
+//        end for
+//        // 移动指令要么插入在块 from 的结尾，要么插入在块 to 的开头，取决于控制流
+//        resolver.find_insert_position(from, to)
+//        // 按正确顺序插入所有移动指令（不覆盖稍后使用的寄存器）
+//        resolver.resolve_mappings()
+//        end for
+//        end for
+//    }
+
+    private void RESOLVE_DATA_FLOW(int type) {
+        for (AsmBlock from: blocks) {
+            for (AsmBlock to: from.sucs) {
+                for (AsmOperand opr: to.LiveIn) {
+                    if (IntIntervals.containsKey(opr) && type == 0) {
+                        Interval parent_interval = IntIntervals.get(opr);
+                        Interval from_interval = parent_interval.child_at(instrsId.get(from.getInstrTail()));
+                        Interval to_interval = parent_interval.child_at(instrsId.get(to.getInstrTail()));
+                        if (from_interval != to_interval) {
+                            AsmInstr instr = idInstrs.get(to_interval.RangeList.get(0).from);
+                            AsmBlock b = instr.parent;
+                            if (from.sucs.contains(b)) {
+                                int insertPlace = instrsId.get(from.getInstrTail());
+                                GenerateMove(from_interval, to_interval, insertPlace, 1);
+                            } else {
+                                int insertPlace = instrsId.get(to.getInstrs().getHead());
+                                GenerateMove(from_interval, to_interval, insertPlace, 0);
+                            }
+                        }
+                    }
+                    if (FloatIntervals.containsKey(opr) && type == 1) {
+                        Interval parent_interval = IntIntervals.get(opr);
+                        Interval from_interval = parent_interval.child_at(instrsId.get(from.getInstrTail()));
+                        Interval to_interval = parent_interval.child_at(instrsId.get(to.getInstrTail()));
+                        if (from_interval != to_interval) {
+                            AsmInstr instr = idInstrs.get(to_interval.RangeList.get(0).from);
+                            AsmBlock b = instr.parent;
+                            if (from.sucs.contains(b)) {
+                                int insertPlace = instrsId.get(from.getInstrTail());
+                                GenerateMove(from_interval, to_interval, insertPlace, 1);
+                            } else {
+                                int insertPlace = instrsId.get(to.getInstrs().getHead());
+                                GenerateMove(from_interval, to_interval, insertPlace, 0);
+                            }
+                        }
+                    }
+                }
+
+
+            }
+        }
+    }
+    // 分配寄存器编号
+//    void ASSIGN_REG_NUM() {
+//        LIR_OpVisitState visitor // 用于收集一个操作的所有操作数的访客
+//        for each block b in blocks do
+//            for each operation op in b.operations do
+//            visitor.visit(op)
+//        // 处理输入、临时和输出操作数
+//        for each virtual register v_opr in visitor.oprs do
+//            // 根据分配给区间的寄存器计算新的操作数
+//            r_opr = intervals[v_opr].child_at(op.id).assigned_opr
+//        // 将新的操作数存回操作中
+//        visitor.set_opr(r_opr)
+//        end for
+//        if op is move with equal source and target then
+//        // 从 LIR 操作列表中删除无用的 move 操作
+//        remove op from b.operations
+//        end if
+//        end for
+//        end for
+//    }
+    private void ASSIGN_REG_NUM() {
+        for (AsmBlock block: blocks) {
+            CustomList.Node instrHead = block.getInstrs().getHead();
+            while (instrHead != null) {
+                if (instrHead instanceof Move) {
+                    Move move = (Move) instrHead;
+                    if (move.dst.assignedReg != -1 && move.src.assignedReg != -1) {
+                        int dstReg = move.dst.assignedReg;
+                        int srcReg = move.src.assignedReg;
+                        if (dstReg < 32 && srcReg < 32) {
+                            AsmMove move1 = new AsmMove(RegGeter.AllRegsInt.get(dstReg), RegGeter.AllRegsInt.get(srcReg));
+                            move1.insertBefore(move);
+                            move.removeFromList();
+                        } else if (dstReg >= 32 && srcReg >= 32) {
+                            AsmMove move1 = new AsmMove(RegGeter.AllRegsFloat.get(dstReg - 32), RegGeter.AllRegsFloat.get(srcReg - 32));
+                            move1.insertBefore(move);
+                            move.removeFromList();
+                        } else {
+                            throw new RuntimeException("Invalid Move reg number: dstReg=" + dstReg + ", srcReg=" + srcReg);
+                        }
+                    } else if (move.dst.assignedReg != -1 && move.src.assignedReg == -1) {
+                        int dstReg = move.dst.assignedReg;
+                        int spill = move.src.assignedSpill;
+                        if (dstReg < 32 && dstReg >= 0) {
+                            storeOrLoadInt(spill, RegGeter.AllRegsInt.get(dstReg), move,  "load", 0);
+                        } else if (dstReg >= 32) {
+                            storeOrLoadFloat(spill, RegGeter.AllRegsFloat.get(dstReg - 32), move,  "load", 0);
+                        } else {
+                            throw new RuntimeException("Invalid Move reg number: dstReg=" + dstReg + ", spill=" + spill);
+                        }
+                        move.removeFromList();
+                    } else if (move.dst.assignedReg == -1 && move.src.assignedReg != -1) {
+                        int spill = move.src.assignedSpill;
+                        int srcReg = move.dst.assignedReg;
+                        if (srcReg < 32 && srcReg >= 0) {
+                            storeOrLoadInt(spill, RegGeter.AllRegsInt.get(srcReg), move,  "load", 0);
+                        } else if (srcReg >= 32) {
+                            storeOrLoadFloat(spill, RegGeter.AllRegsFloat.get(srcReg - 32), move,  "load", 0);
+                        }
+                        move.removeFromList();
+                    } else {
+                        throw new RuntimeException("Invalid Move : 两个都是地址，连续两个Interval都是栈空间：" + move.dst.register.toString());
+                    }
+                } else {
+                    for (AsmOperand opr: ((AsmInstr)instrHead).regDef) {
+                        if (opr instanceof AsmVirReg || opr instanceof AsmFVirReg) {
+                            if (opr instanceof AsmVirReg) {
+                                ((AsmVirReg) opr).color = IntIntervals.get(opr).child_at(instrsId.get((AsmInstr)instrHead)).assignedReg;
+                            }
+                            if (opr instanceof AsmFVirReg) {
+                                ((AsmVirReg) opr).color = FloatIntervals.get(opr).child_at(instrsId.get((AsmInstr)instrHead)).assignedReg;
+                            }
+                        }
+                    }
+                }
+                instrHead = instrHead.getNext();
+            }
+        }
+    }
+
     public void debug(AsmModule module) {
         for (AsmFunction function : module.getFunctions()) {
             COMPUTE_BLOCK_ORDER(function);
@@ -613,7 +1255,11 @@ public class RegAllocLinear {
             COMPUTE_LOCAL_LIVE_SETS();
             COMPUTE_GLOBAL_LIVE_SETS(function);
             BUILD_INTERVALS();
-
+            initial_(new ArrayList<>(IntIntervals.values()));
+            for (Interval interval : unhandled) {
+                interval.printRanges();
+            }
+            System.out.println("###############################################################");
         }
     }
 
