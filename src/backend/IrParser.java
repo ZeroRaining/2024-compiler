@@ -662,12 +662,8 @@ public class IrParser {
             asmBlock.addInstrTail(asmMul);
             return;
         }
-        boolean isSrc1Const = instr.getOp1() instanceof ConstInt;
         boolean isSrc2Const = instr.getOp2() instanceof ConstInt;
-        if (isSrc1Const || isSrc2Const) {
-            if (isSrc1Const && !isSrc2Const) {
-                instr.swapOp();
-            }
+        if (isSrc2Const) {
             AsmOperand dst = parseOperand(instr, 0, f, bb);
             AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
             int value = ((ConstInt) instr.getOp2()).getNumber();
@@ -809,7 +805,6 @@ public class IrParser {
             asmBlock.addInstrTail(asmMove);
         } else if (value == -1) {
             AsmSub asmSub = new AsmSub(dst, ZERO, src1);
-            asmSub.isWord = true;
             asmBlock.addInstrTail(asmSub);
             return;
         } else {
@@ -1221,11 +1216,14 @@ public class IrParser {
         } else if (src1 instanceof AsmImm12) {
             AsmOperand tmpReg = genTmpReg(f);
             AsmAdd asmAdd = new AsmAdd(tmpReg, ZERO, src1);
+            asmAdd.isWord = true;
             asmBlock.addInstrTail(asmAdd);
             AsmSll asmSll = new AsmSll(dst, tmpReg, src2);
+            asmSll.isWord = true;
             asmBlock.addInstrTail(asmSll);
         } else {
             AsmSll asmSll = new AsmSll(dst, src1, src2);
+            asmSll.isWord = true;
             asmBlock.addInstrTail(asmSll);
         }
     }
@@ -1244,11 +1242,14 @@ public class IrParser {
         } else if (src1 instanceof AsmImm12) {
             AsmOperand tmpReg = genTmpReg(f);
             AsmAdd asmAdd = new AsmAdd(tmpReg, ZERO, src1);
+            asmAdd.isWord = true;
             asmBlock.addInstrTail(asmAdd);
             AsmSra asmSra = new AsmSra(dst, tmpReg, src2);
+            asmSra.isWord = true;
             asmBlock.addInstrTail(asmSra);
         } else {
             AsmSra asmSra = new AsmSra(dst, src1, src2);
+            asmSra.isWord = true;
             asmBlock.addInstrTail(asmSra);
         }
     }

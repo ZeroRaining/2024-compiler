@@ -20,9 +20,9 @@ public class AsmAdd extends AsmBinary {
         if(src2 instanceof AsmImm12){
             sb.append("i");
         }
-//        if(isWord){
-//            sb.append("w");
-//        }
+        if(isWord){
+            sb.append("w");
+        }
         sb.append("\t");
         sb.append(dst);
         sb.append(",\t");

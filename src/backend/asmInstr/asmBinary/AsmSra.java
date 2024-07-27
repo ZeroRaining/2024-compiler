@@ -12,7 +12,7 @@ public class AsmSra extends AsmBinary{
         StringBuilder sb = new StringBuilder();
         sb.append("sra");
         if(src2 instanceof AsmImm12) sb.append("i");
-        //if(isWord) sb.append("w");
+        if(isWord) sb.append("w");
         sb.append("\t");
         sb.append(dst);
         sb.append(",\t");
