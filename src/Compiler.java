@@ -51,19 +51,22 @@ public class Compiler {
         }
         if (arg.getOptLevel() == 1) {
             Mem2Reg.doMem2Reg(functions);
-            DeadCodeRemove.doDeadCodeRemove(functions);
-            OIS.doOIS(functions);
-            OISR.doOISR(functions);
-            GVN.doGVN(functions);
-            SimplifyBranch.execute(functions);
-            MergeBlock.execute(functions);
-            DeadBlockRemove.execute(functions);
-            RemoveUseLessPhi.execute(functions);
-            
-            //makeDFG
-//            SimplifyBranch.execute(functions);
-//            MergeBlock.execute(functions);
-//            DeadBlockRemove.execute(functions);
+            int times = 2;
+            int cnt = 0;
+            while (cnt < times) {
+                DeadCodeRemove.doDeadCodeRemove(functions);
+                OIS.doOIS(functions);
+//                OISR.doOISR(functions);
+                GVN.doGVN(functions);
+                SimplifyBranch.execute(functions);
+                MergeBlock.execute(functions);
+                DeadBlockRemove.execute(functions);
+                RemoveUseLessPhi.execute(functions);
+                cnt++;
+                if (cnt < times) {
+                    DFG.doDFG(functions);
+                }
+            }
         }
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
