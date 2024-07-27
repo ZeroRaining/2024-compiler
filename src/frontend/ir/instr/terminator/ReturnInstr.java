@@ -40,11 +40,6 @@ public class ReturnInstr extends Terminator {
     }
     
     @Override
-    public Integer getNumber() {
-        return -1;
-    }
-    
-    @Override
     public DataType getDataType() {
         return returnType;
     }

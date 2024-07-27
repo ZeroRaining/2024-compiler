@@ -15,10 +15,7 @@ import frontend.ir.instr.otherop.EmptyInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
-import frontend.ir.symbols.Symbol;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
@@ -34,22 +31,19 @@ public class Mem2Reg {
     private static int cnt = 0;
     
     private static void removeAlloc(Function function) throws IOException {
-        for (CustomList.Node node : function.getBasicBlocks()) {
-            BasicBlock block = (BasicBlock) node;
-            Instruction instr = (Instruction) block.getInstructions().getHead();
-            while (instr != null) {
+        BasicBlock block = (BasicBlock) function.getBasicBlocks().getHead();
+        Instruction instr = (Instruction) block.getInstructions().getHead();
+        while (instr != null) {
 //                System.out.println(instr.print());
-                if (instr instanceof AllocaInstr && instr.getPointerLevel() == 1) {
+            if (instr instanceof AllocaInstr && instr.getPointerLevel() == 1) {
 //                    if (cnt <= 10) {
 //                        BufferedWriter writer = new BufferedWriter(new FileWriter("testPhi" + cnt++));
 //                        function.printIR(writer);
 //                        writer.close();
 //                    }
-                    remove(instr);
-                }
-                instr = (Instruction) instr.getNext();
+                remove(instr);
             }
-            
+            instr = (Instruction) instr.getNext();
         }
     }
     

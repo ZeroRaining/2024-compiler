@@ -45,9 +45,11 @@ public class MoveInstr extends Instruction {
     @Override
     public void modifyValue(Value from, Value to) {
         if (from == dst) {
-            dst = from;
-        } else if (to == dst) {
             dst = to;
+        } else if (from == src) {
+            src = to;
+        } else {
+            throw new RuntimeException();
         }
     }
 

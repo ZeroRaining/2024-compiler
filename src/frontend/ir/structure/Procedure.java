@@ -67,7 +67,7 @@ public class Procedure {
         allocaRearrangement();
     }
     
-    private void allocaRearrangement() {
+    public void allocaRearrangement() {
         BasicBlock blk = (BasicBlock) basicBlocks.getHead();
         ArrayList<AllocaInstr> allocaList = new ArrayList<>();
         while (blk != null) {
@@ -150,7 +150,7 @@ public class Procedure {
         }
     }
 
-    public List<Value> getFParamSymbolList() {
+    public List<Value> getFParamValueList() {
         return this.fParamValueList;
     }
 
@@ -799,6 +799,7 @@ public class Procedure {
             if (myFunc == null) {
                 throw new RuntimeException("不是哥们，你这是什么函数啊？" + name);
             }
+            myFunc.addCall();
             myCallee.add(myFunc);
             List<Ast.FuncFParam> fParams = myFunc.getFParams();
             funcParamConv(fParams, rParams);

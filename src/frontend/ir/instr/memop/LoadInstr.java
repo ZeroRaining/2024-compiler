@@ -7,11 +7,12 @@ import frontend.ir.symbols.Symbol;
 
 public class LoadInstr extends MemoryOperation {
     private final int result;
-    private Value ptr = null;
+    private Value ptr;
     
     public LoadInstr(int result, Symbol symbol) {
         super(symbol);
         this.result = result;
+        this.ptr = symbol.getAllocValue();
         setUse(symbol.getAllocValue());
         this.pointerLevel = symbol.getAllocValue().getPointerLevel() - 1;
     }
@@ -26,11 +27,7 @@ public class LoadInstr extends MemoryOperation {
     
     @Override
     public Instruction cloneShell(Function parentFunc) {
-        if (ptr == null) {
-            return new LoadInstr(parentFunc.getAndAddRegIndex(), this.symbol);
-        } else {
-            return new LoadInstr(parentFunc.getAndAddRegIndex(), this.symbol, ptr);
-        }
+        return new LoadInstr(parentFunc.getAndAddRegIndex(), this.symbol, ptr);
     }
     
     @Override
@@ -49,13 +46,7 @@ public class LoadInstr extends MemoryOperation {
             ty = printBaseType();
         }
         stringBuilder.append(ty).append(", ").append(ty).append("* ");
-        if (ptr != null) {
-            stringBuilder.append(ptr.value2string());
-        } else if (symbol.isGlobal()) {
-            stringBuilder.append("@").append(symbol.getName());
-        } else {
-            stringBuilder.append(symbol.getAllocValue().value2string());
-        }
+        stringBuilder.append(ptr.value2string());
         return stringBuilder.toString();
     }
     
@@ -70,7 +61,11 @@ public class LoadInstr extends MemoryOperation {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        throw new RuntimeException("没有可以置换的 value");
+        if (ptr == from) {
+            ptr = to;
+        } else {
+            throw new RuntimeException();
+        }
     }
     
     public Value getPtr() {

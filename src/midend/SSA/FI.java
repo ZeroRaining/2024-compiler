@@ -1,15 +1,20 @@
 package midend.SSA;
 
+import Utils.CustomList;
 import frontend.ir.DataType;
+import frontend.ir.Use;
+import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
+import frontend.ir.instr.terminator.Terminator;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Function inlining
@@ -35,6 +40,9 @@ public class FI {
                         instr = (Instruction) instr.getNext();
                         continue;
                     }
+                    
+                    callee.minusCall();
+                    
                     // 将原本的基本块拆成两个
                     Instruction nextIns = (Instruction) instr.getNext();
                     int curDepth = basicBlock.getDepth();
@@ -42,12 +50,22 @@ public class FI {
                     nextBB.insertAfter(basicBlock);
                     
                     while (nextIns != null) {
-                        nextIns.removeFromList();
-                        nextBB.addInstruction(nextIns);
-                        nextIns = (Instruction) nextIns.getNext();
+                        Instruction tmp = (Instruction) nextIns.getNext();
+                        if (nextIns instanceof Terminator) {
+                            nextBB.addInstruction(nextIns.cloneShell(function));
+                            nextIns.removeFromList();
+                        } else {
+                            nextIns.removeFromListWithUseRemain();
+                            nextBB.addInstruction(nextIns);
+                        }
+                        if (nextIns.getPrev() == instr) {
+                            nextIns.setPrev(null);
+                        }
+                        nextIns = tmp;
                     }
                     
-                    ArrayList<BasicBlock> bbList = callee.func2blocks(curDepth);
+                    List<Value> rParams = ((CallInstr) instr).getRParams();
+                    ArrayList<BasicBlock> bbList = callee.func2blocks(curDepth, rParams, function);
                     
                     Collections.reverse(bbList);
                     for (BasicBlock newBB : bbList) {
@@ -55,7 +73,8 @@ public class FI {
                     }
                     
                     JumpInstr prev2func = new JumpInstr(bbList.get(bbList.size() - 1));
-                    prev2func.insertAfter(instr);
+                    basicBlock.setRet(false);
+                    basicBlock.addInstruction(prev2func);
                     
                     BasicBlock funcLastBB = bbList.get(0);
                     ReturnInstr retIns = (ReturnInstr) funcLastBB.getEndInstr();
@@ -63,6 +82,7 @@ public class FI {
                         instr.replaceUseTo(retIns.getReturnValue());
                     }
                     retIns.removeFromList();
+                    funcLastBB.setRet(false);
                     JumpInstr func2next = new JumpInstr(nextBB);
                     funcLastBB.addInstruction(func2next);
                     
@@ -71,6 +91,8 @@ public class FI {
                 }
                 basicBlock = (BasicBlock) basicBlock.getNext();
             }
+            
+            function.allocaRearrangement();
         }
     }
 }

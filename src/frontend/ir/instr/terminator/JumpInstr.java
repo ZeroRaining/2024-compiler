@@ -38,12 +38,7 @@ public class JumpInstr extends Terminator {
     public BasicBlock getTarget() {
         return Target;
     }
-
-    @Override
-    public Integer getNumber() {
-        return -1;
-    }
-
+    
     @Override
     public DataType getDataType() {
         throw new RuntimeException("no data type");

@@ -58,11 +58,6 @@ public class BranchInstr extends Terminator {
     }
 
     @Override
-    public Number getNumber() {
-        throw new RuntimeException("no value in branch");
-    }
-
-    @Override
     public DataType getDataType() {
         throw new RuntimeException("no data type");
     }
