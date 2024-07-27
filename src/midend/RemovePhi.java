@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class RemovePhi {
-    public static void phi2move(HashSet<Function> functions) {
+    public static void phi2move(ArrayList<Function> functions) {
         for (Function function : functions) {
             removePhi(function);
             addMove(function);

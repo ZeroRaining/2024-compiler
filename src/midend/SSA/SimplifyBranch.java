@@ -8,11 +8,11 @@ import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 
 public class SimplifyBranch {
     private static boolean toBeContinue = false;
-    public static void execute(HashSet<Function> functions) {
+    public static void execute(ArrayList<Function> functions) {
         toBeContinue = true;
         while (toBeContinue) {
             toBeContinue = false;

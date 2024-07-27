@@ -6,10 +6,10 @@ import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 
 public class DeadBlockRemove {
-    public static void execute(HashSet<Function> functions) {
+    public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
             removeBlk(function);
         }

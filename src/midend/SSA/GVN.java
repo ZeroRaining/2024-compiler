@@ -4,11 +4,12 @@ import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class GVN {
-    public static void doGVN(HashSet<Function> functions) {
+    public static void execute(ArrayList<Function> functions) {
         if (functions == null) {
             throw new NullPointerException();
         }

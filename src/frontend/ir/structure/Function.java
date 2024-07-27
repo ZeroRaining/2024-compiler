@@ -7,9 +7,9 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.CallInstr;
+import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.symbols.SymTab;
-import frontend.ir.symbols.Symbol;
 import frontend.lexer.TokenType;
 import frontend.syntax.Ast;
 
@@ -19,6 +19,7 @@ import java.util.*;
 
 public class Function extends Value implements FuncDef {
     private static final HashMap<String, Function> FUNCTION_MAP = new HashMap<>();
+    private static final int whatIsLong = 100;  // 一个函数多少指令算是“多”，不能内联
     private final String name;
     private final DataType returnType;
     private final Procedure procedure;
@@ -127,26 +128,18 @@ public class Function extends Value implements FuncDef {
         return procedure.getBasicBlocks();
     }
 
-    public List<Symbol> getArgs(){
-        return symTab.getSymbolList();
-    }
-
-    public static CallInstr makeCall(int result, String name, List<Value> rParams) {
-        if (rParams == null || name == null) {
+    public CallInstr makeCall(int result, List<Value> rParams) {
+        if (rParams == null) {
             throw new NullPointerException();
         }
-        Function function = FUNCTION_MAP.get(name);
-        if (function == null) {
-            throw new RuntimeException("兄弟，这是最后的防线了，真没有别的函数了");
-        }
-        if (!function.checkParams(rParams)) {
+        if (!this.checkParams(rParams)) {
             throw new RuntimeException("形参实参不匹配");
         }
-        DataType type = function.getDataType();
+        DataType type = this.getDataType();
         if (type == DataType.VOID) {
-            return new CallInstr(null, type, function, rParams);
+            return new CallInstr(null, type, this, rParams);
         } else {
-            return new CallInstr(result, type, function, rParams);
+            return new CallInstr(result, type, this, rParams);
         }
     }
 
@@ -264,6 +257,10 @@ public class Function extends Value implements FuncDef {
         for (BasicBlock newBB : bbs) {
             Instruction newIns = (Instruction) newBB.getInstructions().getHead();
             while (newIns != null) {
+                if (newIns instanceof PhiInstr) {
+                    ((PhiInstr) newIns).renewBlocks(old2new);
+                }
+                
                 ArrayList<Value> usedValues = new ArrayList<>(newIns.getUseValueList());
                 for (Value toReplace : usedValues) {
                     if (!old2new.containsKey(toReplace)) {
@@ -306,6 +303,10 @@ public class Function extends Value implements FuncDef {
         this.calledCnt--;
     }
     
+    public int getCalledCnt() {
+        return calledCnt;
+    }
+    
     public boolean noUse() {
         if (this.name.equals("main")) {
             return false;
@@ -315,5 +316,21 @@ public class Function extends Value implements FuncDef {
 
     public Procedure getProcedure() {
         return procedure;
+    }
+    
+    public boolean checkInsTooMany() {
+        int cnt = 0;
+        BasicBlock basicBlock = (BasicBlock) this.procedure.getBasicBlocks().getHead();
+        while (basicBlock != null) {
+            Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
+            while (instruction != null) {
+                if (++cnt > whatIsLong) {
+                    return true;
+                }
+                instruction = (Instruction) instruction.getNext();
+            }
+            basicBlock = (BasicBlock) basicBlock.getNext();
+        }
+        return false;
     }
 }

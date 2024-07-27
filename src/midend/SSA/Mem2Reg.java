@@ -21,7 +21,7 @@ import java.util.*;
 
 public class Mem2Reg {
     private static int curRegCnt = 0;//TODO:!!!!!
-    public static void doMem2Reg(HashSet<Function> functions) throws IOException {
+    public static void execute(ArrayList<Function> functions) throws IOException {
         for (Function function : functions) {
             curRegCnt = 0;
             removeAlloc(function);

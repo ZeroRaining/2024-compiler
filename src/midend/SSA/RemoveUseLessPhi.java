@@ -7,10 +7,9 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class RemoveUseLessPhi {
-    public static boolean execute(HashSet<Function> functions) {
+    public static boolean execute(ArrayList<Function> functions) {
         boolean toBeContinue = false;
         for (Function function : functions) {
             toBeContinue = removeUnused(function) | toBeContinue;

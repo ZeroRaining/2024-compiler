@@ -839,7 +839,7 @@ public class Procedure {
             myCallee.add(myFunc);
             List<Ast.FuncFParam> fParams = myFunc.getFParams();
             funcParamConv(fParams, rParams);
-            callInstr = Function.makeCall(curRegIndex++, name, rParams);
+            callInstr = myFunc.makeCall(curRegIndex++, rParams);
         }
         if (callInstr.getDataType() == DataType.VOID) {
             curRegIndex--;

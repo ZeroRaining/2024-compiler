@@ -100,13 +100,13 @@ public class IrParser {
 
     private void parseFunctions() {
         createMaps();
-        for (Function f : program.getFunctions().values()) {
+        for (Function f : program.getFunctionList()) {
             parseFunction(f);
         }
     }
 
     private void createMaps() {
-        for (Function f : program.getFunctions().values()) {
+        for (Function f : program.getFunctionList()) {
             AsmFunction asmFunction = new AsmFunction(f.getName());
             asmModule.addFunction(asmFunction);
             funcMap.put(f, asmFunction);
