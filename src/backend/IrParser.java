@@ -581,7 +581,7 @@ public class IrParser {
             } else {
                 AsmOperand left = parseOperand(op1, 0, f, bb);
                 AsmOperand right = parseOperand(op2, 0, f, bb);
-                AsmFle asmFle = new AsmFle(dst, right, left);
+                AsmFle asmFle = new AsmFle(dst, left, right);
                 asmBlock.addInstrTail(asmFle);
             }
         } else if (cond == CmpCond.GT) {
@@ -990,9 +990,6 @@ public class IrParser {
         } else if (instr.getOpName().equals("sitofp")) {
             AsmitoF asmitoF = new AsmitoF(dst, src);
             asmBlock.addInstrTail(asmitoF);
-        } else if (instr.getOpName().equals("zext")) {
-            AsmMove asmMove = new AsmMove(dst, src);
-            asmBlock.addInstrTail(asmMove);
         } else {
             AsmMove asmMove = new AsmMove(dst, src);
             asmBlock.addInstrTail(asmMove);
