@@ -7,6 +7,7 @@ import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.AllocaInstr;
+import frontend.ir.instr.otherop.PCInstr;
 import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
@@ -21,6 +22,8 @@ import java.util.Objects;
 
 public class BasicBlock extends Value {
     private CustomList instructions = new CustomList();
+    private BasicBlock newTrue;
+    private BasicBlock newFalse;
     private int labelCnt;
     private int depth;
     private boolean isRet;
@@ -40,6 +43,23 @@ public class BasicBlock extends Value {
         iDoms = new HashSet<>();
         DF = new HashSet<>();
         this.labelCnt = labelCnt;
+        newTrue = newFalse = null;
+    }
+
+    public void setNewTrue(BasicBlock newTrue) {
+        this.newTrue = newTrue;
+    }
+
+    public void setNewFalse(BasicBlock newFalse) {
+        this.newFalse = newFalse;
+    }
+
+    public BasicBlock getNewTrue() {
+        return newTrue;
+    }
+
+    public BasicBlock getNewFalse() {
+        return newFalse;
     }
 
     public void setInstructions(CustomList instructions) {
@@ -81,11 +101,6 @@ public class BasicBlock extends Value {
     public void setDoms(HashSet<BasicBlock> doms) {
         this.doms = doms;
     }
-    
-    public void setLabelCnt(int labelCnt) {
-        this.labelCnt = labelCnt;
-    }
-    
     public HashSet<BasicBlock> getIDoms() {
         return iDoms;
     }
@@ -104,6 +119,10 @@ public class BasicBlock extends Value {
 
     public HashSet<BasicBlock> getDoms() {
         return doms;
+    }
+
+    public void setLabelCnt(int labelCnt) {
+        this.labelCnt = labelCnt;
     }
 
     public int getLabelCnt() {
@@ -217,5 +236,10 @@ public class BasicBlock extends Value {
             instr.removeFromList();
             instr = (Instruction) instr.getNext();
         }
+    }
+
+    public PCInstr getPc() {
+        assert instructions.getHead() instanceof PCInstr;
+        return (PCInstr) instructions.getHead();
     }
 }

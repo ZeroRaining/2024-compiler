@@ -843,12 +843,12 @@ public class Procedure {
             writer.append(block.value2string()).append(":\n");
             block.printIR(writer);
         }
-        DEBUG.dbgPrint1("\n");
-        for (CustomList.Node basicBlockNode : basicBlocks) {
-            BasicBlock block = (BasicBlock) basicBlockNode;
-            DEBUG.dbgPrint1(block.value2string());
-            block.printDBG();
-        }
+//        DEBUG.dbgPrint1("\n");
+//        for (CustomList.Node basicBlockNode : basicBlocks) {
+//            BasicBlock block = (BasicBlock) basicBlockNode;
+//            DEBUG.dbgPrint1(block.value2string());
+//            block.printDBG();
+//        }
     }
 
     public CustomList getBasicBlocks() {

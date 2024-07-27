@@ -14,7 +14,6 @@ import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 
 public class RemovePhi {
     public static void phi2move(HashSet<Function> functions) {
@@ -89,6 +88,17 @@ public class RemovePhi {
         }
     }
 
+    private static BasicBlock createMidBlk(BranchInstr branch, int cnt, BasicBlock blk) {
+        BasicBlock pre = branch.getParentBB();
+        BasicBlock newBlk = new BasicBlock(pre.getDepth(), cnt);
+        newBlk.insertAfter(pre);
+        newBlk.setLabelCnt(cnt);
+        branch.modifyUse(blk, newBlk);
+        newBlk.addInstruction(new PCInstr());
+        newBlk.addInstruction(new JumpInstr(blk));
+        return newBlk;
+    }
+
     private static void removePhi(Function function) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         while (blk != null) {
@@ -113,14 +123,27 @@ public class RemovePhi {
                         }
                     } else if (pre.getSucs().size() == 2){
                         BranchInstr branch = (BranchInstr) pre.getEndInstr();
-                        BasicBlock newBlk = new BasicBlock(pre.getDepth(), function.getAndAddBlkIndex());
-                        newBlk.insertAfter(pre);
-                        branch.modifyUse(blk, newBlk);
-                        PCInstr pc = new PCInstr();
+                        BasicBlock newBlk;
+                        if (branch.getThenTarget() == blk) {
+                            newBlk = createMidBlk(branch, function.getAndAddBlkIndex(), blk);
+                            pre.setNewTrue(newBlk);
+                        } else if (branch.getElseTarget() == blk) {
+                            newBlk = createMidBlk(branch, function.getAndAddBlkIndex(), blk);
+                            pre.setNewFalse(newBlk);
+                        } else {
+                            BasicBlock newTrue = pre.getNewTrue();
+                            BasicBlock newFalse = pre.getNewFalse();
+                            if (newTrue != null && newTrue.getSucs().contains(blk)) {
+                                newBlk = newTrue;
+                            } else if (newFalse != null && newFalse.getSucs().contains(blk)) {
+                                newBlk = newFalse;
+                            } else {
+                                throw new RuntimeException("illegal branch");
+                            }
+                        }
+                        PCInstr pc = newBlk.getPc();
                         pc.addPC(src, phi);
-                        newBlk.addInstruction(pc);
-                        newBlk.addInstruction(new JumpInstr(blk));
-                    } else if (!pre.getSucs().isEmpty()){
+                    } else if (pre.getSucs().size() != 0){
                         DEBUG.dbgPrint(pre.value2string());
                         DEBUG.dbgPrint2("sucs size: " + pre.getSucs());
                         throw new RuntimeException("too many sucs");

@@ -68,7 +68,8 @@ public class Compiler {
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
         }
-        
+        RemovePhi.phi2move(functions);
+
         // 打印 IR
         if (arg.toPrintIR()) {
 //            Function.blkLabelReorder();
@@ -79,7 +80,6 @@ public class Compiler {
         }
         
         if (arg.getOptLevel() == 1 && !arg.toSkipBackEnd()) {
-            RemovePhi.phi2move(functions);
         }
         
         // 运行后端
