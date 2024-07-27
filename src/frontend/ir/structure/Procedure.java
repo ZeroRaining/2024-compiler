@@ -44,13 +44,15 @@ public class Procedure {
     private final Stack<BasicBlock> whileEnds;
     private final ArrayList<Value> fParamValueList = new ArrayList<>();
     private final HashSet<Function> myCallee;
+    private final Function parentFunc;
 
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block,
-                     SymTab funcSymTab, HashSet<Function> myCallee) {
+                     SymTab funcSymTab, HashSet<Function> myCallee, Function parentFunc) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
         this.myCallee = myCallee;
+        this.parentFunc = parentFunc;
         BasicBlock firstBasicBlock = new BasicBlock(curDepth, curBlkIndex++);
         basicBlocks.addToTail(firstBasicBlock);
         curBlock = firstBasicBlock;
@@ -175,7 +177,7 @@ public class Procedure {
         } else if (item instanceof Ast.Break) {
             dealBreak();
         } else if (item instanceof Ast.WhileStmt) {
-            dealWhile((Ast.WhileStmt)item, returnType, symTab);
+            doWhile((Ast.WhileStmt)item, returnType, symTab);
         } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
@@ -209,6 +211,40 @@ public class Procedure {
         basicBlocks.addToTail(curBlock);
     }
 
+    private void doWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
+        BasicBlock cond1Blk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock bodyBlk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock endBlk = new BasicBlock(curDepth, curBlkIndex++);
+
+        curBlock.addInstruction(new JumpInstr(cond1Blk));//要为condBlk新建一个块吗
+
+        basicBlocks.addToTail(cond1Blk);
+        curBlock = cond1Blk;
+        Value cond = calculateLOr(item.cond, bodyBlk, endBlk, symTab);
+        curBlock.addInstruction(new BranchInstr(cond, bodyBlk, endBlk));
+
+        BasicBlock cond2Blk = cond1Blk.clone4while(parentFunc);
+
+        //fixme：if和while同时创建一个新end块，会导致没有语句
+        basicBlocks.addToTail(bodyBlk);
+        curBlock = bodyBlk;
+        //todo: break & continue
+        whileBegins.push(cond2Blk);
+        whileEnds.push(endBlk);
+
+        bodyBlk.setDepth(++curDepth);
+        dealStmt(item.body, returnType, new SymTab(symTab));
+        cond2Blk.setDepth(curDepth);
+        bodyBlk.setDepth(--curDepth);
+        whileBegins.pop();
+        whileEnds.pop();
+
+        curBlock.addInstruction(new JumpInstr(cond2Blk));
+        basicBlocks.addToTail(cond2Blk);
+
+        basicBlocks.addToTail(endBlk);
+        curBlock = endBlk;
+    }
 
     private void dealWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
         BasicBlock condBlk = new BasicBlock(curDepth, curBlkIndex++);

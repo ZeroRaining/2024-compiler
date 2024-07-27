@@ -49,7 +49,7 @@ public class Function extends Value implements FuncDef {
         }
         fParams = funcDef.getFParams();
         FUNCTION_MAP.put(name, this);
-        procedure = new Procedure(returnType, fParams, funcDef.getBody(), symTab, myImmediateCallee);
+        procedure = new Procedure(returnType, fParams, funcDef.getBody(), symTab, myImmediateCallee, this);
         initAllCallee();
     }
     
