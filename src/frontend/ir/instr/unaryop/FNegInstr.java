@@ -6,6 +6,7 @@ import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 import java.util.Objects;
 
@@ -57,8 +58,8 @@ public class FNegInstr extends Instruction {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new FNegInstr(parentFunc.getAndAddRegIndex(), value);
+    public Instruction cloneShell(Procedure procedure) {
+        return new FNegInstr(procedure.getAndAddRegIndex(), value);
     }
     
     public Value getValue() {

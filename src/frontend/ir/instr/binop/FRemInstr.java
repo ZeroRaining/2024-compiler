@@ -5,6 +5,7 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class FRemInstr extends BinaryOperation {
     public FRemInstr(int result, Value op1, Value op2) {
@@ -14,8 +15,8 @@ public class FRemInstr extends BinaryOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new FRemInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    public Instruction cloneShell(Procedure procedure) {
+        return new FRemInstr(procedure.getAndAddRegIndex(), this.op1, this.op2);
     }
     
     @Override

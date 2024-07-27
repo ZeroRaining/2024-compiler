@@ -7,6 +7,7 @@ import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class ICmpInstr extends Cmp {
     public ICmpInstr(int result, CmpCond cond, Value op1, Value op2) {
@@ -17,8 +18,8 @@ public class ICmpInstr extends Cmp {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new ICmpInstr(parentFunc.getAndAddRegIndex(), cond, op1, op2);
+    public Instruction cloneShell(Procedure procedure) {
+        return new ICmpInstr(procedure.getAndAddRegIndex(), cond, op1, op2);
     }
     
     @Override

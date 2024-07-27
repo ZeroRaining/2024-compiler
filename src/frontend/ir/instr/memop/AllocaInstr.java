@@ -3,6 +3,7 @@ package frontend.ir.instr.memop;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
 
 public class AllocaInstr extends MemoryOperation {
@@ -40,7 +41,7 @@ public class AllocaInstr extends MemoryOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new AllocaInstr(parentFunc.getAndAddRegIndex(), this.symbol);
+    public Instruction cloneShell(Procedure procedure) {
+        return new AllocaInstr(procedure.getAndAddRegIndex(), this.symbol);
     }
 }

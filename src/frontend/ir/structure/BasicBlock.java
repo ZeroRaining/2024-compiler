@@ -240,16 +240,15 @@ public class BasicBlock extends Value {
         return (PCInstr) instructions.getHead();
     }
 
-    public BasicBlock clone4while(Function preFunc) {
-        BasicBlock newBlk = new BasicBlock(depth, preFunc.getAndAddBlkIndex());
+    public BasicBlock clone4while(Procedure procedure) {
+        BasicBlock newBlk = new BasicBlock(depth, procedure.getAndAddBlkIndex());
         HashMap<Value, Value> old2new = new HashMap<>();
         Instruction instr = (Instruction) this.getInstructions().getHead();
         while (instr != null) {
-            Instruction newIns = instr.cloneShell(preFunc);
+            Instruction newIns = instr.cloneShell(procedure);
             for (Value value : instr.getUseValueList()) {
-                if (!(value instanceof ConstValue) && !(value instanceof GlobalObject)) {
-                    Value newValue = old2new.get(value);
-                    assert newValue == null;
+                Value newValue = old2new.get(value);
+                if (newValue != null) {
                     newIns.modifyUse(value, newValue);
                 }
             }

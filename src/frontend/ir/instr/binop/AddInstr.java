@@ -5,6 +5,7 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 
@@ -29,8 +30,8 @@ public class AddInstr extends BinaryOperation implements Swappable {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new AddInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    public Instruction cloneShell(Procedure procedure) {
+        return new AddInstr(procedure.getAndAddRegIndex(), this.op1, this.op2);
     }
     
     private Value mergeConst(ConstInt constInt, Value nonConst) {

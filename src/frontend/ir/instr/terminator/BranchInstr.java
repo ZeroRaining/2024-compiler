@@ -8,6 +8,7 @@ import frontend.ir.instr.otherop.PCInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class BranchInstr extends Terminator {
     private Value condition;
@@ -44,7 +45,7 @@ public class BranchInstr extends Terminator {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
+    public Instruction cloneShell(Procedure procedure) {
         return new BranchInstr(condition, thenTarget, elseTarget);
     }
     

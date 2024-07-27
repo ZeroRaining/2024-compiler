@@ -5,6 +5,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 
@@ -17,8 +18,8 @@ public class SDivInstr extends BinaryOperation {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
-        return new SDivInstr(parentFunc.getAndAddRegIndex(), this.op1, this.op2);
+    public Instruction cloneShell(Procedure procedure) {
+        return new SDivInstr(procedure.getAndAddRegIndex(), this.op1, this.op2);
     }
     
     @Override

@@ -312,4 +312,8 @@ public class Function extends Value implements FuncDef {
         }
         return this.calledCnt == 0;
     }
+
+    public Procedure getProcedure() {
+        return procedure;
+    }
 }

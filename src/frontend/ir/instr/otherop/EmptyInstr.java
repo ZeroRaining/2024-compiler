@@ -5,6 +5,7 @@ import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 public class EmptyInstr extends Instruction {
     private static int cnt = 0;
@@ -50,7 +51,7 @@ public class EmptyInstr extends Instruction {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
+    public Instruction cloneShell(Procedure procedure) {
         return new EmptyInstr(this.dataType);
     }
     

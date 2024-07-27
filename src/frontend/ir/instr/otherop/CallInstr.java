@@ -6,6 +6,7 @@ import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.lib.LibFunc;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,11 +38,11 @@ public class CallInstr extends Instruction {
     }
     
     @Override
-    public Instruction cloneShell(Function parentFunc) {
+    public Instruction cloneShell(Procedure procedure) {
         if (this.returnType == DataType.VOID) {
             return new CallInstr(null, returnType, funcDef, new ArrayList<>(rParams));
         } else {
-            return new CallInstr(parentFunc.getAndAddRegIndex(), returnType, funcDef, new ArrayList<>(rParams));
+            return new CallInstr(procedure.getAndAddRegIndex(), returnType, funcDef, new ArrayList<>(rParams));
         }
     }
     
