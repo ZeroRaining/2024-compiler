@@ -1055,7 +1055,7 @@ public class RegAlloc {
             ArrayList<Integer> okColors = new ArrayList<>(); //换成固定取色
             if (FI == 0) {
                 for (int k = 0; k < K; k++) {
-                    if (k >= 6 && k != 10)
+                    if (k >= 6 && k != 10 && !( k >= 10&& k <= 17))
                         okColors.add(k);
                 }
             } else {
