@@ -480,8 +480,8 @@ public class RegAllocLinear {
     }
 //    {
 //        WALK_INTERVALS
-//                unhandled = list of intervals sorted by increasing start point // 未处理区间列表，按起始点递增排序
-//            active = { } // 活动区间集合
+//        unhandled = list of intervals sorted by increasing start point // 未处理区间列表，按起始点递增排序
+//        active = { } // 活动区间集合
 //        inactive = { } // 非活动区间集合
 //
 //// 注意：在分配期间，当区间被分割时，新的区间可能会被排序到unhandled列表中
@@ -543,7 +543,7 @@ public class RegAllocLinear {
             Iterator<Interval> activeIterator = active.iterator();
             while (activeIterator.hasNext()) {
                 Interval it = activeIterator.next();
-                if (it.RangeList.get(it.RangeList.size()).to < position) {
+                if (it.RangeList.get(it.RangeList.size() - 1).to < position) {
                     activeIterator.remove();
                     // move it to handled (not implemented, assumed to be a separate collection)
                 } else if (!it.cover(position)) {
@@ -554,12 +554,13 @@ public class RegAllocLinear {
             // 检查inactive中的区间
             for (int i = 0; i < inactive.size(); i++) {
                 Interval it = inactive.get(i);
-                if (it.RangeList.get(it.RangeList.size()).to < position) {
+                if (it.RangeList.get(it.RangeList.size() - 1).to < position) {
                     inactive.remove(i);
                 } else if (it.cover(position)) {
                     inactive.remove(i);
                     active.add(it);
                 }
+                i--;
             }
 
             // 为current分配寄存器
@@ -1129,14 +1130,20 @@ public class RegAllocLinear {
     private void RESOLVE_DATA_FLOW(int type) {
         for (AsmBlock from: blocks) {
             for (AsmBlock to: from.sucs) {
-                for (AsmOperand opr: to.LiveIn) {
+                for (AsmReg opr: to.LiveIn) {
                     if (IntIntervals.containsKey(opr) && type == 0) {
                         Interval parent_interval = IntIntervals.get(opr);
                         Interval from_interval = parent_interval.child_at(instrsId.get(from.getInstrTail()));
                         Interval to_interval = parent_interval.child_at(instrsId.get(to.getInstrTail()));
                         if (from_interval != to_interval) {
-                            AsmInstr instr = idInstrs.get(to_interval.RangeList.get(0).from);
-                            AsmBlock b = instr.parent;
+                            AsmInstr instr = null;
+                            if (to_interval != null) {
+                                instr = idInstrs.get(to_interval.RangeList.get(0).from);
+                            }
+                            AsmBlock b = null;
+                            if (instr != null) {
+                                b = instr.parent;
+                            }
                             if (from.sucs.contains(b)) {
                                 int insertPlace = instrsId.get(from.getInstrTail());
                                 GenerateMove(from_interval, to_interval, insertPlace, 1);
