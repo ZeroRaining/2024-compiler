@@ -947,7 +947,7 @@ public class IrParser {
                 offset += 4;
             }
         }
-        AsmCall asmCall = new AsmCall(instr.getFuncDef().getName());
+        AsmCall asmCall = new AsmCall(instr.getFuncDef().getName(), intArgRegNum, floatArgRegNum);
         asmBlock.addInstrTail(asmCall);
         if (instr.getDataType() != VOID) {
             AsmOperand dst = parseOperand(instr, 0, f, bb);
