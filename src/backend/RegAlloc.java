@@ -289,7 +289,7 @@ public class RegAlloc {
     private void storeOrLoadFromMemory(int spillPlace, AsmReg reg, AsmInstr nowInstr, String type, int foreOrBack, int needVir) {
         if (spillPlace >= -2048 && spillPlace <= 2047) {
             AsmImm12 place = new AsmImm12(spillPlace);
-            if (type == "store") {
+            if (type.equals("store")) {
                 if (foreOrBack == 0) {
                     if (FI == 0) {
                         AsmSw store = new AsmSw(reg, RegGeter.SP, place);
@@ -325,6 +325,8 @@ public class RegAlloc {
                         load.insertAfter(nowInstr);
                     }
                 }
+            } else {
+                throw new RuntimeException("storeOrLoadFromMemory type error");
             }
         } else {
             AsmReg tmpMove = null;
@@ -357,6 +359,8 @@ public class RegAlloc {
                         AsmFsw store = new AsmFsw(reg, tmpAdd, new AsmImm12(0));
                         store.insertBefore(nowInstr);
                     }
+                } else {
+                    throw new RuntimeException("storeOrLoadFromMemory type error");
                 }
             } else {
                 if (type == "load") {
@@ -375,6 +379,8 @@ public class RegAlloc {
                         AsmFsw store = new AsmFsw(reg, tmpAdd, new AsmImm12(0));
                         store.insertAfter(nowInstr);
                     }
+                } else {
+                    throw new RuntimeException("storeOrLoadFromMemory type error");
                 }
                 asmAdd.insertAfter(nowInstr);
                 asmMove.insertAfter(nowInstr);
@@ -902,7 +908,13 @@ public class RegAlloc {
 
     private void makeWorkList() {
         for (AsmOperand n : all) {
-            if (degree.get(n) >= K) {
+            int N = 0;
+            if (FI == 0) {
+                N = 25;
+            } else {
+                N = 31;
+            }
+            if (degree.get(n) >= N) {
                 spillWorkList.add(n);
             } else if (moveList.containsKey(n) && !moveList.get(n).isEmpty()) {
                 freezeWorkList.add(n);
@@ -1244,7 +1256,13 @@ public class RegAlloc {
         }
         int d = degree.get(m);
         degree.put(m, d - 1);
-        if (d == K - 1) {
+        int N = 0;
+        if (FI == 0) {
+            N = 25;
+        } else {
+            N = 31;
+        }
+        if (d == N) {
             HashSet<AsmOperand> union = new HashSet<>();
             union.addAll(Adjacent(m));
             union.add(m);
