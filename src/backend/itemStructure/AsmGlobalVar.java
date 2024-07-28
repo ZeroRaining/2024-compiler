@@ -47,7 +47,7 @@ public class AsmGlobalVar {
         this.size = size;
     }
 
-    //浮点数
+    //中途申请的浮点数
     public AsmGlobalVar(int floatvar) {
         this.name = ".LC" + lcCnt;
         lcCnt++;
@@ -132,7 +132,6 @@ public class AsmGlobalVar {
                 }
             }
         }
-//        System.out.println("ArrayInitVal");
     }
 }
 

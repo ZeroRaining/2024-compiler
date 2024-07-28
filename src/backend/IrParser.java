@@ -74,14 +74,14 @@ public class IrParser {
     private AsmGlobalVar parseGlobalVar(Symbol globalVar) {
         AsmType type = globalVar.getAsmType();
         if (type == AsmType.INT) {
-            boolean isInit = (globalVar.getInitVal() == null) ? false : true;
+            boolean isInit = (globalVar.getInitVal() != null);
             if (!isInit)
                 return new AsmGlobalVar(globalVar.getName());
             Number initVal = globalVar.getValue();
             return new AsmGlobalVar(globalVar.getName(), initVal);
         }
         if (type == AsmType.FLOAT) {
-            boolean isInit = (globalVar.getInitVal() == null) ? false : true;
+            boolean isInit = (globalVar.getInitVal() != null);
             if (!isInit)
                 return new AsmGlobalVar(globalVar.getName());
             Number floatVal = globalVar.getValue();
@@ -89,7 +89,7 @@ public class IrParser {
             return new AsmGlobalVar(globalVar.getName(), initVal);
         }
         if (type == AsmType.ARRAY) {
-            boolean isInit = (globalVar.getInitVal() == null) ? false : true;
+            boolean isInit = (globalVar.getInitVal() != null);
             if (!isInit)
                 return new AsmGlobalVar(globalVar.getName(), globalVar.getLimSize() * 4);
             return new AsmGlobalVar(globalVar);
