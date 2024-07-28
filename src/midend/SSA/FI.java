@@ -1,28 +1,25 @@
 package midend.SSA;
 
-import Utils.CustomList;
 import frontend.ir.DataType;
-import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.CallInstr;
+import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.terminator.Terminator;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Function inlining
- * 函数内联，初步目标是将
- * todo: 值得注意的是，函数内联并不一定能提高运行效率，有时候一些不常用的代码（冷代码）可能作为函数调用存在会更合适一些
+ * 函数内联，现在的内联条件是非递归且调用次数少或者函数本身小，如果 call 在多层循环中一定内联 todo: 以上具体数据均有待调试
+ * 值得注意的是，函数内联并不一定能提高运行效率，有时候一些不常用的代码（冷代码）可能作为函数调用存在会更合适一些
  */
 public class FI {
-    public static void doFI(ArrayList<Function> functions) {
+    public static void execute(ArrayList<Function> functions) {
         if (functions == null) {
             throw new NullPointerException();
         }
@@ -36,7 +33,9 @@ public class FI {
                         continue;
                     }
                     Function callee = (Function) (((CallInstr) instr).getFuncDef());
-                    if (callee.isRecursive()) {
+                    boolean doNotInline = callee.getCalledCnt() > 3 && callee.checkInsTooMany();
+                    doNotInline = doNotInline && !(instr.getParentBB().getDepth() > 1);
+                    if (callee.isRecursive() || doNotInline) {
                         instr = (Instruction) instr.getNext();
                         continue;
                     }
@@ -85,6 +84,17 @@ public class FI {
                     funcLastBB.setRet(false);
                     JumpInstr func2next = new JumpInstr(nextBB);
                     funcLastBB.addInstruction(func2next);
+                    
+                    HashMap<Value, Value> old2new = new HashMap<>();
+                    old2new.put(basicBlock, nextBB);
+                    for (BasicBlock block : nextBB.getSucs()) {
+                        Instruction ins = (Instruction) block.getInstructions().getHead();
+                        while (ins instanceof PhiInstr) {
+                            ((PhiInstr) ins).renewBlocks(old2new);
+                            ins = (Instruction) ins.getNext();
+                        }
+                    }
+                    
                     
                     instr.removeFromList();
                     instr = (Instruction) instr.getNext();

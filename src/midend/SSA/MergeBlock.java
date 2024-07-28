@@ -1,8 +1,6 @@
 package midend.SSA;
 
 import Utils.CustomList;
-import arg.Arg;
-import frontend.ir.Use;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.terminator.JumpInstr;
@@ -10,10 +8,9 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class MergeBlock {
-    public static void execute(HashSet<Function> functions) {
+    public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
             merge(function);
         }

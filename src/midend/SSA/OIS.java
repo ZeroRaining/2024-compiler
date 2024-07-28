@@ -5,14 +5,14 @@ import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 
 /**
  * Operation instruction simplification
  * 运算指令简化
  */
 public class OIS {
-    public static void doOIS(HashSet<Function> functions) {
+    public static void execute(ArrayList<Function> functions) {
         if (functions == null) {
             throw new NullPointerException();
         }

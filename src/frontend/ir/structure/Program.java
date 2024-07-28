@@ -11,7 +11,8 @@ import java.util.*;
 
 public class Program {
     private final SymTab globalSymTab = new SymTab();
-    private final HashMap<String, Function> functions = new HashMap<>();
+//    private final HashMap<String, Function> functions = new HashMap<>();
+    private final HashSet<String> funcNames = new HashSet<>();
     private final ArrayList<Function> functionList = new ArrayList<>();
     
     public Program(Ast ast) {
@@ -21,14 +22,14 @@ public class Program {
         for (Ast.CompUnit compUnit : ast.getUnits()) {
             if (compUnit instanceof Ast.FuncDef) {
                 String funcName = ((Ast.FuncDef) compUnit).getIdent().getContent();
-                if (functions.containsKey(funcName)) {
+                if (funcNames.contains(funcName)) {
                     throw new RuntimeException("重复的函数命名");
                 }
                 if (globalSymTab.hasSym(funcName)) {
                     throw new RuntimeException("函数命名与全局变量名重复");
                 }
                 Function newFunc = new Function((Ast.FuncDef) compUnit, globalSymTab);
-                functions.put(funcName, newFunc);
+                funcNames.add(funcName);
                 functionList.add(newFunc);
             } else if (compUnit instanceof Ast.Decl) {
                 globalSymTab.parseNewSymbols((Ast.Decl) compUnit);
@@ -46,9 +47,9 @@ public class Program {
         writeGlobalDecl(writer);
         Lib.getInstance().declareUsedFunc(writer);
         int i = 0;
-        for (Function function : functions.values()) {
+        for (Function function : functionList) {
             function.printIR(writer);
-            if (++i < functions.size()) {
+            if (++i < functionList.size()) {
                 writer.append("\n");
             }
         }
@@ -58,11 +59,7 @@ public class Program {
         return globalSymTab.getSymbolList();
     }
     
-    public HashMap<String, Function> getFunctions(){
-        return functions;
-    }
-    
-    public ArrayList<Function> getFunctionList() {
+    public ArrayList<Function> getFunctionList(){
         return functionList;
     }
 
@@ -92,7 +89,8 @@ public class Program {
             Function function = iterator.next();
             if (function.noUse()) {
                 iterator.remove();
-                functions.remove(function.getName());
+                functionList.remove(function);
+                funcNames.remove(function.getName());
             }
         }
     }

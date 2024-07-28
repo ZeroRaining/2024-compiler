@@ -11,7 +11,7 @@ import midend.RemovePhi;
 import midend.SSA.*;
 
 import java.io.*;
-import java.util.HashSet;
+import java.util.ArrayList;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
@@ -34,37 +34,37 @@ public class Compiler {
         Ast ast = new Parser(tokenList).parseAst();
         // 生成 IR
         Program program = new Program(ast);
-        
-        if (arg.getOptLevel() == 1) {
-            FI.doFI(program.getFunctionList());     // todo: 函数内联，未来可能要加一些限制，不一定全内联
-        }
-        
         program.removeUselessFunc();
         
-        HashSet<Function> functions = new HashSet<>(program.getFunctions().values());
+        ArrayList<Function> functions = program.getFunctionList();
         DeadBlockRemove.execute(functions);
-        DFG.doDFG(functions);
+        DFG.execute(functions);
 
         // 开启优化
         if (arg.toTime()) {
             optimizeStartTime = System.currentTimeMillis();
         }
         if (arg.getOptLevel() == 1) {
-            Mem2Reg.doMem2Reg(functions);
+            Mem2Reg.execute(functions);
             int times = 2;
             int cnt = 0;
             while (cnt < times) {
-                DeadCodeRemove.doDeadCodeRemove(functions);
-                OIS.doOIS(functions);
+                DeadCodeRemove.execute(functions);
+                OIS.execute(functions);
 //                OISR.doOISR(functions);
-                GVN.doGVN(functions);
+                GVN.execute(functions);
                 SimplifyBranch.execute(functions);
                 MergeBlock.execute(functions);
                 DeadBlockRemove.execute(functions);
                 RemoveUseLessPhi.execute(functions);
+                if (cnt == 0) {
+                    // 只有第一轮才做内联
+                    FI.execute(program.getFunctionList());
+                    program.removeUselessFunc();
+                }
                 cnt++;
                 if (cnt < times) {
-                    DFG.doDFG(functions);
+                    DFG.execute(functions);
                 }
             }
         }

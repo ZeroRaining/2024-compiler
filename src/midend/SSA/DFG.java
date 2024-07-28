@@ -1,17 +1,13 @@
 package midend.SSA;
 
 import Utils.CustomList;
-import frontend.ir.Use;
-import frontend.ir.instr.Instruction;
-import frontend.ir.instr.terminator.BranchInstr;
-import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
 import java.util.*;
 
 public class DFG {
-    public static void doDFG(HashSet<Function> functions) {
+    public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
             makeDoms(function);
             makeIDoms(function);

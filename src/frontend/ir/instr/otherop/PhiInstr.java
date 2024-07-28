@@ -2,15 +2,12 @@ package frontend.ir.instr.otherop;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
-import frontend.ir.constvalue.ConstInt;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
-import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
 
-import java.util.ArrayList;
-import java.util.Objects;
+import java.util.*;
 
 public class PhiInstr extends Instruction {
     private final int result;
@@ -117,5 +114,14 @@ public class PhiInstr extends Instruction {
             }
         }
         return true;
+    }
+    
+    public void renewBlocks(HashMap<Value, Value> old2new) {
+        for (int i = 0; i < prtBlks.size(); i++) {
+            BasicBlock oldBlk = prtBlks.get(i);
+            if (old2new.containsKey(oldBlk)) {
+                prtBlks.set(i, (BasicBlock) old2new.get(oldBlk));
+            }
+        }
     }
 }
