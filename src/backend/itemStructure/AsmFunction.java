@@ -59,7 +59,7 @@ public class AsmFunction {
 
     public int getWholeSize() {
         int size = raSize + argsSize + allocaSize;
-        return (size % 8 == 0 ? size : size + 4);
+        return size;
     }
 
     public int getRaSize() {

@@ -67,11 +67,11 @@ public class RegAlloc {
     private HashSet<AsmInstr> worklistMoves = new HashSet<>();//有可能合并的传送指令
     private HashSet<AsmInstr> activeMoves = new HashSet<>();//还未做好合并准备的传送指令集合
     //@2 传送指令集合，传送指令只能存在在其中一张表中
-
+    private static int addOffSet = 0;
     public void run(AsmModule module) {
         PreColor();
         for (AsmFunction function : module.getFunctions()) {
-            int addOffSet = 0;
+            addOffSet = 0;
             if (((AsmBlock) function.getBlocks().getHead()).getInstrs().getSize() == 0) {
                 continue;
             }
@@ -152,7 +152,7 @@ public class RegAlloc {
             }
 
             allocAndRecycleSP(function);
-            changeOffset(function, addOffSet);
+            changeOffset(function);
             //deleteMove(function);
         }
 
@@ -174,10 +174,10 @@ public class RegAlloc {
         }
     }
 
-    private void changeOffset(AsmFunction function, int addOffSet) {
+    private void changeOffset(AsmFunction function) {
         AsmBlock firstBlock = (AsmBlock) function.getBlocks().getHead();
         AsmInstr firstInstr = (AsmInstr) firstBlock.getInstrs().getHead();
-        int stackAddOffset = (addOffSet % 8 == 0) ? addOffSet : addOffSet + 4;
+        int stackAddOffset = addOffSet;
         while (firstInstr != null) {
             if (firstInstr instanceof AsmL) {
                 if (firstInstr instanceof AsmLw) {
@@ -214,6 +214,11 @@ public class RegAlloc {
 
     private void allocAndRecycleSP(AsmFunction function) {
         int offset = 0;
+        offset = function.getWholeSize();
+        if (offset % 8 != 0) {
+            function.addAllocaSize(4);
+            addOffSet += 4;
+        }
         offset = function.getWholeSize() - 8;
         if (function.getRaSize() != 0) {
             if (offset >= -2048 && offset <= 2047) {
