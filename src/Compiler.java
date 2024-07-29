@@ -59,8 +59,8 @@ public class Compiler {
                 RemoveUseLessPhi.execute(functions);
                 if (cnt == 0) {
                     // 只有第一轮才做内联
-//                    FI.execute(program.getFunctionList());
-//                    program.removeUselessFunc();
+                    FI.execute(program.getFunctionList());
+                    program.removeUselessFunc();
                 }
                 cnt++;
                 if (cnt < times) {
