@@ -906,6 +906,9 @@ public class IrParser {
         } else {
             int offset = 0;
             for (int i = 8; i < intArgs.size(); i++) {
+//                if (offset == 236) {
+//                    System.out.println("debug");
+//                }
                 Value arg = intArgs.get(i);
                 AsmOperand argReg = parseOperand(arg, 0, f, bb);
                 if (arg.getPointerLevel() == 0) {

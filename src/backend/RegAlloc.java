@@ -7,8 +7,11 @@ import backend.asmInstr.asmTermin.AsmCall;
 import backend.itemStructure.*;
 import backend.regs.*;
 import frontend.ir.Value;
+import frontend.ir.structure.BasicBlock;
+import frontend.ir.structure.Function;
 
 import java.util.*;
+import java.util.stream.Collectors;
 /*todo*/ //load指令偏移量超过32位
 
 public class RegAlloc {
@@ -72,41 +75,7 @@ public class RegAlloc {
             if (((AsmBlock) function.getBlocks().getHead()).getInstrs().getSize() == 0) {
                 continue;
             }
-            K = 32;
-            FI = 0;
-            while (true) {
-                initial();
-                LivenessAnalysis(function);
-                findLoopDepth(function);
-                build(function);
-                makeWorkList();
-                while (!simplifyWorklist.isEmpty() || !worklistMoves.isEmpty() ||
-                        !freezeWorkList.isEmpty() || !spillWorkList.isEmpty()) {
-                    if (!simplifyWorklist.isEmpty()) {
-                        simplify();
-                    } else if (!worklistMoves.isEmpty()) {
-                        Coalesce();
-                    } else if (!freezeWorkList.isEmpty()) {
-                        Freeze();
-                    } else if (!spillWorkList.isEmpty()) {
-                        SelectSpill();
-                    }
-                }
-                AssignColors();
-                if (spilledNodes.isEmpty()) {
-                    for (AsmOperand vreg : color.keySet()) {
-                        AsmVirReg vreg1 = (AsmVirReg) vreg;
-                        vreg1.color = color.get(vreg);
-                    }
-                    //不确定是否要这样
-                    addOffSet += callerSave(function);
-                    addOffSet += calleeSave(function);
-                    allocRealReg(function);
-                    break;
-                } else {
-                    addOffSet += RewriteProgram(function);
-                }
-            }
+
 
             K = 64;
             FI = 1;
@@ -145,6 +114,43 @@ public class RegAlloc {
                     addOffSet += RewriteProgram(function);
                 }
             }
+
+            K = 32;
+            FI = 0;
+            while (true) {
+                initial();
+                LivenessAnalysis(function);
+                findLoopDepth(function);
+                build(function);
+                makeWorkList();
+                while (!simplifyWorklist.isEmpty() || !worklistMoves.isEmpty() ||
+                        !freezeWorkList.isEmpty() || !spillWorkList.isEmpty()) {
+                    if (!simplifyWorklist.isEmpty()) {
+                        simplify();
+                    } else if (!worklistMoves.isEmpty()) {
+                        Coalesce();
+                    } else if (!freezeWorkList.isEmpty()) {
+                        Freeze();
+                    } else if (!spillWorkList.isEmpty()) {
+                        SelectSpill();
+                    }
+                }
+                AssignColors();
+                if (spilledNodes.isEmpty()) {
+                    for (AsmOperand vreg : color.keySet()) {
+                        AsmVirReg vreg1 = (AsmVirReg) vreg;
+                        vreg1.color = color.get(vreg);
+                    }
+                    //不确定是否要这样
+                    addOffSet += callerSave(function);
+                    addOffSet += calleeSave(function);
+                    allocRealReg(function);
+                    break;
+                } else {
+                    addOffSet += RewriteProgram(function);
+                }
+            }
+
             allocAndRecycleSP(function);
             changeOffset(function, addOffSet);
             //deleteMove(function);
@@ -304,7 +310,7 @@ public class RegAlloc {
                         store.insertAfter(nowInstr);
                     }
                 }
-            } else if (type.equals("load")) {
+            } else if (type == "load") {
                 if (foreOrBack == 0) {
                     if (FI == 0) {
                         AsmLw load = new AsmLw(reg, RegGeter.SP, place);
@@ -340,8 +346,7 @@ public class RegAlloc {
             if (foreOrBack == 0) {
                 asmMove.insertBefore(nowInstr);
                 asmAdd.insertBefore(nowInstr);
-            } else {
-                if (type.equals("load")) {
+                if (type == "load") {
                     if (FI == 0) {
                         AsmLw load = new AsmLw(reg, tmpAdd, new AsmImm12(0));
                         load.insertBefore(nowInstr);
@@ -349,7 +354,7 @@ public class RegAlloc {
                         AsmFlw load = new AsmFlw(reg, tmpAdd, new AsmImm12(0));
                         load.insertBefore(nowInstr);
                     }
-                } else if (type.equals("store")) {
+                } else if (type == "store") {
                     if (FI == 0) {
                         AsmSw store = new AsmSw(reg, tmpAdd, new AsmImm12(0));
                         store.insertBefore(nowInstr);
@@ -360,7 +365,8 @@ public class RegAlloc {
                 } else {
                     throw new RuntimeException("storeOrLoadFromMemory type error");
                 }
-                if (type.equals("load")) {
+            } else {
+                if (type == "load") {
                     if (FI == 0) {
                         AsmLw load = new AsmLw(reg, tmpAdd, new AsmImm12(0));
                         load.insertAfter(nowInstr);
@@ -368,7 +374,7 @@ public class RegAlloc {
                         AsmFlw load = new AsmFlw(reg, tmpAdd, new AsmImm12(0));
                         load.insertAfter(nowInstr);
                     }
-                } else if (type.equals("store")) {
+                } else if (type == "store") {
                     if (FI == 0) {
                         AsmSw store = new AsmSw(reg, tmpAdd, new AsmImm12(0));
                         store.insertAfter(nowInstr);
@@ -390,7 +396,7 @@ public class RegAlloc {
     private void storeDOrLoadDFromMemory(int spillPlace, AsmReg reg, AsmInstr nowInstr, String type, int foreOrBack, int needVir) {
         if (spillPlace >= -2048 && spillPlace <= 2047) {
             AsmImm12 place = new AsmImm12(spillPlace);
-            if (type.equals("store")) {
+            if (type == "store") {
                 if (foreOrBack == 0) {
                     if (FI == 0) {
                         AsmSd store = new AsmSd(reg, RegGeter.SP, place);
@@ -402,7 +408,7 @@ public class RegAlloc {
                         store.insertAfter(nowInstr);
                     }
                 }
-            } else if (type.equals("load")) {
+            } else if (type == "load") {
                 if (foreOrBack == 0) {
                     if (FI == 0) {
                         AsmLd load = new AsmLd(reg, RegGeter.SP, place);
@@ -430,24 +436,24 @@ public class RegAlloc {
             if (foreOrBack == 0) {
                 asmMove.insertBefore(nowInstr);
                 asmAdd.insertBefore(nowInstr);
-                if (type.equals("load")) {
+                if (type == "load") {
                     if (FI == 0) {
                         AsmLd load = new AsmLd(reg, tmpAdd, new AsmImm12(0));
                         load.insertBefore(nowInstr);
                     }
-                } else if (type.equals("store")) {
+                } else if (type == "store") {
                     if (FI == 0) {
                         AsmSd store = new AsmSd(reg, tmpAdd, new AsmImm12(0));
                         store.insertBefore(nowInstr);
                     }
                 }
             } else {
-                if (type.equals("load")) {
+                if (type == "load") {
                     if (FI == 0) {
                         AsmLd load = new AsmLd(reg, tmpAdd, new AsmImm12(0));
                         load.insertAfter(nowInstr);
                     }
-                } else if (type.equals("store")) {
+                } else if (type == "store") {
                     if (FI == 0) {
                         AsmSd store = new AsmSd(reg, tmpAdd, new AsmImm12(0));
                         store.insertAfter(nowInstr);
@@ -804,7 +810,7 @@ public class RegAlloc {
                     instrTail.LiveOut.addAll(((AsmInstr) instrTail.getNext()).LiveIn);
                 }
                 instrTail.LiveIn.addAll(instrTail.LiveOut);
-                instrTail.regDef.forEach(instrTail.LiveIn::remove);
+                instrTail.LiveIn.removeAll(instrTail.regDef);
                 instrTail = (AsmInstr) instrTail.getPrev();
             }
             blockHead = (AsmBlock) blockHead.getNext();
@@ -886,7 +892,7 @@ public class RegAlloc {
                 }
 
                 //live.addAll(instrTail.regUse);
-                instrTail.regDef.forEach(live::remove);
+                live.removeAll(instrTail.regDef);
                 for (AsmReg U : instrTail.regUse) {
                     if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) { //不确定是否要要算上预着色的，但应该要算，所以先按算的来/todo
                         live.add(U);
@@ -1293,7 +1299,7 @@ public class RegAlloc {
         HashSet<AsmOperand> result = new HashSet<>();
         if (adjList.containsKey(n)) {
             result.addAll(adjList.get(n));
-            selectStack.forEach(result::remove);
+            result.removeAll(selectStack);
             result.removeAll(coalescedNodes);
         }
         return result;
