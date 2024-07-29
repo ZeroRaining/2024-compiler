@@ -30,7 +30,6 @@ public class FuncGetfarray extends LibFunc {
     protected boolean checkParams(List<Value> rParams) {
         return  rParams != null &&
                 rParams.size() == 1 &&
-                rParams.get(0).getPointerLevel() == 1 &&
                 rParams.get(0).getDataType() == DataType.FLOAT;
     }
 }
