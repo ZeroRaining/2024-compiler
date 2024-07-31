@@ -90,7 +90,7 @@ public class RemovePhi {
 
     private static BasicBlock createMidBlk(BranchInstr branch, int cnt, BasicBlock blk) {
         BasicBlock pre = branch.getParentBB();
-        BasicBlock newBlk = new BasicBlock(pre.getDepth(), cnt);
+        BasicBlock newBlk = new BasicBlock(pre.getLoopDepth(), cnt);
         newBlk.insertAfter(pre);
         newBlk.setLabelCnt(cnt);
         branch.modifyUse(blk, newBlk);

@@ -34,7 +34,7 @@ public class FI {
                     }
                     Function callee = (Function) (((CallInstr) instr).getFuncDef());
                     boolean doNotInline = callee.getCalledCnt() > 3 && callee.checkInsTooMany();
-                    doNotInline = doNotInline && !(instr.getParentBB().getDepth() > 1);
+                    doNotInline = doNotInline && !(instr.getParentBB().getLoopDepth() > 1);
                     if (callee.isRecursive() || doNotInline) {
                         instr = (Instruction) instr.getNext();
                         continue;
@@ -44,7 +44,7 @@ public class FI {
                     
                     // 将原本的基本块拆成两个
                     Instruction nextIns = (Instruction) instr.getNext();
-                    int curDepth = basicBlock.getDepth();
+                    int curDepth = basicBlock.getLoopDepth();
                     BasicBlock nextBB = new BasicBlock(curDepth, function.getAndAddBlkIndex());
                     nextBB.insertAfter(basicBlock);
                     

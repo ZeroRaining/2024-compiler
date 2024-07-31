@@ -9,6 +9,7 @@ import frontend.syntax.Ast;
 import frontend.syntax.Parser;
 import midend.RemovePhi;
 import midend.SSA.*;
+import midend.loop.AnalysisLoop;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -68,6 +69,8 @@ public class Compiler {
                 }
             }
         }
+        Function.blkLabelReorder();
+        AnalysisLoop.execute(functions);
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
         }

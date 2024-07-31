@@ -12,6 +12,7 @@ import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.symbols.SymTab;
 import frontend.lexer.TokenType;
 import frontend.syntax.Ast;
+import midend.loop.Loop;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -27,6 +28,9 @@ public class Function extends Value implements FuncDef {
     private final List<Ast.FuncFParam> fParams;
     private final HashSet<Function> myImmediateCallee = new HashSet<>(); // 被 this 直接调用的自定义函数列表
     private final HashSet<Function> allCallee = new HashSet<>(); // 本函数执行过程中会调用（包括间接调用）的所有函数，可能包括自己
+    private ArrayList<Loop> allLoop = new ArrayList<>();
+    private HashMap<BasicBlock, Loop> header2loop = new HashMap<>();
+    private ArrayList<Loop> outerLoop = new ArrayList<>();
     private int calledCnt = 0;
 
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
@@ -239,7 +243,7 @@ public class Function extends Value implements FuncDef {
         
         BasicBlock curBB = (BasicBlock) this.procedure.getBasicBlocks().getHead();
         while (curBB != null) {
-            BasicBlock newBB = new BasicBlock(curDepth + curBB.getDepth(), caller.getAndAddBlkIndex());
+            BasicBlock newBB = new BasicBlock(curDepth + curBB.getLoopDepth(), caller.getAndAddBlkIndex());
             old2new.put(curBB, newBB);
             bbs.add(newBB);
             
@@ -332,5 +336,17 @@ public class Function extends Value implements FuncDef {
             basicBlock = (BasicBlock) basicBlock.getNext();
         }
         return false;
+    }
+
+    public void setAllLoop(ArrayList<Loop> allLoop) {
+        this.allLoop = allLoop;
+    }
+
+    public void setHeader2loop(HashMap<BasicBlock, Loop> header2loop) {
+        this.header2loop = header2loop;
+    }
+
+    public void setOuterLoop(ArrayList<Loop> outerLoop) {
+        this.outerLoop = outerLoop;
     }
 }
