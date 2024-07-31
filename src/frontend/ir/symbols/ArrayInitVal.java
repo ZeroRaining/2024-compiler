@@ -61,8 +61,8 @@ public class ArrayInitVal extends Value {
         
         if (indexList.get(0) >= initList.size()) {
             switch (dataType) {
-                case INT:   return new ConstInt(0);
-                case FLOAT: return new ConstFloat(0);
+                case INT:   return ConstInt.Zero;
+                case FLOAT: return ConstFloat.Zero;
                 default: throw new RuntimeException("?");
             }
         }
@@ -148,8 +148,8 @@ public class ArrayInitVal extends Value {
                         value = initList.get(i);
                     } else {
                         switch (dataType) {
-                            case INT:   value = new ConstInt(0);    break;
-                            case FLOAT: value = new ConstFloat(0);  break;
+                            case INT:   value = ConstInt.Zero;    break;
+                            case FLOAT: value = ConstFloat.Zero;  break;
                             default: throw new RuntimeException();
                         }
                     }

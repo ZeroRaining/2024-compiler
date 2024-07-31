@@ -105,9 +105,9 @@ public class Procedure {
             funcSymTab.addSym(symbol);
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol));
             if (returnType == DataType.INT) {
-                curBlock.addInstruction(new StoreInstr(new ConstInt(0), funcSymTab.getSym("")));
+                curBlock.addInstruction(new StoreInstr(ConstInt.Zero, funcSymTab.getSym("")));
             } else {
-                curBlock.addInstruction(new StoreInstr(new ConstFloat(0), funcSymTab.getSym("")));
+                curBlock.addInstruction(new StoreInstr(ConstFloat.Zero, funcSymTab.getSym("")));
             }
         }
     }
@@ -374,7 +374,7 @@ public class Procedure {
                     curBlock.addInstruction(toI8);
                     ArrayList<Value> rParams = new ArrayList<>();
                     rParams.add(toI8);
-                    rParams.add(new ConstInt(0));
+                    rParams.add(ConstInt.Zero);
                     rParams.add(new ConstInt(((ArrayInitVal) initVal).getSize()));
                     LibFunc libFunc = Lib.getInstance().getLibFunc("memset");
                     CallInstr memset = libFunc.makeCall(curRegIndex++, rParams);
@@ -443,11 +443,11 @@ public class Procedure {
         if (type == DataType.BOOL) {
             return value;
         } else if (type == DataType.INT) {
-            Instruction instr = new ICmpInstr(curRegIndex++, CmpCond.NE, value, new ConstInt(0));
+            Instruction instr = new ICmpInstr(curRegIndex++, CmpCond.NE, value, ConstInt.Zero);
             curBlock.addInstruction(instr);
             return instr;
         } else if (type == DataType.FLOAT) {
-            Instruction instr = new FCmpInstr(curRegIndex++, CmpCond.NE, value, new ConstFloat(0));
+            Instruction instr = new FCmpInstr(curRegIndex++, CmpCond.NE, value, ConstFloat.Zero);
             curBlock.addInstruction(instr);
             return instr;
         } else {
@@ -738,7 +738,7 @@ public class Procedure {
             if (sign == -1) {
                 switch (res.getDataType()) {
                     case INT:
-                        res = new SubInstr(curRegIndex++, new ConstInt(0), res);
+                        res = new SubInstr(curRegIndex++, ConstInt.Zero, res);
                         break;
                     case FLOAT:
                         res = new FNegInstr(curRegIndex++, res);
@@ -751,9 +751,9 @@ public class Procedure {
             if (((Ast.UnaryExp) exp).checkNot()) {
                 DataType dataType = res.getDataType();
                 if (dataType == DataType.INT) {
-                    res = new ICmpInstr(curRegIndex++, CmpCond.EQ, new ConstInt(0), res);
+                    res = new ICmpInstr(curRegIndex++, CmpCond.EQ, ConstInt.Zero, res);
                 } else if (dataType == DataType.FLOAT) {
-                    res = new FCmpInstr(curRegIndex++, CmpCond.EQ, new ConstFloat(0), res);
+                    res = new FCmpInstr(curRegIndex++, CmpCond.EQ, ConstFloat.Zero, res);
                 } else {
                     throw new RuntimeException("!后面返回的应该只能是整数或者浮点数");
                 }

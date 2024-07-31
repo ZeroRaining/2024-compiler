@@ -177,7 +177,7 @@ public class GEPInstr extends MemoryOperation {
         return null;//todo
 //        List<Value> wholeIndexList = new ArrayList<>(indexList);
 //        for (int i = 0; i < symbol.getLimitList().size() - indexList.size(); i++) {
-//            wholeIndexList.add(new ConstInt(0));
+//            wholeIndexList.add(ConstInt.Zero);
 //        }
 //        return wholeIndexList;
     }

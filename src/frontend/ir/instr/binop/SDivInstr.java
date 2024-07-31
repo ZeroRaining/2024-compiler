@@ -51,7 +51,7 @@ public class SDivInstr extends BinaryOperation {
                 res.add(newAshr);
                 
                 if (intValue < 0) {
-                    ConstInt zero = new ConstInt(0);
+                    ConstInt zero = ConstInt.Zero;
                     SubInstr sub = new SubInstr(function.getAndAddRegIndex(), zero, newAshr);
                     res.add(sub);
                 }
