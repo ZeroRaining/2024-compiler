@@ -174,12 +174,12 @@ public class GEPInstr extends MemoryOperation {
     }
 
     public List<Value> getWholeIndexList() {
-        return null;//todo
-//        List<Value> wholeIndexList = new ArrayList<>(indexList);
-//        for (int i = 0; i < symbol.getLimitList().size() - indexList.size(); i++) {
-//            wholeIndexList.add(ConstInt.Zero);
-//        }
-//        return wholeIndexList;
+        List<Value> wholeIndexList = new ArrayList<>();
+        wholeIndexList.add(index);
+        for (int i = 0; i < symbol.getLimitList().size() - 1; i++) {
+            wholeIndexList.add(ConstInt.Zero);
+        }
+        return wholeIndexList;
     }
 
     @Override
