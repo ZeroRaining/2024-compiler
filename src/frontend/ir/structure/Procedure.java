@@ -363,12 +363,13 @@ public class Procedure {
                     init = toSameType(init, symbol);
                     curBlock.addInstruction(new StoreInstr(init, symbol));
                 } else if (initVal instanceof ArrayInitVal) {
-                    ArrayList<Value> baseIndexList = new ArrayList<>();
-                    for (int i = 0; i < ((ArrayInitVal) initVal).getDim(); i++) {
-                        baseIndexList.add(new ConstInt(0));
-                    }
-                    GEPInstr toBase = new GEPInstr(curRegIndex++, baseIndexList, symbol);
+                    GEPInstr toBase = new GEPInstr(curRegIndex++, ConstInt.Zero, symbol);
                     curBlock.addInstruction(toBase);
+                    int dim = ((ArrayInitVal) initVal).getDim();
+                    for (int i = 1; i < dim; i++) {
+                        toBase = new GEPInstr(curRegIndex++, ConstInt.Zero, toBase);
+                        curBlock.addInstruction(toBase);
+                    }
                     Bitcast toI8 = new Bitcast(curRegIndex++, toBase);
                     curBlock.addInstruction(toI8);
                     ArrayList<Value> rParams = new ArrayList<>();
@@ -383,18 +384,16 @@ public class Procedure {
                     ((ArrayInitVal) initVal).getNonZeroIndex(toInit, new ArrayList<>());
                     for (List<Integer> list : toInit) {
                         Value valToInit = ((ArrayInitVal) initVal).getValueWithIndex(list);
-                        ArrayList<Value> indexList = new ArrayList<>();
-                        for (Integer index : list) {
-                            indexList.add(new ConstInt(index));
+                        GEPInstr ptr = new GEPInstr(curRegIndex++, new ConstInt(list.get(0)), symbol);
+                        curBlock.addInstruction(ptr);
+                        for (int i = 1; i < list.size(); i++) {
+                            ptr = new GEPInstr(curRegIndex++, new ConstInt(list.get(i)), ptr);
+                            curBlock.addInstruction(ptr);
                         }
                         if (valToInit instanceof ConstValue) {
-                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
-                            curBlock.addInstruction(ptr);
                             valToInit = toSameType(valToInit, symbol);
                             curBlock.addInstruction(new StoreInstr(valToInit, symbol, ptr));
                         } else if (valToInit instanceof InitExpr) {
-                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
-                            curBlock.addInstruction(ptr);
                             Value init = calculateExpr(((InitExpr) valToInit).getExp(), symTab, false);
                             init = toSameType(init, symbol);
                             curBlock.addInstruction(new StoreInstr(init, symbol, ptr));
@@ -706,7 +705,7 @@ public class Procedure {
                         res = load;
                     } else {
                         if (ptr instanceof GEPInstr) {
-                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr);
+                            Instruction newPtr = new GEPInstr(curRegIndex++, ConstInt.Zero, (GEPInstr) ptr);
                             curBlock.addInstruction(newPtr);
                             res = newPtr;
                         } else {
@@ -782,9 +781,21 @@ public class Procedure {
             }
             curBlock.addInstruction(load);
             
-            ptr = new GEPInstr(curRegIndex++, load, indexList);
+            ptr = new GEPInstr(curRegIndex++, load, indexList.get(0));
+            for (int i = 1; i < indexList.size(); i++) {
+                curBlock.addInstruction(ptr);
+                ptr = new GEPInstr(curRegIndex++, indexList.get(i), ptr);
+            }
         } else {
-            ptr = new GEPInstr(curRegIndex++, indexList, symbol);
+            if (indexList.isEmpty()) {
+                ptr = new GEPInstr(curRegIndex++, null, symbol);
+            } else {
+                ptr = new GEPInstr(curRegIndex++, indexList.get(0), symbol);
+                for (int i = 1; i < indexList.size(); i++) {
+                    curBlock.addInstruction(ptr);
+                    ptr = new GEPInstr(curRegIndex++, indexList.get(i), ptr);
+                }
+            }
         }
         return ptr;
     }
