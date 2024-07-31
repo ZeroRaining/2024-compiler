@@ -11,7 +11,7 @@ import java.util.HashSet;
 public class Loop {
     private BasicBlock entering;
     private BasicBlock header;
-    private BasicBlock exit;
+    private HashSet<BasicBlock> exit = new HashSet<>();
     private HashSet<BasicBlock> exiting = new HashSet<>();
     private HashSet<BasicBlock> latch = new HashSet<>();
     private ArrayList<BasicBlock> blks = new ArrayList<>();
@@ -60,11 +60,11 @@ public class Loop {
         latch.add(blk);
     }
 
-    public void setExit(BasicBlock blk) {
-        exit = blk;
+    public void addExitblk(BasicBlock blk) {
+        exit.add(blk);
     }
 
-    public BasicBlock getExit() {
+    public HashSet<BasicBlock> getExit() {
         return exit;
     }
 

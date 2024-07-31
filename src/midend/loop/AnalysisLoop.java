@@ -23,11 +23,11 @@ public class AnalysisLoop {
                 for (BasicBlock suc : blk.getSucs()) {
                     if (!loop.getBlks().contains(suc)) {
                         loop.addExitingBlk(blk);
-                        if (loop.getExit() == suc || loop.getExit() == null) {
-                            loop.setExit(suc);
-                        } else {
-                            throw new RuntimeException("竟然会有两个结束块");
-                        }
+//                        if (loop.getExit() == suc || loop.getExit() == null) {
+                            loop.addExitblk(suc);
+//                        } else {
+//                            throw new RuntimeException("竟然会有两个结束块");
+//                        }
                     }
                 }
             }
@@ -41,13 +41,13 @@ public class AnalysisLoop {
 
     private static void findAllLoop(Function function) {
         ArrayList<BasicBlock> order = DFG.getDomPostOrder(function);
-        System.out.println(order);
+//        System.out.println(order);
         // 如果blk支配其前驱pre，则构成循环blk1 -> blk2 -> blk1，blk2->blk1为backEdge
         for (BasicBlock blk : order) {
             Stack<BasicBlock> backEdges = new Stack<>();
             for (BasicBlock pre : blk.getPres()) {
                 if (blk.getDoms().contains(pre)) {
-                    System.out.println(blk + " doms " + pre);
+//                    System.out.println(blk + " doms " + pre);
                     backEdges.push(pre);
                 }
             }
@@ -133,7 +133,7 @@ public class AnalysisLoop {
                 }
                 innerLoop.setPrtLoop(loop);
                 for (BasicBlock pre : innerLoop.getHeader().getPres()) {
-                    if (!header2loop.get(pre).equals(innerLoop)) {
+                    if (header2loop.get(pre) == null || !header2loop.get(pre).equals(innerLoop)) {
                         backEdges.push(pre);
                     }
                 }
