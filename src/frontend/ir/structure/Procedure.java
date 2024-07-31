@@ -34,7 +34,7 @@ import java.io.Writer;
 import java.util.*;
 
 public class Procedure {
-    private final CustomList basicBlocks = new CustomList();
+    private final CustomList basicBlocks = new CustomList(this);
     private int curRegIndex = 0;
     private int curBlkIndex = 0;
     private int curDepth = 0;
