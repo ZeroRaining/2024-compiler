@@ -23,8 +23,11 @@ public class AnalysisLoop {
                 for (BasicBlock suc : blk.getSucs()) {
                     if (!loop.getBlks().contains(suc)) {
                         loop.addExitingBlk(blk);
-                        assert loop.getExit() == suc || loop.getExit() == null;
-                        loop.setExit(suc);
+                        if (loop.getExit() == suc || loop.getExit() == null) {
+                            loop.setExit(suc);
+                        } else {
+                            throw new RuntimeException("竟然会有两个结束块");
+                        }
                     }
                 }
             }
