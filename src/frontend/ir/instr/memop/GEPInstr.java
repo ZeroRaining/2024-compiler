@@ -18,40 +18,37 @@ import java.util.List;
  */
 public class GEPInstr extends MemoryOperation {
     private final int result;
-    private final List<Value> indexList;
+//    private final List<Value> indexList;
+    private final Value index;
     private final String arrayTypeName;
     private Value ptrVal;    // 指针基质：全局变量名，或者局部变量申请指令，或上一条 GEP
 
-    public GEPInstr(int result, List<Value> indexList, Symbol symbol) {
+    public GEPInstr(int result, Value index, Symbol symbol) {
         super(symbol);
-        if (indexList == null) {
+        if (index == null) {
             throw new NullPointerException();
         }
         this.result = result;
-        this.indexList = indexList;
-        this.pointerLevel = symbol.getDim() + 1 - indexList.size();
+        this.index = index;
+        this.pointerLevel = symbol.getDim();
         this.arrayTypeName = symbol.printArrayTypeName();
         this.ptrVal = symbol.getAllocValue();
         setUse(symbol.getAllocValue());
-        for (Value value : indexList) {
-            setUse(value);
-        }
+        setUse(index);
     }
     
-    private GEPInstr(int result, List<Value> indexList, Value allocValue, Symbol symbol) {
+    private GEPInstr(int result, Value index, Value allocValue, Symbol symbol) {
         super(symbol);
-        if (indexList == null) {
+        if (index == null) {
             throw new NullPointerException();
         }
         this.result = result;
-        this.indexList = indexList;
-        this.pointerLevel = symbol.getDim() + 1 - indexList.size();
+        this.index = index;
+        this.pointerLevel = symbol.getDim();
         this.arrayTypeName = symbol.printArrayTypeName();
         this.ptrVal = allocValue;
         setUse(allocValue);
-        for (Value value : indexList) {
-            setUse(value);
-        }
+        setUse(index);
     }
 
     public GEPInstr(int result, GEPInstr base) {
@@ -82,7 +79,7 @@ public class GEPInstr extends MemoryOperation {
     @Override
     public Instruction cloneShell(Procedure procedure) {
         if (ptrVal instanceof GlobalObject || ptrVal instanceof AllocaInstr) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), new ArrayList<>(indexList), ptrVal, symbol);
+            return new GEPInstr(procedure.getAndAddRegIndex(), index, ptrVal, symbol);
         } else if (ptrVal instanceof GEPInstr) {
             return new GEPInstr(procedure.getAndAddRegIndex(), (GEPInstr) ptrVal);
         } else if (ptrVal instanceof LoadInstr) {
@@ -148,7 +145,7 @@ public class GEPInstr extends MemoryOperation {
         stringBuilder.append(arrayTypeName).append(", ");
         stringBuilder.append(arrayTypeName).append("* ");
         stringBuilder.append(ptrVal.value2string());
-        if (!symbol.isArrayFParam()) {
+        if (!(symbol.isArrayFParam() && ptrVal instanceof LoadInstr)) {
             stringBuilder.append(", i64 0");
         }
         for (Value index : indexList) {

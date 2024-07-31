@@ -781,6 +781,7 @@ public class Procedure {
                 return load;
             }
             curBlock.addInstruction(load);
+            
             ptr = new GEPInstr(curRegIndex++, load, indexList);
         } else {
             ptr = new GEPInstr(curRegIndex++, indexList, symbol);
