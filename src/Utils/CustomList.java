@@ -8,6 +8,8 @@ public class CustomList implements Iterable<CustomList.Node> {
     private Node tail;
 //    private L value;
     private int size;
+    
+    private Object owner;
 
     public CustomList() {
 //        this.value = value;
@@ -16,6 +18,18 @@ public class CustomList implements Iterable<CustomList.Node> {
         this.size = 0;
     }
 
+    public CustomList(Object owner) {
+//        this.value = value;
+        this.head = null;
+        this.tail = null;
+        this.size = 0;
+        this.owner = owner;
+    }
+    
+    public Object getOwner() {
+        return owner;
+    }
+    
     public Node getHead() {
         return head;
     }

@@ -5,7 +5,6 @@ import debug.DEBUG;
 import frontend.ir.DataType;
 import frontend.ir.Use;
 import frontend.ir.Value;
-import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.otherop.PCInstr;
@@ -22,7 +21,8 @@ public class BasicBlock extends Value {
     private BasicBlock newTrue;
     private BasicBlock newFalse;
     private int labelCnt;
-    private int depth;
+    private int loopDepth;
+    private int domDepth;
     private boolean isRet;
     private HashSet<BasicBlock> pres;
     private HashSet<BasicBlock> sucs;
@@ -30,10 +30,11 @@ public class BasicBlock extends Value {
     private HashSet<BasicBlock> iDoms;
     private HashSet<BasicBlock> DF;
     
-    public BasicBlock(int depth, int labelCnt) {
+    public BasicBlock(int loopDepth, int labelCnt) {
         super();
         isRet = false;
-        this.depth = depth;
+        this.loopDepth = loopDepth;
+        this.domDepth = 0;
         pres = new HashSet<>();
         sucs = new HashSet<>();
         doms = new HashSet<>();
@@ -67,12 +68,19 @@ public class BasicBlock extends Value {
         isRet = ret;
     }
 
-    public int getDepth() {
-        return depth;
+    public int getLoopDepth() {
+        return loopDepth;
     }
 
-    public void setDepth(int depth) {
-        this.depth = depth;
+    public void setLoopDepth(int loopDepth) {
+        this.loopDepth = loopDepth;
+    }
+    public int getDomDepth() {
+        return domDepth;
+    }
+
+    public void setDomDepth(int domDepth) {
+        this.domDepth = domDepth;
     }
 
     public Instruction getEndInstr() {
@@ -241,7 +249,7 @@ public class BasicBlock extends Value {
     }
 
     public BasicBlock clone4while(Procedure procedure) {
-        BasicBlock newBlk = new BasicBlock(depth, procedure.getAndAddBlkIndex());
+        BasicBlock newBlk = new BasicBlock(loopDepth, procedure.getAndAddBlkIndex());
         HashMap<Value, Value> old2new = new HashMap<>();
         Instruction instr = (Instruction) this.getInstructions().getHead();
         while (instr != null) {

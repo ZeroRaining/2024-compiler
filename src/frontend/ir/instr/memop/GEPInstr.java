@@ -3,7 +3,6 @@ package frontend.ir.instr.memop;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
-import frontend.ir.structure.Function;
 import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
@@ -21,7 +20,7 @@ public class GEPInstr extends MemoryOperation {
     private final int result;
     private final List<Value> indexList;
     private final String arrayTypeName;
-    private Value ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
+    private Value ptrVal;    // 指针基质：全局变量名，或者局部变量申请指令，或上一条 GEP
 
     public GEPInstr(int result, List<Value> indexList, Symbol symbol) {
         super(symbol);
@@ -140,8 +139,12 @@ public class GEPInstr extends MemoryOperation {
 
     @Override
     public String print() {
+        return "%reg_" + result + " = getelementptr " +
+                printTypeAndIndex();
+    }
+    
+    private String printTypeAndIndex() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("%reg_").append(result).append(" = getelementptr ");
         stringBuilder.append(arrayTypeName).append(", ");
         stringBuilder.append(arrayTypeName).append("* ");
         stringBuilder.append(ptrVal.value2string());
@@ -170,8 +173,7 @@ public class GEPInstr extends MemoryOperation {
     }
 
     public List<Value> getWholeIndexList() {
-        List<Value> wholeIndexList = new ArrayList<>();
-        wholeIndexList.addAll(indexList);
+        List<Value> wholeIndexList = new ArrayList<>(indexList);
         for (int i = 0; i < symbol.getLimitList().size() - indexList.size(); i++) {
             wholeIndexList.add(new ConstInt(0));
         }
@@ -180,6 +182,6 @@ public class GEPInstr extends MemoryOperation {
 
     @Override
     public String myHash() {
-        return this.value2string();
+        return this.printTypeAndIndex();
     }
 }

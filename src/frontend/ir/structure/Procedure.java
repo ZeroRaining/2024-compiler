@@ -34,7 +34,7 @@ import java.io.Writer;
 import java.util.*;
 
 public class Procedure {
-    private final CustomList basicBlocks = new CustomList();
+    private final CustomList basicBlocks = new CustomList(this);
     private int curRegIndex = 0;
     private int curBlkIndex = 0;
     private int curDepth = 0;
@@ -177,7 +177,7 @@ public class Procedure {
         } else if (item instanceof Ast.Break) {
             dealBreak();
         } else if (item instanceof Ast.WhileStmt) {
-            doWhile((Ast.WhileStmt)item, returnType, symTab);
+            dealWhile((Ast.WhileStmt)item, returnType, symTab);
         } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
@@ -232,10 +232,10 @@ public class Procedure {
         whileBegins.push(cond2Blk);
         whileEnds.push(endBlk);
 
-        bodyBlk.setDepth(++curDepth);
+        bodyBlk.setLoopDepth(++curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
-        cond2Blk.setDepth(curDepth);
-        bodyBlk.setDepth(--curDepth);
+        cond2Blk.setLoopDepth(curDepth);
+        bodyBlk.setLoopDepth(--curDepth);
         whileBegins.pop();
         whileEnds.pop();
 
@@ -263,9 +263,9 @@ public class Procedure {
         curBlock = bodyBlk;
         whileBegins.push(condBlk);
         whileEnds.push(endBlk);
-        bodyBlk.setDepth(++curDepth);
+        bodyBlk.setLoopDepth(++curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
-        bodyBlk.setDepth(--curDepth);
+        bodyBlk.setLoopDepth(--curDepth);
         whileBegins.pop();
         whileEnds.pop();
 
@@ -879,12 +879,12 @@ public class Procedure {
             writer.append(block.value2string()).append(":\n");
             block.printIR(writer);
         }
-//        DEBUG.dbgPrint1("\n");
-//        for (CustomList.Node basicBlockNode : basicBlocks) {
-//            BasicBlock block = (BasicBlock) basicBlockNode;
-//            DEBUG.dbgPrint1(block.value2string());
-//            block.printDBG();
-//        }
+        DEBUG.dbgPrint1("\n");
+        for (CustomList.Node basicBlockNode : basicBlocks) {
+            BasicBlock block = (BasicBlock) basicBlockNode;
+            DEBUG.dbgPrint1(block.value2string());
+            block.printDBG();
+        }
     }
 
     public CustomList getBasicBlocks() {
