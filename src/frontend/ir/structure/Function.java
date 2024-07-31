@@ -349,4 +349,16 @@ public class Function extends Value implements FuncDef {
     public void setOuterLoop(ArrayList<Loop> outerLoop) {
         this.outerLoop = outerLoop;
     }
+
+    public ArrayList<Loop> getAllLoop() {
+        return allLoop;
+    }
+
+    public ArrayList<Loop> getOuterLoop() {
+        return outerLoop;
+    }
+
+    public HashMap<BasicBlock, Loop> getHeader2loop() {
+        return header2loop;
+    }
 }

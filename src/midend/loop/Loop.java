@@ -5,6 +5,7 @@ import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.structure.BasicBlock;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 
 public class Loop {
@@ -13,7 +14,7 @@ public class Loop {
     private BasicBlock exit;
     private HashSet<BasicBlock> exiting = new HashSet<>();
     private HashSet<BasicBlock> latch = new HashSet<>();
-    private HashSet<BasicBlock> blks = new HashSet<>();
+    private ArrayList<BasicBlock> blks = new ArrayList<>();
     private ArrayList<Loop> inner = new ArrayList<>();
     private Loop prtLoop;
 
@@ -71,7 +72,14 @@ public class Loop {
         return inner;
     }
 
-    public HashSet<BasicBlock> getBlks() {
+    public ArrayList<BasicBlock> getBlks() {
         return blks;
+    }
+
+    public void reverse() {
+        blks.remove(header);
+        Collections.reverse(blks);
+        blks.add(0, header);
+        Collections.reverse(inner);
     }
 }

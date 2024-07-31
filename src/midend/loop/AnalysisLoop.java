@@ -72,6 +72,7 @@ public class AnalysisLoop {
                     outLoop.add(innerLoop);
                 }
                 //todo：reverse
+                innerLoop.reverse();
                 innerLoop = innerLoop.getPrtLoop();
             }
             while (innerLoop != null) {
