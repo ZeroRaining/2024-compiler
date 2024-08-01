@@ -17,7 +17,7 @@ public class LCSSA {
         for (Function function : functions) {
             phiCnt = function.getPhiIndex();
             addPhi(function);
-            function.setCurPhiIndex(phiCnt);
+            function.setCurPhiIndex(phiCnt++);
         }
     }
 
