@@ -51,7 +51,7 @@ public class LoopInvariantMotion {
         BasicBlock tmpBlk = new BasicBlock(entering.getLoopDepth(), ((Procedure) entering.getParent().getOwner()).getAndAddBlkIndex());
         while (!queue.isEmpty()) {
             Instruction instr = queue.poll();
-            instr.removeFromList();
+            instr.removeFromListWithUseRemain();
             tmpBlk.addInstruction(instr);
             Use use = instr.getBeginUse();
             while (use != null) {

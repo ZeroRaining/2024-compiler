@@ -84,7 +84,7 @@ public class Loop {
         latchs.add(blk);
     }
 
-    public void addExitblk(BasicBlock blk) {
+    public void addExitBlk(BasicBlock blk) {
         exits.add(blk);
     }
 

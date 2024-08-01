@@ -35,7 +35,7 @@ public class AnalysisLoop {
                     if (!loop.getBlks().contains(suc)) {
                         loop.addExitingBlk(blk);
 //                        if (loop.getExit() == suc || loop.getExit() == null) {
-                            loop.addExitblk(suc);
+                            loop.addExitBlk(suc);
 //                        } else {
 //                            throw new RuntimeException("竟然会有两个结束块");
 //                        }
