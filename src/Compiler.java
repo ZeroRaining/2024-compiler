@@ -64,7 +64,7 @@ public class Compiler {
             //循环分析
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
-            LCSSA.execute(functions);
+//            LCSSA.execute(functions);
             LoopInvariantMotion.execute(functions);
 
             //合并删减块
