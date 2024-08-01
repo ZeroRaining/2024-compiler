@@ -35,7 +35,7 @@ public class LoopInvariantMotion {
         for (Loop inner : loop.getInnerLoops()) {
             findInvar4loop(inner, function);
         }
-        System.out.println(loop.getHeader() + " " + loop.getSameLoopDepth());
+        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         Queue<Instruction> queue = new LinkedList<>();
         HashSet<Value> invariant = new HashSet<>();
         for (BasicBlock block : loop.getSameLoopDepth()) {
@@ -75,6 +75,7 @@ public class LoopInvariantMotion {
             }
             DFG.singleExecute(function);
         }
+        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
     }
 
     private static void addTmpBlk(BasicBlock entering, BasicBlock tmpBlk, BasicBlock next) {
@@ -108,9 +109,6 @@ public class LoopInvariantMotion {
             return false;
         }
         if (instr instanceof Terminator) {
-            return false;
-        }
-        if (instr instanceof GEPInstr) {
             return false;
         }
         if (!instr.getParentBB().getDoms().containsAll(loop.getExits())) {
