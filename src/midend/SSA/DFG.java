@@ -54,6 +54,7 @@ public class DFG {
                 }
                 if (flag) {
                     iDoms.add(dom1);
+                    dom1.setiDomor(block);
                 }
             }
             block.setIDoms(iDoms);

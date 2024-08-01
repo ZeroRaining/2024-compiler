@@ -28,6 +28,7 @@ public class BasicBlock extends Value {
     private HashSet<BasicBlock> sucs;
     private HashSet<BasicBlock> doms;
     private HashSet<BasicBlock> iDoms;
+    private BasicBlock iDomor;
     private HashSet<BasicBlock> DF;
     
     public BasicBlock(int loopDepth, int labelCnt) {
@@ -152,7 +153,7 @@ public class BasicBlock extends Value {
             throw new NullPointerException();
         }
         for (int i = allocaInstrList.size() - 1; i >= 0; i--) {
-            instructions.addToHead(allocaInstrList.get(i));
+            this.addInstrToHead(allocaInstrList.get(i));
         }
     }
 
@@ -174,7 +175,12 @@ public class BasicBlock extends Value {
             isRet = true;
         }
     }
-    
+
+    public void addInstrToHead(Instruction instr) {
+        instr.setParentBB(this);
+        instructions.addToHead(instr);
+    }
+
     public void printIR(Writer writer) throws IOException {
         if (writer == null) {
             throw new NullPointerException();
@@ -265,5 +271,13 @@ public class BasicBlock extends Value {
             instr = (Instruction) instr.getNext();
         }
         return newBlk;
+    }
+
+    public void setiDomor(BasicBlock iDomor) {
+        this.iDomor = iDomor;
+    }
+
+    public BasicBlock getiDomor() {
+        return iDomor;
     }
 }

@@ -11,11 +11,11 @@ import java.util.HashSet;
 public class Loop {
     private BasicBlock entering;
     private BasicBlock header;
-    private HashSet<BasicBlock> exit = new HashSet<>();
-    private HashSet<BasicBlock> exiting = new HashSet<>();
-    private HashSet<BasicBlock> latch = new HashSet<>();
+    private HashSet<BasicBlock> exits = new HashSet<>();
+    private HashSet<BasicBlock> exitings = new HashSet<>();
+    private HashSet<BasicBlock> latchs = new HashSet<>();
     private ArrayList<BasicBlock> blks = new ArrayList<>();
-    private ArrayList<Loop> inner = new ArrayList<>();
+    private ArrayList<Loop> innerLoops = new ArrayList<>();
     private Loop prtLoop;
 
     private Value var;
@@ -45,7 +45,7 @@ public class Loop {
     }
 
     public void addLoop(Loop subLoop) {
-        inner.add(subLoop);
+        innerLoops.add(subLoop);
     }
 
     public void addBlk(BasicBlock blk) {
@@ -53,23 +53,23 @@ public class Loop {
     }
 
     public void addExitingBlk(BasicBlock blk) {
-        exiting.add(blk);
+        exitings.add(blk);
     }
 
     public void addLatchBlk(BasicBlock blk) {
-        latch.add(blk);
+        latchs.add(blk);
     }
 
     public void addExitblk(BasicBlock blk) {
-        exit.add(blk);
+        exits.add(blk);
     }
 
-    public HashSet<BasicBlock> getExit() {
-        return exit;
+    public HashSet<BasicBlock> getExits() {
+        return exits;
     }
 
-    public ArrayList<Loop> getInner() {
-        return inner;
+    public ArrayList<Loop> getInnerLoops() {
+        return innerLoops;
     }
 
     public ArrayList<BasicBlock> getBlks() {
@@ -80,6 +80,6 @@ public class Loop {
         blks.remove(header);
         Collections.reverse(blks);
         blks.add(0, header);
-        Collections.reverse(inner);
+        Collections.reverse(innerLoops);
     }
 }

@@ -23,12 +23,11 @@ public class Mem2Reg {
     private static int curRegCnt = 0;//TODO:!!!!!
     public static void execute(ArrayList<Function> functions) throws IOException {
         for (Function function : functions) {
-            curRegCnt = 0;
+            curRegCnt = function.getPhiIndex();
             removeAlloc(function);
+            function.setCurPhiIndex(curRegCnt);
         }
     }
-    
-    private static int cnt = 0;
     
     private static void removeAlloc(Function function) throws IOException {
         BasicBlock block = (BasicBlock) function.getBasicBlocks().getHead();
@@ -115,7 +114,7 @@ public class Mem2Reg {
                     prtBlks.add(blk);
                 }
                 Instruction phi = new PhiInstr(curRegCnt++, instr.getDataType(), values, prtBlks);
-                block.getInstructions().addToHead(phi);
+                block.addInstrToHead(phi);
                 useIns.add(phi);
                 defIns.add(phi);
                 useBlks.add(block);

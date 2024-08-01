@@ -361,4 +361,12 @@ public class Function extends Value implements FuncDef {
     public HashMap<BasicBlock, Loop> getHeader2loop() {
         return header2loop;
     }
+
+    public int getPhiIndex() {
+        return procedure.getPhiIndex();
+    }
+
+    public void setCurPhiIndex(int curPhiIndex) {
+        procedure.setCurPhiIndex(curPhiIndex);
+    }
 }
