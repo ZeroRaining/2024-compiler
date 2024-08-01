@@ -68,23 +68,29 @@ public class Loop {
         this.prtLoop = prtLoop;
     }
 
-    public void addLoop(Loop subLoop) {
-        innerLoops.add(subLoop);
+    public void addLoop(Loop inner) {
+        if (innerLoops.contains(inner)) return;
+        innerLoops.add(inner);
     }
 
     public void addBlk(BasicBlock blk) {
+        //todo:为什么一个块会被加好几次？
+        if (blks.contains(blk)) return;
         blks.add(blk);
     }
 
     public void addExitingBlk(BasicBlock blk) {
+        if (exitings.contains(blk)) return;
         exitings.add(blk);
     }
 
     public void addLatchBlk(BasicBlock blk) {
+        if (latchs.contains(blk)) return;
         latchs.add(blk);
     }
 
     public void addExitBlk(BasicBlock blk) {
+        if (exits.contains(blk)) return;
         exits.add(blk);
     }
 
