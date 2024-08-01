@@ -46,6 +46,7 @@ public class Procedure {
     private final ArrayList<Value> fParamValueList = new ArrayList<>();
     private final HashSet<Function> myCallee;
     private final Function parentFunc;
+    private final HashSet<CallInstr> selfCallingInstrSet = new HashSet<>();
 
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block,
                      SymTab funcSymTab, HashSet<Function> myCallee, Function parentFunc) {
@@ -853,6 +854,9 @@ public class Procedure {
             List<Ast.FuncFParam> fParams = myFunc.getFParams();
             funcParamConv(fParams, rParams);
             callInstr = myFunc.makeCall(curRegIndex++, rParams);
+            if (myFunc == this.parentFunc) {
+                this.selfCallingInstrSet.add(callInstr);
+            }
         }
         if (callInstr.getDataType() == DataType.VOID) {
             curRegIndex--;
@@ -911,11 +915,16 @@ public class Procedure {
     public int getAndAddBlkIndex() {
         return this.curBlkIndex++;
     }
+    
     public int getPhiIndex() {
         return this.curPhiIndex;
     }
 
     public void setCurPhiIndex(int curPhiIndex) {
         this.curPhiIndex = curPhiIndex;
+    }
+    
+    public HashSet<CallInstr> getSelfCallingInstrSet() {
+        return selfCallingInstrSet;
     }
 }
