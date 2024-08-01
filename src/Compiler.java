@@ -11,6 +11,7 @@ import midend.RemovePhi;
 import midend.SSA.*;
 import midend.loop.AnalysisLoop;
 import midend.loop.LCSSA;
+import midend.loop.LoopInvariantMotion;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -74,6 +75,7 @@ public class Compiler {
         Function.blkLabelReorder();
         AnalysisLoop.execute(functions);
 //        LCSSA.execute(functions);
+        LoopInvariantMotion.execute(functions);
         RemoveUseLessPhi.execute(functions);
 
 
