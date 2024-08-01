@@ -78,7 +78,6 @@ public class AnalysisLoop {
                 } else {
                     outLoop.add(innerLoop);
                 }
-                //todo：reverse
                 innerLoop.reverse();
                 innerLoop = innerLoop.getPrtLoop();
             }

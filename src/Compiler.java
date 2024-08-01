@@ -10,6 +10,7 @@ import frontend.syntax.Parser;
 import midend.RemovePhi;
 import midend.SSA.*;
 import midend.loop.AnalysisLoop;
+import midend.loop.LCSSA;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -52,14 +53,14 @@ public class Compiler {
             while (cnt < times) {
                 DeadCodeRemove.execute(functions);
                 OIS.execute(functions);
-//                OISR.doOISR(functions);
+                //OISR.doOISR(functions);
                 GVN.execute(functions);
                 SimplifyBranch.execute(functions);
                 MergeBlock.execute(functions);
                 DeadBlockRemove.execute(functions);
                 RemoveUseLessPhi.execute(functions);
                 if (cnt == 0) {
-                    // 只有第一轮才做内联
+                     //只有第一轮才做内联
                     FI.execute(program.getFunctionList());
                     program.removeUselessFunc();
                 }
@@ -71,6 +72,7 @@ public class Compiler {
         }
         Function.blkLabelReorder();
         AnalysisLoop.execute(functions);
+        LCSSA.execute(functions);
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
         }
