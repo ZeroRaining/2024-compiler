@@ -36,7 +36,13 @@ public class Compiler {
         Ast ast = new Parser(tokenList).parseAst();
         // 生成 IR
         Program program = new Program(ast);
-//        program.removeUselessFunc();
+        
+        if (arg.getOptLevel() == 1) {
+            FI.execute(program.getFunctionList());
+            program.removeUselessFunc();
+            GlobalValueLocalize.execute(program.getGlobalVars());
+            program.deleteUselessGlobalVars();
+        }
         
         ArrayList<Function> functions = program.getFunctionList();
         DeadBlockRemove.execute(functions);
@@ -59,11 +65,6 @@ public class Compiler {
                 MergeBlock.execute(functions);
                 DeadBlockRemove.execute(functions);
                 RemoveUseLessPhi.execute(functions);
-                if (cnt == 0) {
-                     //只有第一轮才做内联
-                    FI.execute(program.getFunctionList());
-                    program.removeUselessFunc();
-                }
                 cnt++;
                 if (cnt < times) {
                     DFG.execute(functions);

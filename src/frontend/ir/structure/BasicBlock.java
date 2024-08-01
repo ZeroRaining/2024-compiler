@@ -17,7 +17,7 @@ import java.io.Writer;
 import java.util.*;
 
 public class BasicBlock extends Value {
-    private CustomList instructions = new CustomList();
+    private CustomList instructions = new CustomList(this);
     private BasicBlock newTrue;
     private BasicBlock newFalse;
     private int labelCnt;

@@ -927,4 +927,8 @@ public class Procedure {
     public HashSet<CallInstr> getSelfCallingInstrSet() {
         return selfCallingInstrSet;
     }
+    
+    public Function getParentFunc() {
+        return parentFunc;
+    }
 }
