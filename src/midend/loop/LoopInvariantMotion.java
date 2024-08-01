@@ -101,6 +101,9 @@ public class LoopInvariantMotion {
         if (instr instanceof Terminator) {
             return false;
         }
+        if (!instr.getParentBB().getDoms().containsAll(loop.getExits())) {
+            return false;
+        }
         for (Value value : instr.getUseValueList()) {
             if (value instanceof ConstValue) {
                 continue;
