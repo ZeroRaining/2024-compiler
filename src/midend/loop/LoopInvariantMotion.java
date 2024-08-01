@@ -83,6 +83,12 @@ public class LoopInvariantMotion {
             instr = (Instruction) instr.getNext();
         }
         tmpBlk.insertAfter(entering);
+
+        //update dom
+        //fixme：这里应该用不到dom之外的东西。
+        HashSet<BasicBlock> doms = new HashSet<>(entering.getDoms());
+        tmpBlk.setDoms(doms);
+        entering.getDoms().add(tmpBlk);
     }
 
     //instr所使用的值是否都来自循环外
