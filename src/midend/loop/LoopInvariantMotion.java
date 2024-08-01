@@ -81,7 +81,7 @@ public class LoopInvariantMotion {
         tmpBlk.addInstruction(new JumpInstr(next));
         Instruction instr = (Instruction) next.getInstructions().getHead();
         while (instr instanceof PhiInstr) {
-            instr.modifyUse(entering, tmpBlk);
+            ((PhiInstr) instr).modifyPrtBlk(entering, tmpBlk);
             instr = (Instruction) instr.getNext();
         }
         tmpBlk.insertAfter(entering);
