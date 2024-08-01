@@ -4,6 +4,7 @@ import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.memop.GEPInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
@@ -107,6 +108,9 @@ public class LoopInvariantMotion {
             return false;
         }
         if (instr instanceof Terminator) {
+            return false;
+        }
+        if (instr instanceof GEPInstr) {
             return false;
         }
         if (!instr.getParentBB().getDoms().containsAll(loop.getExits())) {
