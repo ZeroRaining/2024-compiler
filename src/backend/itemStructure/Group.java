@@ -19,12 +19,9 @@ public class Group<T1, T2> {
         return second;
     }
 
-    public boolean equals(Object o) {
-        if (o instanceof Group<?, ?> group) {
+    public boolean equals(Group group) {
             return first.equals(group.first) &&
                     second.equals(group.second);
-        }
-        return false;
     }
 
     public int hashCode() {
