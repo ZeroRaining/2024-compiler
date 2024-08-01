@@ -25,7 +25,7 @@ public class Mem2Reg {
         for (Function function : functions) {
             phiCnt = function.getPhiIndex();
             removeAlloc(function);
-            function.setCurPhiIndex(phiCnt++);
+            function.setCurPhiIndex(phiCnt);
         }
     }
     

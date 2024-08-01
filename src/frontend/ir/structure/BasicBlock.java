@@ -236,6 +236,16 @@ public class BasicBlock extends Value {
         printHashset(doms, "doms");
         printHashset(iDoms, "iDoms");
         printHashset(DF, "DF");
+        //printIDomor
+        str = new StringBuilder("idomor");
+        str.append(": ");
+        if (iDomor == null) {
+            str.append("null ");
+
+        } else {
+            str.append(iDomor.value2string()).append(" ");
+        }
+        DEBUG.dbgPrint2(String.valueOf(str));
         DEBUG.dbgPrint1("");
     }
 

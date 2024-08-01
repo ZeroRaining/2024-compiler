@@ -7,16 +7,27 @@ import midend.SSA.DFG;
 import java.util.*;
 
 public class AnalysisLoop {
-    private static final HashMap<BasicBlock, Loop> header2loop = new HashMap<>();
-    private static final ArrayList<Loop> outLoop = new ArrayList<>();
-    private static final ArrayList<Loop> allLoop = new ArrayList<>();
+    private static HashMap<BasicBlock, Loop> header2loop = new HashMap<>();
+    private static ArrayList<Loop> outLoop = new ArrayList<>();
+    private static ArrayList<Loop> allLoop = new ArrayList<>();
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
+            init();
             findAllLoop(function);
             fillInLoop();
+            finalized(function);
         }
     }
-
+    private static void finalized(Function function){
+        function.setAllLoop(allLoop);
+        function.setHeader2loop(header2loop);
+        function.setOuterLoop(outLoop);
+    }
+    private static void init() {
+        header2loop = new HashMap<>();
+        outLoop = new ArrayList<>();
+        allLoop = new ArrayList<>();
+    }
     private static void fillInLoop() {
         for (Loop loop : allLoop) {
             for (BasicBlock blk : loop.getBlks()) {
@@ -63,9 +74,6 @@ public class AnalysisLoop {
             }
         }
         populateLoops(order);
-        function.setAllLoop(allLoop);
-        function.setHeader2loop(header2loop);
-        function.setOuterLoop(outLoop);
     }
 
     private static void populateLoops(ArrayList<BasicBlock> order) {
