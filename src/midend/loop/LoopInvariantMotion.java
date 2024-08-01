@@ -4,7 +4,6 @@ import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
-import frontend.ir.instr.memop.GEPInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
@@ -14,7 +13,6 @@ import frontend.ir.instr.terminator.Terminator;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
-import midend.SSA.DFG;
 
 import java.util.*;
 
@@ -27,13 +25,13 @@ public class LoopInvariantMotion {
 
     private static void findInvariant(Function function) {
         for (Loop loop : function.getOuterLoop()) {
-            findInvar4loop(loop, function);
+            findInvar4loop(loop);
         }
     }
 
-    private static void findInvar4loop(Loop loop, Function function) {
+    private static void findInvar4loop(Loop loop) {
         for (Loop inner : loop.getInnerLoops()) {
-            findInvar4loop(inner, function);
+            findInvar4loop(inner);
         }
         System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         Queue<Instruction> queue = new LinkedList<>();
@@ -73,7 +71,7 @@ public class LoopInvariantMotion {
             if (loop.getPrtLoop() != null) {
                 loop.getPrtLoop().addBlk(tmpBlk);
             }
-            DFG.singleExecute(function);
+//            DFG.singleExecute(function);
         }
         System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
     }
@@ -90,9 +88,9 @@ public class LoopInvariantMotion {
 
         //update dom
         //fixme：这里应该用不到dom之外的东西。
-//        HashSet<BasicBlock> doms = new HashSet<>(entering.getDoms());
-//        tmpBlk.setDoms(doms);
-//        entering.getDoms().add(tmpBlk);
+        HashSet<BasicBlock> doms = new HashSet<>(entering.getDoms());
+        tmpBlk.setDoms(doms);
+        entering.getDoms().add(tmpBlk);
     }
 
     //instr所使用的值是否都来自循环外
