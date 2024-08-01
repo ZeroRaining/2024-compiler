@@ -122,7 +122,7 @@ public class MulInstr extends BinaryOperation implements Swappable {
             }
             
             if (intValue < 0) {
-                ConstInt zero = new ConstInt(0);
+                ConstInt zero = ConstInt.Zero;
                 SubInstr sub = new SubInstr(function.getAndAddRegIndex(), zero, abs);
                 res.add(sub);
             }

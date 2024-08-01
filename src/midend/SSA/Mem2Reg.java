@@ -184,9 +184,9 @@ public class Mem2Reg {
     public static Value getStackValue(Stack<Value> S, DataType type) {
         if (S.isEmpty()) {
             if (type == DataType.FLOAT) {
-                return new ConstFloat(0);
+                return ConstFloat.Zero;
             } else {
-                return new ConstInt(0);
+                return ConstInt.Zero;
             }
         }
         return S.peek();

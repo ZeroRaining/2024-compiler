@@ -821,39 +821,39 @@ public class RegAlloc {
             AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
             HashSet<AsmReg> live = new HashSet<>(blockHead.LiveOut);
             while (instrTail != null) {
-                if (instrTail instanceof AsmMove  && ((AsmMove) instrTail).getSrc() instanceof AsmReg && ((AsmMove) instrTail).getDst() instanceof  AsmReg) {
-                    if (((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(10) &&
-                            ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(5) &&
-                            ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsFloat.get(10) &&
-                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsInt.get(10) &&
-                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsInt.get(5) &&
-                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsFloat.get(10)) {
-                                AsmMove instrMove = (AsmMove) instrTail;
-                                 live.removeAll(instrMove.regUse);
-                                HashSet<AsmOperand> union = new HashSet<>();
-                                    //union.addAll(instrTail.regDef);
-                                    //union.addAll(instrTail.regUse);
-                        for (AsmOperand D : instrMove.regDef) {
-                            if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
-                                union.add(D);
-                            }
-                        }
-                        for (AsmOperand U : instrMove.regUse) {
-                            if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) {
-                                union.add(U);
-                            }
-                        }
-                        if (!union.isEmpty()) {
-                            for (AsmOperand n : union) {
-                                if (!moveList.containsKey(n)) {
-                                    moveList.put(n, new HashSet<>());
-                                }
-                                moveList.get(n).add(instrMove);
-                            }
-                            worklistMoves.add(instrMove);
-                        }
-                    }
-                }
+//                if (instrTail instanceof AsmMove  && ((AsmMove) instrTail).getSrc() instanceof AsmReg && ((AsmMove) instrTail).getDst() instanceof  AsmReg) {
+//                    if (((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(10) &&
+//                            ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(5) &&
+//                            ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsFloat.get(10) &&
+//                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsInt.get(10) &&
+//                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsInt.get(5) &&
+//                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsFloat.get(10)) {
+//                                AsmMove instrMove = (AsmMove) instrTail;
+//                                 live.removeAll(instrMove.regUse);
+//                                HashSet<AsmOperand> union = new HashSet<>();
+//                                    //union.addAll(instrTail.regDef);
+//                                    //union.addAll(instrTail.regUse);
+//                        for (AsmOperand D : instrMove.regDef) {
+//                            if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
+//                                union.add(D);
+//                            }
+//                        }
+//                        for (AsmOperand U : instrMove.regUse) {
+//                            if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) {
+//                                union.add(U);
+//                            }
+//                        }
+//                        if (!union.isEmpty()) {
+//                            for (AsmOperand n : union) {
+//                                if (!moveList.containsKey(n)) {
+//                                    moveList.put(n, new HashSet<>());
+//                                }
+//                                moveList.get(n).add(instrMove);
+//                            }
+//                            worklistMoves.add(instrMove);
+//                        }
+//                    }
+//                }
 
                 for (AsmReg D : instrTail.regDef) {
                     if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {

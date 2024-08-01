@@ -6,6 +6,7 @@ import java.util.Objects;
 
 public class ConstFloat extends ConstValue {
     private final float value;
+    public static final ConstFloat Zero = new ConstFloat(0.0f);
     public ConstFloat(float init) {
         value = init;
     }
