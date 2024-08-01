@@ -34,7 +34,7 @@ import java.io.Writer;
 import java.util.*;
 
 public class Procedure {
-    private final CustomList basicBlocks = new CustomList();
+    private final CustomList basicBlocks = new CustomList(this);
     private int curRegIndex = 0;
     private int curBlkIndex = 0;
     private int curDepth = 0;
@@ -105,9 +105,9 @@ public class Procedure {
             funcSymTab.addSym(symbol);
             curBlock.addInstruction(new AllocaInstr(curRegIndex++, symbol));
             if (returnType == DataType.INT) {
-                curBlock.addInstruction(new StoreInstr(new ConstInt(0), funcSymTab.getSym("")));
+                curBlock.addInstruction(new StoreInstr(ConstInt.Zero, funcSymTab.getSym("")));
             } else {
-                curBlock.addInstruction(new StoreInstr(new ConstFloat(0), funcSymTab.getSym("")));
+                curBlock.addInstruction(new StoreInstr(ConstFloat.Zero, funcSymTab.getSym("")));
             }
         }
     }
@@ -177,7 +177,7 @@ public class Procedure {
         } else if (item instanceof Ast.Break) {
             dealBreak();
         } else if (item instanceof Ast.WhileStmt) {
-            doWhile((Ast.WhileStmt)item, returnType, symTab);
+            dealWhile((Ast.WhileStmt)item, returnType, symTab);
         } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
@@ -232,10 +232,10 @@ public class Procedure {
         whileBegins.push(cond2Blk);
         whileEnds.push(endBlk);
 
-        bodyBlk.setDepth(++curDepth);
+        bodyBlk.setLoopDepth(++curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
-        cond2Blk.setDepth(curDepth);
-        bodyBlk.setDepth(--curDepth);
+        cond2Blk.setLoopDepth(curDepth);
+        bodyBlk.setLoopDepth(--curDepth);
         whileBegins.pop();
         whileEnds.pop();
 
@@ -263,9 +263,9 @@ public class Procedure {
         curBlock = bodyBlk;
         whileBegins.push(condBlk);
         whileEnds.push(endBlk);
-        bodyBlk.setDepth(++curDepth);
+        bodyBlk.setLoopDepth(++curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
-        bodyBlk.setDepth(--curDepth);
+        bodyBlk.setLoopDepth(--curDepth);
         whileBegins.pop();
         whileEnds.pop();
 
@@ -363,17 +363,18 @@ public class Procedure {
                     init = toSameType(init, symbol);
                     curBlock.addInstruction(new StoreInstr(init, symbol));
                 } else if (initVal instanceof ArrayInitVal) {
-                    ArrayList<Value> baseIndexList = new ArrayList<>();
-                    for (int i = 0; i < ((ArrayInitVal) initVal).getDim(); i++) {
-                        baseIndexList.add(new ConstInt(0));
-                    }
-                    GEPInstr toBase = new GEPInstr(curRegIndex++, baseIndexList, symbol);
+                    GEPInstr toBase = new GEPInstr(curRegIndex++, ConstInt.Zero, symbol);
                     curBlock.addInstruction(toBase);
+                    int dim = ((ArrayInitVal) initVal).getDim();
+                    for (int i = 1; i < dim; i++) {
+                        toBase = new GEPInstr(curRegIndex++, ConstInt.Zero, toBase);
+                        curBlock.addInstruction(toBase);
+                    }
                     Bitcast toI8 = new Bitcast(curRegIndex++, toBase);
                     curBlock.addInstruction(toI8);
                     ArrayList<Value> rParams = new ArrayList<>();
                     rParams.add(toI8);
-                    rParams.add(new ConstInt(0));
+                    rParams.add(ConstInt.Zero);
                     rParams.add(new ConstInt(((ArrayInitVal) initVal).getSize()));
                     LibFunc libFunc = Lib.getInstance().getLibFunc("memset");
                     CallInstr memset = libFunc.makeCall(curRegIndex++, rParams);
@@ -383,18 +384,16 @@ public class Procedure {
                     ((ArrayInitVal) initVal).getNonZeroIndex(toInit, new ArrayList<>());
                     for (List<Integer> list : toInit) {
                         Value valToInit = ((ArrayInitVal) initVal).getValueWithIndex(list);
-                        ArrayList<Value> indexList = new ArrayList<>();
-                        for (Integer index : list) {
-                            indexList.add(new ConstInt(index));
+                        GEPInstr ptr = new GEPInstr(curRegIndex++, new ConstInt(list.get(0)), symbol);
+                        curBlock.addInstruction(ptr);
+                        for (int i = 1; i < list.size(); i++) {
+                            ptr = new GEPInstr(curRegIndex++, new ConstInt(list.get(i)), ptr);
+                            curBlock.addInstruction(ptr);
                         }
                         if (valToInit instanceof ConstValue) {
-                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
-                            curBlock.addInstruction(ptr);
                             valToInit = toSameType(valToInit, symbol);
                             curBlock.addInstruction(new StoreInstr(valToInit, symbol, ptr));
                         } else if (valToInit instanceof InitExpr) {
-                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
-                            curBlock.addInstruction(ptr);
                             Value init = calculateExpr(((InitExpr) valToInit).getExp(), symTab, false);
                             init = toSameType(init, symbol);
                             curBlock.addInstruction(new StoreInstr(init, symbol, ptr));
@@ -444,11 +443,11 @@ public class Procedure {
         if (type == DataType.BOOL) {
             return value;
         } else if (type == DataType.INT) {
-            Instruction instr = new ICmpInstr(curRegIndex++, CmpCond.NE, value, new ConstInt(0));
+            Instruction instr = new ICmpInstr(curRegIndex++, CmpCond.NE, value, ConstInt.Zero);
             curBlock.addInstruction(instr);
             return instr;
         } else if (type == DataType.FLOAT) {
-            Instruction instr = new FCmpInstr(curRegIndex++, CmpCond.NE, value, new ConstFloat(0));
+            Instruction instr = new FCmpInstr(curRegIndex++, CmpCond.NE, value, ConstFloat.Zero);
             curBlock.addInstruction(instr);
             return instr;
         } else {
@@ -706,7 +705,7 @@ public class Procedure {
                         res = load;
                     } else {
                         if (ptr instanceof GEPInstr) {
-                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr);
+                            Instruction newPtr = new GEPInstr(curRegIndex++, ConstInt.Zero, (GEPInstr) ptr);
                             curBlock.addInstruction(newPtr);
                             res = newPtr;
                         } else {
@@ -739,7 +738,7 @@ public class Procedure {
             if (sign == -1) {
                 switch (res.getDataType()) {
                     case INT:
-                        res = new SubInstr(curRegIndex++, new ConstInt(0), res);
+                        res = new SubInstr(curRegIndex++, ConstInt.Zero, res);
                         break;
                     case FLOAT:
                         res = new FNegInstr(curRegIndex++, res);
@@ -752,9 +751,9 @@ public class Procedure {
             if (((Ast.UnaryExp) exp).checkNot()) {
                 DataType dataType = res.getDataType();
                 if (dataType == DataType.INT) {
-                    res = new ICmpInstr(curRegIndex++, CmpCond.EQ, new ConstInt(0), res);
+                    res = new ICmpInstr(curRegIndex++, CmpCond.EQ, ConstInt.Zero, res);
                 } else if (dataType == DataType.FLOAT) {
-                    res = new FCmpInstr(curRegIndex++, CmpCond.EQ, new ConstFloat(0), res);
+                    res = new FCmpInstr(curRegIndex++, CmpCond.EQ, ConstFloat.Zero, res);
                 } else {
                     throw new RuntimeException("!后面返回的应该只能是整数或者浮点数");
                 }
@@ -781,9 +780,22 @@ public class Procedure {
                 return load;
             }
             curBlock.addInstruction(load);
-            ptr = new GEPInstr(curRegIndex++, load, indexList);
+            
+            ptr = new GEPInstr(curRegIndex++, load, indexList.get(0));
+            for (int i = 1; i < indexList.size(); i++) {
+                curBlock.addInstruction(ptr);
+                ptr = new GEPInstr(curRegIndex++, indexList.get(i), ptr);
+            }
         } else {
-            ptr = new GEPInstr(curRegIndex++, indexList, symbol);
+            if (indexList.isEmpty()) {
+                ptr = new GEPInstr(curRegIndex++, null, symbol);
+            } else {
+                ptr = new GEPInstr(curRegIndex++, indexList.get(0), symbol);
+                for (int i = 1; i < indexList.size(); i++) {
+                    curBlock.addInstruction(ptr);
+                    ptr = new GEPInstr(curRegIndex++, indexList.get(i), ptr);
+                }
+            }
         }
         return ptr;
     }
@@ -879,12 +891,12 @@ public class Procedure {
             writer.append(block.value2string()).append(":\n");
             block.printIR(writer);
         }
-//        DEBUG.dbgPrint1("\n");
-//        for (CustomList.Node basicBlockNode : basicBlocks) {
-//            BasicBlock block = (BasicBlock) basicBlockNode;
-//            DEBUG.dbgPrint1(block.value2string());
-//            block.printDBG();
-//        }
+        DEBUG.dbgPrint1("\n");
+        for (CustomList.Node basicBlockNode : basicBlocks) {
+            BasicBlock block = (BasicBlock) basicBlockNode;
+            DEBUG.dbgPrint1(block.value2string());
+            block.printDBG();
+        }
     }
 
     public CustomList getBasicBlocks() {

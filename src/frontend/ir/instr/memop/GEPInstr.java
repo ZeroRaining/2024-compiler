@@ -3,7 +3,6 @@ package frontend.ir.instr.memop;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
-import frontend.ir.structure.Function;
 import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
@@ -19,75 +18,80 @@ import java.util.List;
  */
 public class GEPInstr extends MemoryOperation {
     private final int result;
-    private final List<Value> indexList;
+//    private final List<Value> indexList;
+    private Value index;
     private final String arrayTypeName;
-    private Value ptrVal;    // 指针基质，全局变量名，或者局部变量申请指令，或上一条 GEP
+    private Value ptrVal;    // 指针基质：全局变量名，或者局部变量申请指令，或上一条 GEP
 
-    public GEPInstr(int result, List<Value> indexList, Symbol symbol) {
+    public GEPInstr(int result, Value index, Symbol symbol) {
         super(symbol);
-        if (indexList == null) {
-            throw new NullPointerException();
-        }
         this.result = result;
-        this.indexList = indexList;
-        this.pointerLevel = symbol.getDim() + 1 - indexList.size();
+        this.index = index;
+        this.pointerLevel = symbol.getDim();
         this.arrayTypeName = symbol.printArrayTypeName();
         this.ptrVal = symbol.getAllocValue();
         setUse(symbol.getAllocValue());
-        for (Value value : indexList) {
-            setUse(value);
+        if (index == null) {
+            this.pointerLevel++;
+        } else {
+            setUse(index);
         }
     }
     
-    private GEPInstr(int result, List<Value> indexList, Value allocValue, Symbol symbol) {
+    private GEPInstr(int result, Value index, Value allocValue, Symbol symbol) {
         super(symbol);
-        if (indexList == null) {
-            throw new NullPointerException();
-        }
         this.result = result;
-        this.indexList = indexList;
-        this.pointerLevel = symbol.getDim() + 1 - indexList.size();
+        this.index = index;
+        this.pointerLevel = symbol.getDim();
         this.arrayTypeName = symbol.printArrayTypeName();
         this.ptrVal = allocValue;
         setUse(allocValue);
-        for (Value value : indexList) {
-            setUse(value);
+        if (index == null) {
+            this.pointerLevel++;
+        } else {
+            setUse(index);
         }
     }
 
-    public GEPInstr(int result, GEPInstr base) {
+    public GEPInstr(int result, Value index, GEPInstr base) {
         super(base.symbol);
         this.result = result;
-        this.indexList = new ArrayList<>();
-        indexList.add(new ConstInt(0));
+        this.index = index;
         this.pointerLevel = base.pointerLevel - 1;
         this.arrayTypeName = base.printBaseType();
         this.ptrVal = base;
         setUse(base);
+        if (index == null) {
+            throw new RuntimeException("已经取过一次指针了，不应该再没有 index 了");
+        } else {
+            setUse(index);
+        }
     }
 
-    public GEPInstr(int result, LoadInstr base, List<Value> indexList) {
+    public GEPInstr(int result, LoadInstr base, Value index) {
         super(base.symbol);
         this.result = result;
-        this.indexList = indexList;
-        this.pointerLevel = symbol.getDim() + 1 - indexList.size();
+        this.index = index;
+        this.pointerLevel = symbol.getDim();
         String superType = base.printBaseType();
         this.arrayTypeName = superType.substring(0, superType.length() - 1);
         this.ptrVal = base;
         setUse(base);
-        for (Value value : indexList) {
-            setUse(value);
+        if (index == null) {
+            throw new RuntimeException("不应该再没有 index 了");
+        } else {
+            setUse(index);
         }
     }
     
     @Override
     public Instruction cloneShell(Procedure procedure) {
         if (ptrVal instanceof GlobalObject || ptrVal instanceof AllocaInstr) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), new ArrayList<>(indexList), ptrVal, symbol);
+            return new GEPInstr(procedure.getAndAddRegIndex(), index, ptrVal, symbol);
         } else if (ptrVal instanceof GEPInstr) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), (GEPInstr) ptrVal);
+            return new GEPInstr(procedure.getAndAddRegIndex(), index, (GEPInstr) ptrVal);
         } else if (ptrVal instanceof LoadInstr) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), (LoadInstr) ptrVal, new ArrayList<>(indexList));
+            return new GEPInstr(procedure.getAndAddRegIndex(), (LoadInstr) ptrVal, index);
         } else {
             throw new RuntimeException("GEP 的指针基址还有什么其它可能吗？");
         }
@@ -140,15 +144,19 @@ public class GEPInstr extends MemoryOperation {
 
     @Override
     public String print() {
+        return "%reg_" + result + " = getelementptr " +
+                printTypeAndIndex();
+    }
+    
+    private String printTypeAndIndex() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("%reg_").append(result).append(" = getelementptr ");
         stringBuilder.append(arrayTypeName).append(", ");
         stringBuilder.append(arrayTypeName).append("* ");
         stringBuilder.append(ptrVal.value2string());
-        if (!symbol.isArrayFParam()) {
+        if (!(symbol.isArrayFParam() && ptrVal instanceof LoadInstr)) {
             stringBuilder.append(", i64 0");
         }
-        for (Value index : indexList) {
+        if (index != null) {
             stringBuilder.append(", i64 ").append(index.value2string());
         }
         return stringBuilder.toString();
@@ -158,28 +166,24 @@ public class GEPInstr extends MemoryOperation {
     public void modifyValue(Value from, Value to) {
         if (this.ptrVal == from) {
             this.ptrVal = to;
+        } else if (index == from) {
+            index = to;
         } else {
-            for (int i = 0; i < indexList.size(); i++) {
-                if (indexList.get(i) == from) {
-                    indexList.set(i, to);
-                    return;
-                }
-            }
             throw new RuntimeException("没有可以置换的 value");
         }
     }
 
     public List<Value> getWholeIndexList() {
         List<Value> wholeIndexList = new ArrayList<>();
-        wholeIndexList.addAll(indexList);
-        for (int i = 0; i < symbol.getLimitList().size() - indexList.size(); i++) {
-            wholeIndexList.add(new ConstInt(0));
+        wholeIndexList.add(index);
+        for (int i = 0; i < symbol.getLimitList().size() - 1; i++) {
+            wholeIndexList.add(ConstInt.Zero);
         }
         return wholeIndexList;
     }
 
     @Override
     public String myHash() {
-        return this.value2string();
+        return this.printTypeAndIndex();
     }
 }

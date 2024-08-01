@@ -75,8 +75,8 @@ public class SymTab {
             } else if (!limList.isEmpty()) {
                 initVal = new ArrayInitVal(dataType, limList);
             } else if (isGlobal()) {
-                initVal = dataType == DataType.FLOAT ? new ConstFloat(0.0f) :
-                                                       new ConstInt(0);
+                initVal = dataType == DataType.FLOAT ? ConstFloat.Zero :
+                                                       ConstInt.Zero;
             } else {
                 initVal = null;
             }

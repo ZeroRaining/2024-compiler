@@ -12,6 +12,7 @@ public class DFG {
             makeDoms(function);
             makeIDoms(function);
             makeDF(function);
+            makeDomTree(function);
         }
     }
 
@@ -92,4 +93,32 @@ public class DFG {
         }
     }
 
+    private static void makeDomTree(Function function) {
+        BasicBlock first = (BasicBlock) function.getBasicBlocks().getHead();
+        int depth = 1;
+        dfs4domTree(first, depth);
+    }
+
+    private static void dfs4domTree(BasicBlock block, int depth) {
+        block.setDomDepth(depth);
+        for (BasicBlock iDom : block.getIDoms()) {
+            dfs4domTree(iDom, depth + 1);
+        }
+    }
+
+
+
+    public static ArrayList<BasicBlock> getDomPostOrder(Function function) {
+        ArrayList<BasicBlock> order = new ArrayList<>();
+        BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
+        dfs4order(blk, order);
+        return order;
+    }
+
+    private static void dfs4order(BasicBlock blk, ArrayList<BasicBlock> order) {
+        for (BasicBlock iDom : blk.getIDoms()){
+            dfs4order(iDom, order);
+        }
+        order.add(blk);
+    }
 }

@@ -74,7 +74,7 @@ public class BranchInstr extends Terminator {
 
     @Override
     public void modifyValue(Value from, Value to) {
-        DEBUG.dbgPrint(this.print() + " try to replace " + from + " to " + to);
+//        DEBUG.dbgPrint(this.print() + " try to replace " + from + " to " + to);
         if (condition == from) {
             condition = to;
         } else if (thenTarget == from) {
