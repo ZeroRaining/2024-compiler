@@ -49,7 +49,8 @@ public class IrParser {
     public HashMap<AsmOperand, Value> downOperandMap = new HashMap<>();
     //指示对应浮点数值映射到的标签
     private HashMap<Integer, AsmLabel> floatLabelMap = new HashMap<>();
-    private HashMap<Map<AsmBlock, Map<AsmOperand, AsmOperand>>, AsmOperand> blockDivExp2Res = new HashMap<>();
+    private HashMap<Group<AsmBlock, Group<AsmOperand, AsmOperand>>, AsmOperand> blockDivExp2Res = new HashMap<>();
+    private HashMap<Group<AsmBlock, Group<AsmOperand, AsmOperand>>, AsmOperand> blockMulExp2Res = new HashMap<>();
 
     public IrParser(Program program) {
         this.program = program;
@@ -662,64 +663,73 @@ public class IrParser {
         }
         boolean isSrc2Const = instr.getOp2() instanceof ConstInt;
         if (isSrc2Const) {
-            AsmOperand dst = parseOperand(instr, 0, f, bb);
             AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
             int value = ((ConstInt) instr.getOp2()).getNumber();
-            if (value == 1) {
-                AsmMove asmMove = new AsmMove(dst, src1);
-                asmBlock.addInstrTail(asmMove);
-            } else if (value == 0) {
-                AsmMove asmMove = new AsmMove(dst, ZERO);
-                asmBlock.addInstrTail(asmMove);
-            } else if (value == -1) {
-                AsmSub asmSub = new AsmSub(dst, ZERO, src1);
-                asmSub.isWord = true;
-                asmBlock.addInstrTail(asmSub);
-            } else if (isTwoTimes(Math.abs(value))) {
-                int absValue = Math.abs(value);
-                int shift = -1;
-                while (absValue != 0) {
-                    absValue >>= 1;
-                    shift++;
-                }
-                AsmSll asmSll = new AsmSll(dst, src1, new AsmImm12(shift));
-                asmBlock.addInstrTail(asmSll);
-                if (value < 0) {
-                    AsmSub asmSub = new AsmSub(dst, ZERO, dst);
-                    asmSub.isWord = true;
-                    asmBlock.addInstrTail(asmSub);
-                }
-            } else if (isTwoTimes(Math.abs(value) + 1)) {
-                int absValue = Math.abs(value) + 1;
-                int shift = -1;
-                while (absValue != 0) {
-                    absValue >>= 1;
-                    shift++;
-                }
-                AsmOperand tmpReg = genTmpReg(f);
-                AsmSll asmSll = new AsmSll(tmpReg, src1, new AsmImm12(shift));
-                asmBlock.addInstrTail(asmSll);
-                AsmSub asmSub1 = new AsmSub(dst, tmpReg, src1);
-                asmSub1.isWord = true;
-                asmBlock.addInstrTail(asmSub1);
-                if (value < 0) {
-                    AsmSub asmSub2 = new AsmSub(dst, ZERO, dst);
-                    asmSub2.isWord = true;
-                    asmBlock.addInstrTail(asmSub2);
-                }
-            } else if (false/*TODO:先这样吧，不想再优化了*/) {
-                assert true;
+            Group<AsmOperand, AsmOperand> mulExp = new Group<>(src1, new AsmImm32(value));
+            Group<AsmBlock, Group<AsmOperand, AsmOperand>> mulExpInBlock = new Group<>(asmBlock, mulExp);
+            if (blockMulExp2Res.containsKey(mulExpInBlock)) {
+                operandMap.put(instr, blockMulExp2Res.get(mulExpInBlock));
             } else {
-                AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
-                AsmMul asmMul = new AsmMul(dst, src1, src2);
-                asmMul.isWord = true;
-                asmBlock.addInstrTail(asmMul);
+                mulByConst(asmBlock, instr, f, bb);
             }
-            //TODO:纯常数相乘优化
         } else {
             AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
             AsmOperand dst = parseOperand(instr, 0, f, bb);
             AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
+            AsmMul asmMul = new AsmMul(dst, src1, src2);
+            asmMul.isWord = true;
+            asmBlock.addInstrTail(asmMul);
+        }
+    }
+
+    public void mulByConst(AsmBlock asmBlock, MulInstr instr, Function f, BasicBlock bb) {
+        AsmOperand dst = parseOperand(instr, 0, f, bb);
+        AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
+        int value = ((ConstInt) instr.getOp2()).getNumber();
+        if (value == 1) {
+            AsmMove asmMove = new AsmMove(dst, src1);
+            asmBlock.addInstrTail(asmMove);
+        } else if (value == 0) {
+            AsmMove asmMove = new AsmMove(dst, ZERO);
+            asmBlock.addInstrTail(asmMove);
+        } else if (value == -1) {
+            AsmSub asmSub = new AsmSub(dst, ZERO, src1);
+            asmSub.isWord = true;
+            asmBlock.addInstrTail(asmSub);
+        } else if (isTwoTimes(Math.abs(value))) {
+            int absValue = Math.abs(value);
+            int shift = -1;
+            while (absValue != 0) {
+                absValue >>= 1;
+                shift++;
+            }
+            AsmSll asmSll = new AsmSll(dst, src1, new AsmImm12(shift));
+            asmBlock.addInstrTail(asmSll);
+            if (value < 0) {
+                AsmSub asmSub = new AsmSub(dst, ZERO, dst);
+                asmSub.isWord = true;
+                asmBlock.addInstrTail(asmSub);
+            }
+        } else if (isTwoTimes(Math.abs(value) + 1)) {
+            int absValue = Math.abs(value) + 1;
+            int shift = -1;
+            while (absValue != 0) {
+                absValue >>= 1;
+                shift++;
+            }
+            AsmOperand tmpReg = genTmpReg(f);
+            AsmSll asmSll = new AsmSll(tmpReg, src1, new AsmImm12(shift));
+            asmBlock.addInstrTail(asmSll);
+            AsmSub asmSub1 = new AsmSub(dst, tmpReg, src1);
+            asmSub1.isWord = true;
+            asmBlock.addInstrTail(asmSub1);
+            if (value < 0) {
+                AsmSub asmSub2 = new AsmSub(dst, ZERO, dst);
+                asmSub2.isWord = true;
+                asmBlock.addInstrTail(asmSub2);
+            }
+        } else {
+            AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
             AsmMul asmMul = new AsmMul(dst, src1, src2);
             asmMul.isWord = true;
             asmBlock.addInstrTail(asmMul);
@@ -785,7 +795,15 @@ public class IrParser {
         AsmOperand dst = parseOperand(instr, 0, f, bb);
         AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
         if (instr.getOp2() instanceof ConstInt) {
-            divByConst(dst, src1, ((ConstInt) instr.getOp2()).getNumber(), bb, f);
+            //SSA的存在使得记录块中的除法算式不会出错
+            int value = ((ConstInt) instr.getOp2()).getNumber();
+            Group<AsmOperand, AsmOperand> divExp = new Group<>(dst, new AsmImm32(value));
+            Group<AsmBlock, Group<AsmOperand, AsmOperand>> divExpInBlock = new Group<>(asmBlock, divExp);
+            if (blockDivExp2Res.containsKey(divExpInBlock)) {
+                operandMap.put(instr, blockDivExp2Res.get(divExpInBlock));
+            } else {
+                divByConst(dst, src1, ((ConstInt) instr.getOp2()).getNumber(), bb, f);
+            }
         } else {
             AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
             AsmDiv asmDiv = new AsmDiv(dst, src1, src2);
@@ -805,6 +823,25 @@ public class IrParser {
             AsmSub asmSub = new AsmSub(dst, ZERO, src1);
             asmBlock.addInstrTail(asmSub);
             return;
+        } else if (isTwoTimes(Math.abs(value))) {
+            int absValue = Math.abs(value);
+            int shift = -1;
+            while (absValue != 0) {
+                absValue >>= 1;
+                shift++;
+            }
+            AsmSra asmSra = new AsmSra(dst, src1, new AsmImm12(31));
+            asmSra.isWord = true;
+            asmBlock.addInstrTail(asmSra);
+            AsmSrl asmSrl = new AsmSrl(dst, dst, new AsmImm12(32 - shift));
+            asmSrl.isWord = true;
+            asmBlock.addInstrTail(asmSrl);
+            AsmAdd asmAdd = new AsmAdd(dst, dst, src1);
+            asmAdd.isWord = true;
+            asmBlock.addInstrTail(asmAdd);
+            AsmSra asmSra2 = new AsmSra(dst, dst, new AsmImm12(shift));
+            asmSra2.isWord = true;
+            asmBlock.addInstrTail(asmSra2);
         } else {
             int absValue = Math.abs(value);
             AsmDiv asmDiv = new AsmDiv(dst, src1, parseConstIntOperand(absValue, 0, f, bb));
@@ -1010,6 +1047,24 @@ public class IrParser {
             throw new RuntimeException("sizeList is empty");
         }
         int offset = 0;
+        boolean constFlag = true;
+        for (int i = 0; i < sizeList.size(); i++) {
+            if (!(indexList.get(i) instanceof ConstInt)) {
+                constFlag = false;
+                break;
+            }
+        }
+        if (constFlag) {
+            for (int i = 0; i < sizeList.size(); i++) {
+                int index = ((ConstInt) indexList.get(i)).getNumber();
+                offset += index * sizeList.get(i) * 4;
+            }
+            if (offset != 0) {
+                AsmAdd asmAdd = new AsmAdd(result, result, parseConstIntOperand(offset, 12, f, bb));
+                asmBlock.addInstrTail(asmAdd);
+            }
+            return;
+        }
         for (int i = 0; i < sizeList.size(); i++) {
             if (indexList.get(i) instanceof ConstInt) {
                 int index = ((ConstInt) indexList.get(i)).getNumber();
