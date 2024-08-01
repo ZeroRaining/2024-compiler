@@ -49,8 +49,9 @@ public class AnalysisLoop {
             }
         }
         for (Loop loop : allLoop) {
-            assert loop.getHeader().getPres().size() == 1;
+//            assert loop.getHeader().getPres().size() == 1;
             for (BasicBlock blk : loop.getHeader().getPres()) {
+                if (loop.getBlks().contains(blk)) continue;
                 loop.setEntering(blk);
                 loop.setPreCond(blk);
             }
@@ -61,6 +62,7 @@ public class AnalysisLoop {
                 sameDepth.removeAll(in.getBlks());
             }
             loop.setSameLoopDepth(sameDepth);
+            System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         }
     }
 

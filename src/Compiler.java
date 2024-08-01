@@ -54,30 +54,35 @@ public class Compiler {
             optimizeStartTime = System.currentTimeMillis();
         }
         if (arg.getOptLevel() == 1) {
+            //简化代码
             Mem2Reg.execute(functions);
-            int times = 2;
-            int cnt = 0;
-            while (cnt < times) {
-                DeadCodeRemove.execute(functions);
-                OIS.execute(functions);
-                //OISR.doOISR(functions);
-                GVN.execute(functions);
-                SimplifyBranch.execute(functions);
-                MergeBlock.execute(functions);
-                DeadBlockRemove.execute(functions);
-                RemoveUseLessPhi.execute(functions);
-                cnt++;
-                if (cnt < times) {
-                    DFG.execute(functions);
-                }
-            }
+            DeadCodeRemove.execute(functions);
+            OIS.execute(functions);
+            GVN.execute(functions);
+            SimplifyBranch.execute(functions);
+
+            //循环分析
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+            LCSSA.execute(functions);
+            LoopInvariantMotion.execute(functions);
+
+            //合并删减块
+            MergeBlock.execute(functions);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
+
+            //second
+            DFG.execute(functions);
+            DeadCodeRemove.execute(functions);
+            OIS.execute(functions);
+            GVN.execute(functions);
+            SimplifyBranch.execute(functions);
+            MergeBlock.execute(functions);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
         }
         Function.blkLabelReorder();
-        AnalysisLoop.execute(functions);
-//        LCSSA.execute(functions);
-        LoopInvariantMotion.execute(functions);
-        RemoveUseLessPhi.execute(functions);
-
 
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
