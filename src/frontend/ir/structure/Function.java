@@ -369,4 +369,8 @@ public class Function extends Value implements FuncDef {
     public void setCurPhiIndex(int curPhiIndex) {
         procedure.setCurPhiIndex(curPhiIndex);
     }
+    
+    public HashSet<CallInstr> getSelfCallingInstrSet() {
+        return this.procedure.getSelfCallingInstrSet();
+    }
 }
