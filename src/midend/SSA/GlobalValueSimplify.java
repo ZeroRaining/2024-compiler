@@ -17,7 +17,6 @@ import java.util.List;
 /**
  * 全局对象简化，包括将没有被更新过的全局对象直接用初值替代，以及【局部化】
  * 安排在函数内联之后、Mem2Reg 之前
- *
  * 全局对象局部化：
  * 现阶段想法是若一个全局变量只被 main 函数使用过，则将其变为局部变量。
  */
@@ -42,10 +41,11 @@ public class GlobalValueSimplify {
                     neverStored = false;
                 }
                 
-                Function func = getFunction((Instruction) user);
-                if (!func.isMain()) {
-                    onlyMain = false;
-                    break;
+                if (onlyMain) { // 仅当目前还只有 main 使用过该对象时才需要做进一步判断
+                    Function func = getFunction((Instruction) user);
+                    if (!func.isMain()) {
+                        onlyMain = false;
+                    }
                 }
             }
             
