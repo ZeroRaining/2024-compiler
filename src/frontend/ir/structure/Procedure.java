@@ -38,6 +38,7 @@ public class Procedure {
     private int curRegIndex = 0;
     private int curBlkIndex = 0;
     private int curDepth = 0;
+    private int curPhiIndex = 0;
     private BasicBlock curBlock;
     private final BasicBlock retBlock;
     private final Stack<BasicBlock> whileBegins;
@@ -897,5 +898,12 @@ public class Procedure {
     
     public int getAndAddBlkIndex() {
         return this.curBlkIndex++;
+    }
+    public int getPhiIndex() {
+        return this.curPhiIndex;
+    }
+
+    public void setCurPhiIndex(int curPhiIndex) {
+        this.curPhiIndex = curPhiIndex;
     }
 }

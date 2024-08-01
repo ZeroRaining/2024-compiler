@@ -163,6 +163,7 @@ public class CustomList implements Iterable<CustomList.Node> {
             this.parent.incrementSize();
         }
 
+        //TODO:insertafter的setParentBB
         public void insertBefore(Node node) {
             if (node == null) {
                 throw new IllegalArgumentException("The given node cannot be null.");
