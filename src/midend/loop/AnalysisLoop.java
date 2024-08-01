@@ -49,11 +49,20 @@ public class AnalysisLoop {
             }
         }
         for (Loop loop : allLoop) {
+//            assert loop.getHeader().getPres().size() == 1;
+            for (BasicBlock blk : loop.getHeader().getPres()) {
+                if (loop.getBlks().contains(blk)) continue;
+                loop.setEntering(blk);
+                loop.setPreCond(blk);
+            }
+//            loop.setEntering(loop.getHeader().getPres().iterator().next());
+//            loop.setPreCond(loop.getHeader().getPres().iterator().next());
             ArrayList<BasicBlock> sameDepth = new ArrayList<>(loop.getBlks());
             for (Loop in : loop.getInnerLoops()) {
                 sameDepth.removeAll(in.getBlks());
             }
             loop.setSameLoopDepth(sameDepth);
+            System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         }
     }
 

@@ -16,6 +16,13 @@ public class DFG {
         }
     }
 
+    public static void singleExecute(Function function) {
+            makeDoms(function);
+            makeIDoms(function);
+            makeDF(function);
+            makeDomTree(function);
+    }
+
     private static void makeDF(Function function) {
         for (CustomList.Node item : function.getBasicBlocks()) {
             BasicBlock block = (BasicBlock) item;

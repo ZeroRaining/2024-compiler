@@ -7,7 +7,6 @@ import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Procedure;
-import midend.SSA.SimplifyBranch;
 
 import java.util.*;
 
@@ -82,11 +81,6 @@ public class PhiInstr extends Instruction {
             if (values.get(i) == from) {
                 values.set(i, to);
                 return;
-////                assert to instanceof Instruction || to instanceof ConstValue;
-//                if (to instanceof Instruction) {
-//                    prtBlks.set(i, ((Instruction) to).getParentBB());
-//                }
-                 // todo return;
             }
         }
     }
@@ -145,5 +139,9 @@ public class PhiInstr extends Instruction {
                 prtBlks.set(i, (BasicBlock) old2new.get(oldBlk));
             }
         }
+    }
+
+    public void modifyPrtBlk(BasicBlock oldBlk, BasicBlock newBlk) {
+        prtBlks.set(prtBlks.indexOf(oldBlk),newBlk);
     }
 }

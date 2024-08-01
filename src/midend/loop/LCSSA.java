@@ -38,7 +38,7 @@ public class LCSSA {
             Instruction instr = (Instruction) blk.getInstructions().getHead();
             while (instr != null) {
                 //从外界流入的值，在结束快就会出现至少两个来源 => phi
-                if (liveOutLoop(instr, loop)) {
+                if (liveInLoop(instr, loop)) {
                     //在每一个结束块加入phi
                     HashMap<BasicBlock, PhiInstr> exit2phi = new HashMap<>();
                     BasicBlock prt = instr.getParentBB();
@@ -109,8 +109,8 @@ public class LCSSA {
         exit2phi.put(userBlk, phi);
         return phi;
     }
-
-    private static boolean liveOutLoop(Instruction instr, Loop loop) {
+    //該指令的所有use的user是否在循环外被使用
+    public static boolean liveInLoop(Instruction instr, Loop loop) {
         Use use = instr.getBeginUse();
         while (use != null) {
             if (!loop.getBlks().contains(use.getUser().getParentBB())) {

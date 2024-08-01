@@ -10,6 +10,7 @@ import java.util.HashSet;
 
 public class Loop {
     private BasicBlock entering;
+    private BasicBlock preCond;
     private BasicBlock header;
     private HashSet<BasicBlock> exits = new HashSet<>();
     private HashSet<BasicBlock> exitings = new HashSet<>();
@@ -29,6 +30,22 @@ public class Loop {
         this.header = header;
         this.addBlk(header);
         prtLoop = null;
+    }
+
+    public void setPreCond(BasicBlock preCond) {
+        this.preCond = preCond;
+    }
+
+    public BasicBlock getPreCond() {
+        return preCond;
+    }
+
+    public void setEntering(BasicBlock entering) {
+        this.entering = entering;
+    }
+
+    public BasicBlock getEntering() {
+        return entering;
     }
 
     public void setSameLoopDepth(ArrayList<BasicBlock> sameLoopDepth) {
