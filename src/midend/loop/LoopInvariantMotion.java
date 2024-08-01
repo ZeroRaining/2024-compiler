@@ -51,6 +51,7 @@ public class LoopInvariantMotion {
         BasicBlock tmpBlk = new BasicBlock(entering.getLoopDepth(), ((Procedure) entering.getParent().getOwner()).getAndAddBlkIndex());
         while (!queue.isEmpty()) {
             Instruction instr = queue.poll();
+            instr.removeFromList();
             tmpBlk.addInstruction(instr);
             Use use = instr.getBeginUse();
             while (use != null) {
@@ -62,12 +63,14 @@ public class LoopInvariantMotion {
                 use = (Use) use.getNext();
             }
         }
-        //修改跳转指令以及phi，并将该块放入procedure中
-        addTmpBlk(entering, tmpBlk, loop.getHeader());
-        //更改loop的相关信息:更改entering，修改父循环的blk内容
-        loop.setEntering(tmpBlk);
-        if (loop.getPrtLoop() != null) {
-            loop.getPrtLoop().addBlk(tmpBlk);
+        if (!invariant.isEmpty()) {
+            //修改跳转指令以及phi，并将该块放入procedure中
+            addTmpBlk(entering, tmpBlk, loop.getHeader());
+            //更改loop的相关信息:更改entering，修改父循环的blk内容
+            loop.setEntering(tmpBlk);
+            if (loop.getPrtLoop() != null) {
+                loop.getPrtLoop().addBlk(tmpBlk);
+            }
         }
     }
 
