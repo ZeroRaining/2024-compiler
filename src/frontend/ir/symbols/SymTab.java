@@ -193,7 +193,7 @@ public class SymTab {
         while (symbolIterator.hasNext()) {
             String name = symbolIterator.next();
             Symbol symbol = symbolMap.get(name);
-            if (symbol.isLocalized()) {
+            if (symbol.isAbandoned()) {
                 abandonedSymbolMap.put(name, symbol);
                 symbolIterator.remove();
             }

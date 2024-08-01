@@ -10,7 +10,6 @@ import frontend.syntax.Parser;
 import midend.RemovePhi;
 import midend.SSA.*;
 import midend.loop.AnalysisLoop;
-import midend.loop.LCSSA;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -40,7 +39,7 @@ public class Compiler {
         if (arg.getOptLevel() == 1) {
             FI.execute(program.getFunctionList());
             program.removeUselessFunc();
-            GlobalValueLocalize.execute(program.getGlobalVars());
+            GlobalValueSimplify.execute(program.getGlobalVars());
             program.deleteUselessGlobalVars();
         }
         
