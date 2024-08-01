@@ -32,6 +32,7 @@ public class GlobalValueSimplify {
             HashSet<Value> users = symbol.getAllocValue().getUserSet();
             boolean onlyMain = true;
             boolean neverStored = true;
+            boolean neverLoaded = true;
             for (Value user : users) {
                 if (!(user instanceof Instruction)) {
                     throw new RuntimeException("使用全局变量地址的应该只有指令");
@@ -39,6 +40,10 @@ public class GlobalValueSimplify {
                 
                 if (user instanceof StoreInstr) {
                     neverStored = false;
+                }
+                
+                if (user instanceof LoadInstr) {
+                    neverLoaded = false;
                 }
                 
                 if (onlyMain) { // 仅当目前还只有 main 使用过该对象时才需要做进一步判断
@@ -49,23 +54,36 @@ public class GlobalValueSimplify {
                 }
             }
             
-            if (neverStored) {      // 赋初值之后再也没有更新过
+            if (neverLoaded) {              // 定义了之后就没用过
+                removeAllUse(symbol, users);
+            } else if (neverStored) {       // 赋初值之后再也没有更新过
                 replaceWithInit(symbol, users);
-            } else if (onlyMain) {  // 只在 main 里被使用过
+            } else if (onlyMain) {          // 只在 main 里被使用过
                 localize(symbol);
             }
         }
+    }
+    
+    private static void removeAllUse(Symbol symbol, HashSet<Value> users) {
+        for (Value user : users) {
+            if (user instanceof StoreInstr) {
+                user.removeFromList();
+            } else {
+                throw new RuntimeException("没有被load过应该也只有store操作的");
+            }
+        }
+        symbol.abandon();
     }
     
     private static void replaceWithInit(Symbol symbol, HashSet<Value> users) {
         for (Value user : users) {
             if (user instanceof LoadInstr) {
                 user.replaceUseTo(symbol.getInitVal());
-                symbol.abandon();
             } else {
                 throw new RuntimeException("还没想好除了load之外还有什么可能用到没修改过的全局变量");
             }
         }
+        symbol.abandon();
     }
     
     private static Function getFunction(Instruction ins) {
