@@ -42,6 +42,10 @@ public class AnalysisLoop {
     private static void findAllLoop(Function function) {
         ArrayList<BasicBlock> order = DFG.getDomPostOrder(function);
 //        System.out.println(order);
+//        for (BasicBlock block : order) {
+//            System.out.println(block);
+//            System.out.println(block.getDoms());
+//        }
         // 如果blk支配其前驱pre，则构成循环blk1 -> blk2 -> blk1，blk2->blk1为backEdge
         for (BasicBlock blk : order) {
             Stack<BasicBlock> backEdges = new Stack<>();
@@ -90,9 +94,9 @@ public class AnalysisLoop {
         //顺序？
         while (!stack.isEmpty()) {
             Loop loop = stack.pop();
-            if (!loop.getInner().isEmpty()) {
-                stack.addAll(loop.getInner());
-                allLoop.addAll(loop.getInner());
+            if (!loop.getInnerLoops().isEmpty()) {
+                stack.addAll(loop.getInnerLoops());
+                allLoop.addAll(loop.getInnerLoops());
             }
         }
     }
