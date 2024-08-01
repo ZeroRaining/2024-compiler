@@ -1,11 +1,13 @@
 package frontend.ir.instr.otherop;
 
 import frontend.ir.DataType;
+import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Procedure;
+import midend.SSA.SimplifyBranch;
 
 import java.util.*;
 
@@ -103,8 +105,8 @@ public class PhiInstr extends Instruction {
     public Instruction cloneShell(Procedure procedure) {
         return new PhiInstr(procedure.getAndAddRegIndex(), type, new ArrayList<>(values), new ArrayList<>(prtBlks));
     }
-    
-    public boolean canSimplify() {
+
+    public boolean simplify2const() {
         Value value = values.get(0);
         if (!(value instanceof ConstValue)) {
             return false;
@@ -115,6 +117,25 @@ public class PhiInstr extends Instruction {
             }
         }
         return true;
+    }
+
+    public boolean canBeReplaced() {
+        if (values.size() != 1) {
+            return false;
+        }
+        Value value = values.get(0);
+        Use use = this.getBeginUse();
+        while (use != null) {
+            if (use.getUser() == value) {
+                return false;
+            }
+            use = (Use) use.getNext();
+        }
+        return true;
+    }
+
+    public boolean canSimplify() {
+        return simplify2const() | canBeReplaced();
     }
     
     public void renewBlocks(HashMap<Value, Value> old2new) {

@@ -16,6 +16,7 @@ public class Loop {
     private HashSet<BasicBlock> latchs = new HashSet<>();
     private ArrayList<BasicBlock> blks = new ArrayList<>();
     private ArrayList<Loop> innerLoops = new ArrayList<>();
+    private ArrayList<BasicBlock> sameLoopDepth = new ArrayList<>();
     private Loop prtLoop;
 
     private Value var;
@@ -30,7 +31,13 @@ public class Loop {
         prtLoop = null;
     }
 
+    public void setSameLoopDepth(ArrayList<BasicBlock> sameLoopDepth) {
+        this.sameLoopDepth = sameLoopDepth;
+    }
 
+    public ArrayList<BasicBlock> getSameLoopDepth() {
+        return sameLoopDepth;
+    }
 
     public BasicBlock getHeader() {
         return header;

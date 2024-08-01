@@ -48,6 +48,13 @@ public class AnalysisLoop {
                 }
             }
         }
+        for (Loop loop : allLoop) {
+            ArrayList<BasicBlock> sameDepth = new ArrayList<>(loop.getBlks());
+            for (Loop in : loop.getInnerLoops()) {
+                sameDepth.removeAll(in.getBlks());
+            }
+            loop.setSameLoopDepth(sameDepth);
+        }
     }
 
     private static void findAllLoop(Function function) {
