@@ -65,16 +65,18 @@ public class Compiler {
             MergeBlock.execute(functions, false);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
-
+//            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
+//            program.printIR(irWriter);
+//            irWriter.close();
             //循环分析
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
 //            LCSSA.execute(functions);
             LoopInvariantMotion.execute(functions);
 
-            BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
-            program.printIR(irWriter);
-            irWriter.close();
+//            irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
+//            program.printIR(irWriter);
+//            irWriter.close();
             //second
             DFG.execute(functions);
             DeadCodeRemove.execute(functions);
@@ -85,7 +87,7 @@ public class Compiler {
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
         }
-//        Function.blkLabelReorder();
+        Function.blkLabelReorder();
 
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
