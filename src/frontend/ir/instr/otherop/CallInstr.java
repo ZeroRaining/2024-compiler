@@ -106,6 +106,13 @@ public class CallInstr extends Instruction {
         return funcDef;
     }
     
+    public boolean checkNoSideEffect() {
+        if (this.funcDef instanceof LibFunc) {
+            return false;
+        }
+        return ((Function) funcDef).checkNoSideEffect();
+    }
+    
     @Override
     public Value operationSimplify() {
         return null;

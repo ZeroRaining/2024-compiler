@@ -6,6 +6,7 @@ import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
@@ -380,5 +381,33 @@ public class Function extends Value implements FuncDef {
     
     public boolean isMain() {
         return main;
+    }
+    
+    /**
+     * 目前检查函数无副作用的标准就是没有 I/O 且没有修改内存
+     * 自定义函数肯定没有 I/O
+     */
+    public boolean checkNoSideEffect() {
+        BasicBlock basicBlock = (BasicBlock) this.procedure.getBasicBlocks().getHead();
+        while (basicBlock != null) {
+            Instruction ins = (Instruction) basicBlock.getInstructions().getHead();
+            while (ins != null) {
+                if (ins instanceof StoreInstr) {
+                    return false;
+                }
+                ins = (Instruction) ins.getNext();
+            }
+            basicBlock = (BasicBlock) basicBlock.getNext();
+        }
+        
+        for (Function function : myImmediateCallee) {
+            if (function == this) {
+                return true;
+            } else {
+                return function.checkNoSideEffect();
+            }
+        }
+        
+        return true;
     }
 }
