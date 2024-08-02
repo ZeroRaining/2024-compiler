@@ -61,17 +61,20 @@ public class Compiler {
             GVN.execute(functions);
             SimplifyBranch.execute(functions);
 
+            //合并删减块
+            MergeBlock.execute(functions);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
+
             //循环分析
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
 //            LCSSA.execute(functions);
             LoopInvariantMotion.execute(functions);
 
-            //合并删减块
-            MergeBlock.execute(functions);
-            DeadBlockRemove.execute(functions);
-            RemoveUseLessPhi.execute(functions);
-
+            BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
+            program.printIR(irWriter);
+            irWriter.close();
             //second
             DFG.execute(functions);
             DeadCodeRemove.execute(functions);

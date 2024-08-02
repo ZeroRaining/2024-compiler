@@ -24,6 +24,7 @@ public class BasicBlock extends Value {
     private int loopDepth;
     private int domDepth;
     private boolean isRet;
+    private boolean isEntering;
     private HashSet<BasicBlock> pres;
     private HashSet<BasicBlock> sucs;
     private HashSet<BasicBlock> doms;
@@ -34,6 +35,7 @@ public class BasicBlock extends Value {
     public BasicBlock(int loopDepth, int labelCnt) {
         super();
         isRet = false;
+        isEntering = false;
         this.loopDepth = loopDepth;
         this.domDepth = 0;
         pres = new HashSet<>();
@@ -289,5 +291,13 @@ public class BasicBlock extends Value {
 
     public BasicBlock getiDomor() {
         return iDomor;
+    }
+
+    public void setEntering(boolean entering) {
+        isEntering = entering;
+    }
+
+    public boolean isEntering() {
+        return isEntering;
     }
 }

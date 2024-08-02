@@ -53,6 +53,7 @@ public class AnalysisLoop {
             for (BasicBlock blk : loop.getHeader().getPres()) {
                 if (loop.getBlks().contains(blk)) continue;
                 loop.setEntering(blk);
+                blk.setEntering(true);
                 loop.setPreCond(blk);
             }
             ArrayList<BasicBlock> sameDepth = new ArrayList<>(loop.getBlks());

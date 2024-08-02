@@ -25,6 +25,9 @@ public class MergeBlock {
         if (((JumpInstr) instr).getTarget().getPres().size() != 1) {
             return false;
         }
+        if (instr.getParentBB().isEntering() || ((JumpInstr) instr).getTarget().isEntering()) {
+            return false;
+        }
         return true;
     }
 
