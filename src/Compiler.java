@@ -65,16 +65,17 @@ public class Compiler {
             MergeBlock.execute(functions, false);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
-//            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
-//            program.printIR(irWriter);
-//            irWriter.close();
+            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
+            program.printIR(irWriter);
+            irWriter.close();
             //循环分析
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
             LCSSA.execute(functions);
             LoopInvariantMotion.execute(functions);
 
-            BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
+            //BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
+            irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
             program.printIR(irWriter);
             irWriter.close();
             //second
