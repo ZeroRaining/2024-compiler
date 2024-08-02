@@ -1,7 +1,7 @@
 package debug;
 
 public class DEBUG {
-    public static final boolean debug1 = false;
+    public static final boolean debug1 = true;
 //     public static final boolean debug1 = true;
 
     public static void dbgPrint1(String string) {

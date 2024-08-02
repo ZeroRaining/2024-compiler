@@ -18,6 +18,40 @@ public class AnalysisLoop {
             finalized(function);
         }
     }
+
+    private static void dfs4loopDom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> linked, ArrayList<BasicBlock> loopBlks) {
+        if (block.equals(otherBlk)) {
+            return;
+        }
+        if (linked.contains(otherBlk)) {
+            return;
+        }
+        linked.add(block);
+        for (BasicBlock next : block.getSucs()) {
+            if (loopBlks.contains(next)) {
+                if (!linked.contains(next) && next != otherBlk){
+                    dfs4loopDom(next, otherBlk, linked, loopBlks);
+                }
+            }
+        }
+    }
+
+    public static void dom4loop(Loop loop) {
+        BasicBlock firstBlk = loop.getBlks().get(0);
+        for (BasicBlock block : loop.getBlks()) {
+            HashSet<BasicBlock> linked = new HashSet<>();
+            dfs4loopDom(firstBlk, block, linked, loop.getBlks());
+
+            HashSet<BasicBlock> doms = new HashSet<>();
+            for (BasicBlock otherBlk : loop.getBlks()) {
+                if (!linked.contains(otherBlk)) {
+                    doms.add(otherBlk);
+                }
+            }
+            block.setLoopDoms(doms);
+        }
+    }
+
     private static void finalized(Function function){
         function.setAllLoop(allLoop);
         function.setHeader2loop(header2loop);
@@ -34,11 +68,7 @@ public class AnalysisLoop {
                 for (BasicBlock suc : blk.getSucs()) {
                     if (!loop.getBlks().contains(suc)) {
                         loop.addExitingBlk(blk);
-//                        if (loop.getExit() == suc || loop.getExit() == null) {
-                            loop.addExitBlk(suc);
-//                        } else {
-//                            throw new RuntimeException("竟然会有两个结束块");
-//                        }
+                        loop.addExitBlk(suc);
                     }
                 }
             }
@@ -49,7 +79,6 @@ public class AnalysisLoop {
             }
         }
         for (Loop loop : allLoop) {
-//            assert loop.getHeader().getPres().size() == 1;
             for (BasicBlock blk : loop.getHeader().getPres()) {
                 if (loop.getBlks().contains(blk)) continue;
                 loop.setEntering(blk);
@@ -63,6 +92,7 @@ public class AnalysisLoop {
             loop.setSameLoopDepth(sameDepth);
 //            System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         }
+
     }
 
     private static void findAllLoop(Function function) {

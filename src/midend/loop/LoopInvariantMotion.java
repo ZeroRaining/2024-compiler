@@ -36,6 +36,7 @@ public class LoopInvariantMotion {
 //        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         Queue<Instruction> queue = new LinkedList<>();
         HashSet<Value> invariant = new HashSet<>();
+        AnalysisLoop.dom4loop(loop);
         for (BasicBlock block : loop.getSameLoopDepth()) {
             Instruction instr = (Instruction) block.getInstructions().getHead();
             while (instr != null) {
@@ -73,7 +74,7 @@ public class LoopInvariantMotion {
             }
 //            DFG.singleExecute(function);
         }
-//        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
+        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth() + " loopExit: " + loop.getExits());
     }
 
     private static void addTmpBlk(BasicBlock entering, BasicBlock tmpBlk, BasicBlock next) {
@@ -88,9 +89,9 @@ public class LoopInvariantMotion {
 
         //update dom
         //fixme：这里应该用不到dom之外的东西。
-        HashSet<BasicBlock> doms = new HashSet<>(entering.getDoms());
-        tmpBlk.setDoms(doms);
-        entering.getDoms().add(tmpBlk);
+//        HashSet<BasicBlock> doms = new HashSet<>(entering.getDoms());
+//        tmpBlk.setDoms(doms);
+//        entering.getDoms().add(tmpBlk);
     }
 
     //instr所使用的值是否都来自循环外
@@ -112,7 +113,7 @@ public class LoopInvariantMotion {
         if (instr instanceof PhiInstr) {
             return false;
         }
-        if (!instr.getParentBB().getDoms().containsAll(loop.getExits())) {
+        if (!instr.getParentBB().getLoopDoms().containsAll(loop.getExits())) {
             return false;
         }
         for (Value value : instr.getUseValueList()) {
