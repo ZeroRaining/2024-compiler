@@ -19,6 +19,9 @@ import java.util.List;
  * 安排在函数内联之后、Mem2Reg 之前
  * 全局对象局部化：
  * 现阶段想法是若一个全局变量只被 main 函数使用过，则将其变为局部变量。
+ * todo: 现在还有一个想法，对于递归函数中被使用的全局对象，我们可以在函数开始处 load，在函数推出前 store
+ *  并在调用其它函数（与该对象相关的）前后做保存
+ *  但是问题在于需要判断递归函数对全局对象的 load 和 store 频率是否足以让我们使用这种优化，如果本身调用频率就很低，这种优化必定带来反效果
  */
 public class GlobalValueSimplify {
     public static void execute(List<Symbol> globalSymbols) {
