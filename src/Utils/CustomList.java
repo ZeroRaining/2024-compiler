@@ -91,6 +91,37 @@ public class CustomList implements Iterable<CustomList.Node> {
         node.parent = this;
         incrementSize();
     }
+    public void addCustomListToTail(CustomList other) {
+        if (other == null || other.isEmpty()) {
+            return; // 如果要合并的链表为空，则无需操作
+        }
+
+        if (this.isEmpty()) {
+            // 如果当前链表为空，则直接使用其他链表的头和尾
+            this.head = other.head;
+            this.tail = other.tail;
+        } else {
+            // 否则，将其他链表的头追加到当前链表的尾部
+            this.tail.next = other.head;
+            other.head.prev = this.tail;
+            this.tail = other.tail;
+        }
+
+        // 更新当前链表的大小
+        this.size += other.size;
+
+        // 更新合并后节点的父引用
+        Node current = other.head;
+        while (current != null) {
+            current.setParent(this.head);
+            current = current.next;
+        }
+
+        // 清空其他链表的引用
+        other.head = null;
+        other.tail = null;
+        other.size = 0;
+    }
 
 //    public N getHeadValue() {
 //        return getHead().getValue();
