@@ -1,7 +1,9 @@
 package backend;
 
+import Utils.CustomList;
 import backend.asmInstr.AsmInstr;
 import backend.asmInstr.asmBinary.AsmAdd;
+import backend.asmInstr.asmBr.AsmJ;
 import backend.asmInstr.asmLS.*;
 import backend.asmInstr.asmTermin.AsmCall;
 import backend.itemStructure.*;
@@ -28,6 +30,7 @@ public class RegAlloc {
         }
         return instance;
     }
+
     private static int tryN = 0;
     private int FI = 0;//0代表处理Int型，1代表处理Float型
     private static int K = 27;
@@ -62,6 +65,7 @@ public class RegAlloc {
     private HashSet<AsmInstr> activeMoves = new HashSet<>();//还未做好合并准备的传送指令集合
     //@2 传送指令集合，传送指令只能存在在其中一张表中
     private static int addOffSet = 0;
+
     public void run(AsmModule module) {
         PreColor();
         for (AsmFunction function : module.getFunctions()) {
@@ -146,7 +150,8 @@ public class RegAlloc {
             }
 
             allocAndRecycleSP(function);
-            changeOffset(function);
+            changeLoads(function);
+            changeStores(function);
             deleteMove(function);
         }
 
@@ -168,41 +173,79 @@ public class RegAlloc {
         }
     }
 
-    private void changeOffset(AsmFunction function) {
-        AsmBlock firstBlock = (AsmBlock) function.getBlocks().getHead();
-        AsmInstr firstInstr = (AsmInstr) firstBlock.getInstrs().getHead();
-        int stackAddOffset = addOffSet;
-        while (firstInstr != null) {
-            if (firstInstr instanceof AsmL) {
-                if (firstInstr instanceof AsmLw) {
-                    if (((AsmLw) firstInstr).isPassIarg == 1) {
-                        int originOffset = ((AsmImm32) (((AsmLw) firstInstr).getOffset())).getValue();
-                        int newOffset = stackAddOffset + originOffset;
-                        FI = 0;
-                        storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
-                        firstInstr.removeFromList();
+    private void changeLoads(AsmFunction function) {
+        int a = 1;
+        for (CustomList.Node asmBlock : function.getBlocks()) {
+            AsmInstr firstInstr = (AsmInstr) ((AsmBlock) asmBlock).getInstrs().getHead();
+            while (firstInstr != null) {
+                if (firstInstr instanceof AsmL) {
+                    if (firstInstr instanceof AsmLw) {
+                        if (((AsmLw) firstInstr).isPassIarg == 1) {
+                            int originOffset = ((AsmImm32) (((AsmLw) firstInstr).getOffset())).getValue();
+                            int newOffset = addOffSet + originOffset;
+                            FI = 0;
+                            storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
+                            firstInstr.removeFromList();
+                        }
+                    }
+                    if (firstInstr instanceof AsmLd) {
+                        if (((AsmLd) firstInstr).isPassIarg == 1) {
+                            int originOffset = ((AsmImm32) (((AsmLd) firstInstr).getOffset())).getValue();
+                            int newOffset = addOffSet + originOffset;
+                            FI = 0;
+                            storeDOrLoadDFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
+                            firstInstr.removeFromList();
+                        }
+                    }
+                    if (firstInstr instanceof AsmFlw) {
+                        if (((AsmFlw) firstInstr).isPassIarg == 1) {
+                            int originOffset = ((AsmImm32) (((AsmFlw) firstInstr).getOffset())).getValue();
+                            int newOffset = addOffSet + originOffset;
+                            FI = 1;
+                            storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
+                            firstInstr.removeFromList();
+                        }
                     }
                 }
-                if (firstInstr instanceof AsmLd) {
-                    if (((AsmLd) firstInstr).isPassIarg == 1) {
-                        int originOffset = ((AsmImm32) (((AsmLd) firstInstr).getOffset())).getValue();
-                        int newOffset = stackAddOffset + originOffset;
-                        FI = 0;
-                        storeDOrLoadDFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
-                        firstInstr.removeFromList();
-                    }
-                }
-                if (firstInstr instanceof AsmFlw) {
-                    if (((AsmFlw) firstInstr).isPassIarg == 1) {
-                        int originOffset = ((AsmImm32) (((AsmFlw) firstInstr).getOffset())).getValue();
-                        int newOffset = stackAddOffset + originOffset;
-                        FI = 1;
-                        storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmL) firstInstr).getDst()), firstInstr, "load", 1, 0);
-                        firstInstr.removeFromList();
-                    }
-                }
+                firstInstr = (AsmInstr) firstInstr.getNext();
             }
-            firstInstr = (AsmInstr) firstInstr.getNext();
+        }
+
+    }
+
+    public void changeStores(AsmFunction function) {
+        for (CustomList.Node asmBlock : function.getBlocks()) {
+            AsmInstr instrHead = (AsmInstr) ((AsmBlock) asmBlock).getInstrs().getHead();
+            while (instrHead != null) {
+                if (instrHead instanceof AsmSw) {
+                    if (((AsmSw) instrHead).isPassIarg == 1) {
+                        int originOffset = ((AsmImm32) (((AsmSw) instrHead).getOffset())).getValue();
+                        int newOffset = addOffSet + originOffset;
+                        FI = 0;
+                        storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmS) instrHead).getSrc()), instrHead, "store", 1, 0);
+                        instrHead.removeFromList();
+                    }
+                }
+                if (instrHead instanceof AsmSd) {
+                    if (((AsmSd) instrHead).isPassIarg == 1) {
+                        int originOffset = ((AsmImm32) (((AsmSd) instrHead).getOffset())).getValue();
+                        int newOffset = addOffSet + originOffset;
+                        FI = 0;
+                        storeDOrLoadDFromMemory(newOffset, (AsmReg) (((AsmS) instrHead).getSrc()), instrHead, "store", 1, 0);
+                        instrHead.removeFromList();
+                    }
+                }
+                if (instrHead instanceof AsmFsw) {
+                    if (((AsmFsw) instrHead).isPassIarg == 1) {
+                        int originOffset = ((AsmImm32) (((AsmFsw) instrHead).getOffset())).getValue();
+                        int newOffset = addOffSet + originOffset;
+                        FI = 1;
+                        storeOrLoadFromMemory(newOffset, (AsmReg) (((AsmS) instrHead).getSrc()), instrHead, "store", 1, 0);
+                        instrHead.removeFromList();
+                    }
+                }
+                instrHead = (AsmInstr) instrHead.getNext();
+            }
         }
     }
 
@@ -854,6 +897,9 @@ public class RegAlloc {
 //                        }
 //                    }
 //                }
+                if (instrTail instanceof AsmJ) {
+                    int i = 0;
+                }
 
                 for (AsmReg D : instrTail.regDef) {
                     if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
@@ -1141,6 +1187,9 @@ public class RegAlloc {
                         //为regUse进行spill处理
                         if (instrHead.regUse.contains(v)) {
                             AsmVirReg v1 = new AsmVirReg();
+                            if (v1.getPersonalIndex() == 530) {
+                                int i = 0;
+                            }
                             if (downOperandMap.containsKey(v))
                                 downOperandMap.put(v1, downOperandMap.get(v));
                             for (int i = 0; i < instrHead.regUse.size(); i++) {
@@ -1160,6 +1209,9 @@ public class RegAlloc {
                         }
                         if (instrHead.regDef.contains(v)) {
                             AsmVirReg v2 = new AsmVirReg();
+                            if (v2.getPersonalIndex() == 530) {
+                                int i = 0;
+                            }
                             if (downOperandMap.containsKey(v))
                                 downOperandMap.put(v2, downOperandMap.get(v));
                             for (int i = 0; i < instrHead.regDef.size(); i++) {

@@ -13,16 +13,19 @@ public class DetectTailRecursive {
             if (f.getSelfCallingInstrSet() == null || f.getSelfCallingInstrSet().isEmpty()) {
                 continue;
             }
+            boolean flag = true;
             for (CallInstr callInstr : f.getSelfCallingInstrSet()) {
-                if (!(callInstr.getFuncDef().getName().equals(f.getName()))) {
-                    continue;
+                if (!(callInstr.getNext() instanceof JumpInstr jumpInstr)) {
+                    flag = false;
+                    break;
                 }
-                if (callInstr.getNext() instanceof JumpInstr jumpInstr) {
-                    if (!(jumpInstr.getTarget().equals(f.getBasicBlocks().getTail()))) {
-                        continue;
-                    }
-                    f.setTailRecursive(true);
+                if (!(jumpInstr.getTarget().equals(f.getBasicBlocks().getTail()))) {
+                    flag = false;
+                    break;
                 }
+            }
+            if (flag) {
+                f.setTailRecursive(true);
             }
         }
     }

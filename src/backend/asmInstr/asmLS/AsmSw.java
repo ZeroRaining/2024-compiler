@@ -3,10 +3,18 @@ package backend.asmInstr.asmLS;
 import backend.itemStructure.AsmOperand;
 
 public class AsmSw extends AsmS{
+    public int isPassIarg = 0;
     public AsmSw(AsmOperand src, AsmOperand addr, AsmOperand offset) {
         changeSrc(src);
         changeAddr(addr);
         changeOffset(offset);
+    }
+
+    public AsmSw(AsmOperand src, AsmOperand addr, AsmOperand offset, int isPassIarg) {
+        changeSrc(src);
+        changeAddr(addr);
+        changeOffset(offset);
+        this.isPassIarg = isPassIarg;
     }
 
     public String toString() {

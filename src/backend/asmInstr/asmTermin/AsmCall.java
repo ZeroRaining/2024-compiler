@@ -5,10 +5,14 @@ import backend.regs.RegGeter;
 
 public class AsmCall extends AsmInstr {
     public String funcName;
+    public int IntArgRegNum;
+    public int floatArgRegNum;
 
     public AsmCall(String funcName, int IntArgRegNum,int floatArgRegNum) {
         super("AsmCall");
         this.funcName = funcName;
+        this.IntArgRegNum = IntArgRegNum;
+        this.floatArgRegNum = floatArgRegNum;
         for (int i = 0 ; i < IntArgRegNum ; i++) {
             addUseReg(null, RegGeter.AllRegsInt.get(i + 10));
         }
