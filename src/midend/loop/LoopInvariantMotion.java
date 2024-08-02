@@ -74,7 +74,7 @@ public class LoopInvariantMotion {
                 loop.getPrtLoop().addBlk(tmpBlk);
             }
         }
-        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth() + " loopExit: " + loop.getExits());
+//        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth() + " loopExit: " + loop.getExits());
     }
 
     private static void addTmpBlk(BasicBlock entering, BasicBlock tmpBlk, BasicBlock next) {
