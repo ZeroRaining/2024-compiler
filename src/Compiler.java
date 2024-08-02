@@ -61,28 +61,34 @@ public class Compiler {
             GVN.execute(functions);
             SimplifyBranch.execute(functions);
 
+            //合并删减块
+            MergeBlock.execute(functions, false);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
+            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
+            program.printIR(irWriter);
+            irWriter.close();
             //循环分析
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
-//            LCSSA.execute(functions);
+            LCSSA.execute(functions);
             LoopInvariantMotion.execute(functions);
 
-            //合并删减块
-            MergeBlock.execute(functions);
-            DeadBlockRemove.execute(functions);
-            RemoveUseLessPhi.execute(functions);
-
+            //BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
+            irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
+            program.printIR(irWriter);
+            irWriter.close();
             //second
             DFG.execute(functions);
             DeadCodeRemove.execute(functions);
             OIS.execute(functions);
             GVN.execute(functions);
             SimplifyBranch.execute(functions);
-            MergeBlock.execute(functions);
+            MergeBlock.execute(functions, true);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
         }
-        Function.blkLabelReorder();
+//        Function.blkLabelReorder();
 
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();

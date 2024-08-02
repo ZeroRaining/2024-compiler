@@ -33,9 +33,11 @@ public class LoopInvariantMotion {
         for (Loop inner : loop.getInnerLoops()) {
             findInvar4loop(inner);
         }
-        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
+        //System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         Queue<Instruction> queue = new LinkedList<>();
         HashSet<Value> invariant = new HashSet<>();
+        //不需要使用dom，由于是ssa，所以可以直接硬提
+        //AnalysisLoop.dom4loop(loop);
         for (BasicBlock block : loop.getSameLoopDepth()) {
             Instruction instr = (Instruction) block.getInstructions().getHead();
             while (instr != null) {
@@ -71,9 +73,8 @@ public class LoopInvariantMotion {
             if (loop.getPrtLoop() != null) {
                 loop.getPrtLoop().addBlk(tmpBlk);
             }
-//            DFG.singleExecute(function);
         }
-        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
+        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth() + " loopExit: " + loop.getExits());
     }
 
     private static void addTmpBlk(BasicBlock entering, BasicBlock tmpBlk, BasicBlock next) {
@@ -85,12 +86,6 @@ public class LoopInvariantMotion {
             instr = (Instruction) instr.getNext();
         }
         tmpBlk.insertAfter(entering);
-
-        //update dom
-        //fixme：这里应该用不到dom之外的东西。
-        HashSet<BasicBlock> doms = new HashSet<>(entering.getDoms());
-        tmpBlk.setDoms(doms);
-        entering.getDoms().add(tmpBlk);
     }
 
     //instr所使用的值是否都来自循环外
@@ -112,9 +107,9 @@ public class LoopInvariantMotion {
         if (instr instanceof PhiInstr) {
             return false;
         }
-        if (!instr.getParentBB().getDoms().containsAll(loop.getExits())) {
-            return false;
-        }
+//        if (!instr.getParentBB().getLoopDoms().containsAll(loop.getExits())) {
+//            return false;
+//        }
         for (Value value : instr.getUseValueList()) {
             if (value instanceof ConstValue) {
                 continue;

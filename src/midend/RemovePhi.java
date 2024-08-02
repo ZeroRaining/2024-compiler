@@ -27,7 +27,9 @@ public class RemovePhi {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         while (blk != null) {
             Instruction last = (Instruction) blk.getInstructions().getTail();
-            assert last != null;
+            if (last == null) {
+                throw new RuntimeException(blk + "has no instruction" + blk.getInstructions().getSize());
+            }
             if (last.getPrev() == null || !(last.getPrev() instanceof PCInstr)) {
                 blk = (BasicBlock) blk.getNext();
                 continue;

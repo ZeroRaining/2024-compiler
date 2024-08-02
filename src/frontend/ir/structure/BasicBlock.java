@@ -24,9 +24,11 @@ public class BasicBlock extends Value {
     private int loopDepth;
     private int domDepth;
     private boolean isRet;
+    private boolean isEntering;
     private HashSet<BasicBlock> pres;
     private HashSet<BasicBlock> sucs;
     private HashSet<BasicBlock> doms;
+    private HashSet<BasicBlock> loopDoms;
     private HashSet<BasicBlock> iDoms;
     private BasicBlock iDomor;
     private HashSet<BasicBlock> DF;
@@ -34,11 +36,13 @@ public class BasicBlock extends Value {
     public BasicBlock(int loopDepth, int labelCnt) {
         super();
         isRet = false;
+        isEntering = false;
         this.loopDepth = loopDepth;
         this.domDepth = 0;
         pres = new HashSet<>();
         sucs = new HashSet<>();
         doms = new HashSet<>();
+        loopDoms = new HashSet<>();
         iDoms = new HashSet<>();
         DF = new HashSet<>();
         this.labelCnt = labelCnt;
@@ -107,6 +111,11 @@ public class BasicBlock extends Value {
     public void setDoms(HashSet<BasicBlock> doms) {
         this.doms = doms;
     }
+
+    public void setLoopDoms(HashSet<BasicBlock> loopDoms) {
+        this.loopDoms = loopDoms;
+    }
+
     public HashSet<BasicBlock> getIDoms() {
         return iDoms;
     }
@@ -121,6 +130,10 @@ public class BasicBlock extends Value {
 
     public HashSet<BasicBlock> getSucs() {
         return sucs;
+    }
+
+    public HashSet<BasicBlock> getLoopDoms() {
+        return loopDoms;
     }
 
     public HashSet<BasicBlock> getDoms() {
@@ -289,5 +302,13 @@ public class BasicBlock extends Value {
 
     public BasicBlock getiDomor() {
         return iDomor;
+    }
+
+    public void setEntering(boolean entering) {
+        isEntering = entering;
+    }
+
+    public boolean isEntering() {
+        return isEntering;
     }
 }
