@@ -179,7 +179,7 @@ public class Procedure {
         } else if (item instanceof Ast.Break) {
             dealBreak();
         } else if (item instanceof Ast.WhileStmt) {
-            dealWhile((Ast.WhileStmt)item, returnType, symTab);
+            doWhile((Ast.WhileStmt)item, returnType, symTab);
         } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
@@ -365,18 +365,17 @@ public class Procedure {
                     init = toSameType(init, symbol);
                     curBlock.addInstruction(new StoreInstr(init, symbol));
                 } else if (initVal instanceof ArrayInitVal) {
-                    GEPInstr toBase = new GEPInstr(curRegIndex++, ConstInt.Zero, symbol);
-                    curBlock.addInstruction(toBase);
-                    int dim = ((ArrayInitVal) initVal).getDim();
-                    for (int i = 1; i < dim; i++) {
-                        toBase = new GEPInstr(curRegIndex++, ConstInt.Zero, toBase);
-                        curBlock.addInstruction(toBase);
+                    ArrayList<Value> baseIndexList = new ArrayList<>();
+                    for (int i = 0; i < ((ArrayInitVal) initVal).getDim(); i++) {
+                        baseIndexList.add(new ConstInt(0));
                     }
+                    GEPInstr toBase = new GEPInstr(curRegIndex++, baseIndexList, symbol);
+                    curBlock.addInstruction(toBase);
                     Bitcast toI8 = new Bitcast(curRegIndex++, toBase);
                     curBlock.addInstruction(toI8);
                     ArrayList<Value> rParams = new ArrayList<>();
                     rParams.add(toI8);
-                    rParams.add(ConstInt.Zero);
+                    rParams.add(new ConstInt(0));
                     rParams.add(new ConstInt(((ArrayInitVal) initVal).getSize()));
                     LibFunc libFunc = Lib.getInstance().getLibFunc("memset");
                     CallInstr memset = libFunc.makeCall(curRegIndex++, rParams);
@@ -386,16 +385,18 @@ public class Procedure {
                     ((ArrayInitVal) initVal).getNonZeroIndex(toInit, new ArrayList<>());
                     for (List<Integer> list : toInit) {
                         Value valToInit = ((ArrayInitVal) initVal).getValueWithIndex(list);
-                        GEPInstr ptr = new GEPInstr(curRegIndex++, new ConstInt(list.get(0)), symbol);
-                        curBlock.addInstruction(ptr);
-                        for (int i = 1; i < list.size(); i++) {
-                            ptr = new GEPInstr(curRegIndex++, new ConstInt(list.get(i)), ptr);
-                            curBlock.addInstruction(ptr);
+                        ArrayList<Value> indexList = new ArrayList<>();
+                        for (Integer index : list) {
+                            indexList.add(new ConstInt(index));
                         }
                         if (valToInit instanceof ConstValue) {
+                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
+                            curBlock.addInstruction(ptr);
                             valToInit = toSameType(valToInit, symbol);
                             curBlock.addInstruction(new StoreInstr(valToInit, symbol, ptr));
                         } else if (valToInit instanceof InitExpr) {
+                            Instruction ptr = new GEPInstr(curRegIndex++, indexList, symbol);
+                            curBlock.addInstruction(ptr);
                             Value init = calculateExpr(((InitExpr) valToInit).getExp(), symTab, false);
                             init = toSameType(init, symbol);
                             curBlock.addInstruction(new StoreInstr(init, symbol, ptr));
@@ -413,6 +414,7 @@ public class Procedure {
             }
         }
     }
+    
     
     /**
      *  用于 store 之前，检测一下存储类型对不对的上，对不上就改一下
@@ -707,7 +709,7 @@ public class Procedure {
                         res = load;
                     } else {
                         if (ptr instanceof GEPInstr) {
-                            Instruction newPtr = new GEPInstr(curRegIndex++, ConstInt.Zero, (GEPInstr) ptr);
+                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr);
                             curBlock.addInstruction(newPtr);
                             res = newPtr;
                         } else {
@@ -782,26 +784,14 @@ public class Procedure {
                 return load;
             }
             curBlock.addInstruction(load);
-            
-            ptr = new GEPInstr(curRegIndex++, load, indexList.get(0));
-            for (int i = 1; i < indexList.size(); i++) {
-                curBlock.addInstruction(ptr);
-                ptr = new GEPInstr(curRegIndex++, indexList.get(i), ptr);
-            }
+            ptr = new GEPInstr(curRegIndex++, load, indexList);
         } else {
-            if (indexList.isEmpty()) {
-                ptr = new GEPInstr(curRegIndex++, null, symbol);
-            } else {
-                ptr = new GEPInstr(curRegIndex++, indexList.get(0), symbol);
-                for (int i = 1; i < indexList.size(); i++) {
-                    curBlock.addInstruction(ptr);
-                    ptr = new GEPInstr(curRegIndex++, indexList.get(i), ptr);
-                }
-            }
+            ptr = new GEPInstr(curRegIndex++, indexList, symbol);
         }
         return ptr;
     }
-
+    
+    
     private List<Value> getIndexList(Ast.LVal lVal, SymTab symTab) {
         if (lVal == null) {
             throw new NullPointerException();
@@ -926,5 +916,9 @@ public class Procedure {
     
     public HashSet<CallInstr> getSelfCallingInstrSet() {
         return selfCallingInstrSet;
+    }
+    
+    public Function getParentFunc() {
+        return parentFunc;
     }
 }

@@ -11,6 +11,7 @@ import midend.RemovePhi;
 import midend.SSA.*;
 import midend.loop.AnalysisLoop;
 import midend.loop.LCSSA;
+import midend.loop.LoopInvariantMotion;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -36,7 +37,13 @@ public class Compiler {
         Ast ast = new Parser(tokenList).parseAst();
         // 生成 IR
         Program program = new Program(ast);
-//        program.removeUselessFunc();
+        
+        if (arg.getOptLevel() == 1) {
+            FI.execute(program.getFunctionList());
+            program.removeUselessFunc();
+            GlobalValueSimplify.execute(program.getGlobalVars());
+            program.deleteUselessGlobalVars();
+        }
         
         ArrayList<Function> functions = program.getFunctionList();
         DeadBlockRemove.execute(functions);
@@ -47,32 +54,36 @@ public class Compiler {
             optimizeStartTime = System.currentTimeMillis();
         }
         if (arg.getOptLevel() == 1) {
+            //简化代码
             Mem2Reg.execute(functions);
-            int times = 2;
-            int cnt = 0;
-            while (cnt < times) {
-                DeadCodeRemove.execute(functions);
-                OIS.execute(functions);
-                //OISR.doOISR(functions);
-                GVN.execute(functions);
-                SimplifyBranch.execute(functions);
-                MergeBlock.execute(functions);
-                DeadBlockRemove.execute(functions);
-                RemoveUseLessPhi.execute(functions);
-                if (cnt == 0) {
-                     //只有第一轮才做内联
-//                    FI.execute(program.getFunctionList());
-//                    program.removeUselessFunc();
-                }
-                cnt++;
-                if (cnt < times) {
-                    DFG.execute(functions);
-                }
-            }
+            DeadCodeRemove.execute(functions);
+            OIS.execute(functions);
+            GVN.execute(functions);
+            SimplifyBranch.execute(functions);
+
+            //循环分析
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+//            LCSSA.execute(functions);
+            LoopInvariantMotion.execute(functions);
+
+            //合并删减块
+            MergeBlock.execute(functions);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
+
+            //second
+            DFG.execute(functions);
+            DeadCodeRemove.execute(functions);
+            OIS.execute(functions);
+            GVN.execute(functions);
+            SimplifyBranch.execute(functions);
+            MergeBlock.execute(functions);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
         }
         Function.blkLabelReorder();
-        AnalysisLoop.execute(functions);
-        LCSSA.execute(functions);
+
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
         }

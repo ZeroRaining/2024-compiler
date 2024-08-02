@@ -35,7 +35,7 @@ public class AnalysisLoop {
                     if (!loop.getBlks().contains(suc)) {
                         loop.addExitingBlk(blk);
 //                        if (loop.getExit() == suc || loop.getExit() == null) {
-                            loop.addExitblk(suc);
+                            loop.addExitBlk(suc);
 //                        } else {
 //                            throw new RuntimeException("竟然会有两个结束块");
 //                        }
@@ -47,6 +47,20 @@ public class AnalysisLoop {
                     loop.addLatchBlk(pre);
                 }
             }
+        }
+        for (Loop loop : allLoop) {
+//            assert loop.getHeader().getPres().size() == 1;
+            for (BasicBlock blk : loop.getHeader().getPres()) {
+                if (loop.getBlks().contains(blk)) continue;
+                loop.setEntering(blk);
+                loop.setPreCond(blk);
+            }
+            ArrayList<BasicBlock> sameDepth = new ArrayList<>(loop.getBlks());
+            for (Loop in : loop.getInnerLoops()) {
+                sameDepth.removeAll(in.getBlks());
+            }
+            loop.setSameLoopDepth(sameDepth);
+//            System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         }
     }
 

@@ -20,6 +20,7 @@ import java.util.*;
 
 public class Function extends Value implements FuncDef {
     private static final HashMap<String, Function> FUNCTION_MAP = new HashMap<>();
+    public static Function MAIN;
     private static final int whatIsLong = 100;  // 一个函数多少指令算是“多”，不能内联
     private final String name;
     private final DataType returnType;
@@ -33,12 +34,15 @@ public class Function extends Value implements FuncDef {
     private ArrayList<Loop> outerLoop = new ArrayList<>();
     private int calledCnt = 0;
     private boolean isTailRecursive = false;
+    private final boolean main;
 
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
         if (funcDef == null) {
             throw new NullPointerException();
         }
         name = funcDef.getIdent().getContent();
+        main = name.equals("main");
+        MAIN = this;
         symTab = new SymTab(globalSymTab);
         switch (funcDef.getType().getType()) {
             case INT:
@@ -373,6 +377,10 @@ public class Function extends Value implements FuncDef {
 
     public HashSet<CallInstr> getSelfCallingInstrSet() {
         return this.procedure.getSelfCallingInstrSet();
+    }
+
+    public boolean isMain() {
+        return main;
     }
 
     public void setTailRecursive(boolean tailRecursive) {

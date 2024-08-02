@@ -15,7 +15,7 @@ import java.util.*;
 
 /**
  * Function inlining
- * 函数内联，现在的内联条件是非递归且调用次数少或者函数本身小，如果 call 在多层循环中一定内联 todo: 以上具体数据均有待调试
+ * 函数内联
  * 值得注意的是，函数内联并不一定能提高运行效率，有时候一些不常用的代码（冷代码）可能作为函数调用存在会更合适一些
  */
 public class FI {
@@ -35,7 +35,7 @@ public class FI {
                     Function callee = (Function) (((CallInstr) instr).getFuncDef());
                     boolean doNotInline = callee.getCalledCnt() > 3 && callee.checkInsTooMany();
                     doNotInline = doNotInline && !(instr.getParentBB().getLoopDepth() > 1);
-                    if (callee.isRecursive() || doNotInline) {
+                    if (callee.isRecursive()/* || doNotInline */) { // 现版本不做更多限制，能联都联
                         instr = (Instruction) instr.getNext();
                         continue;
                     }

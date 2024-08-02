@@ -11,6 +11,7 @@ import java.util.*;
 public class SymTab {
     private final HashMap<String, Symbol> symbolMap = new HashMap<>();
     private final SymTab parent;
+    private final HashMap<String, Symbol> abandonedSymbolMap = new HashMap<>();
     
     public SymTab(SymTab p) {
         parent = p;
@@ -29,6 +30,11 @@ public class SymTab {
             return symbolMap.get(sym);
         }
         if (parent == null) {
+            if (abandonedSymbolMap.containsKey(sym)) {
+                // 这里存的是被局部化的全局变量，保留这一级是为了有些编译时需要确定值的东西（比如数组长度）需要用到全局不可变对象的值
+                // 其实主要是为了 printIR 准备的，正常是不需要保存这个表的
+                return abandonedSymbolMap.get(sym);
+            }
             throw new RuntimeException("No such symbol");
         }
         return parent.getSym(sym);
@@ -182,4 +188,15 @@ public class SymTab {
         return new ArrayList<>(symbolMap.values());
     }
 
+    public void removeLocalizedSym() {
+        Iterator<String> symbolIterator = symbolMap.keySet().iterator();
+        while (symbolIterator.hasNext()) {
+            String name = symbolIterator.next();
+            Symbol symbol = symbolMap.get(name);
+            if (symbol.isAbandoned()) {
+                abandonedSymbolMap.put(name, symbol);
+                symbolIterator.remove();
+            }
+        }
+    }
 }

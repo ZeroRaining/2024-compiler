@@ -15,6 +15,7 @@ public class Symbol {
     private final boolean global;
     private final Value initVal;
     private Value allocValue;   // 用来获取 IR 中保存该变量地址的指针
+    private boolean abandoned = false;
 
     public Symbol(String name, DataType type, List<Integer> limitList,
                   boolean constant, boolean global, Value initVal) {
@@ -107,5 +108,13 @@ public class Symbol {
     
     public boolean isArrayFParam() {
         return !limitList.isEmpty() && limitList.get(0) == -1;
+    }
+    
+    public void abandon() {
+        abandoned = true;
+    }
+    
+    public boolean isAbandoned() {
+        return abandoned;
     }
 }
