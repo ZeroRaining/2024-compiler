@@ -17,6 +17,10 @@ public class AsmCall extends AsmInstr {
         }
     }
 
+    public String getFuncName() {
+        return funcName;
+    }
+
     @Override
     public String toString() {
         return "call\t" + funcName;

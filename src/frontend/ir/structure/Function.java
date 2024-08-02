@@ -32,6 +32,7 @@ public class Function extends Value implements FuncDef {
     private HashMap<BasicBlock, Loop> header2loop = new HashMap<>();
     private ArrayList<Loop> outerLoop = new ArrayList<>();
     private int calledCnt = 0;
+    private boolean isTailRecursive = false;
 
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
         if (funcDef == null) {
@@ -369,8 +370,16 @@ public class Function extends Value implements FuncDef {
     public void setCurPhiIndex(int curPhiIndex) {
         procedure.setCurPhiIndex(curPhiIndex);
     }
-    
+
     public HashSet<CallInstr> getSelfCallingInstrSet() {
         return this.procedure.getSelfCallingInstrSet();
+    }
+
+    public void setTailRecursive(boolean tailRecursive) {
+        isTailRecursive = tailRecursive;
+    }
+
+    public boolean isTailRecursive() {
+        return isTailRecursive;
     }
 }

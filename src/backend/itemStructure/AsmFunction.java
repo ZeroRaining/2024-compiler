@@ -88,4 +88,12 @@ public class AsmFunction {
         this.fargs.addAll(fargs);
     }
 
+    public void addBlockToHead(AsmBlock block) {
+        blocks.addToHead(block);
+    }
+
+    public CustomList.Node getHead() {
+        return blocks.getHead();
+    }
+
 }

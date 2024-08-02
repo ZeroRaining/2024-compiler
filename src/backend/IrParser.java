@@ -1,5 +1,6 @@
 package backend;
 
+import backend.asmInstr.AsmInstr;
 import backend.asmInstr.asmBr.AsmBnez;
 import backend.asmInstr.asmBr.AsmJ;
 import backend.asmInstr.asmBinary.*;
@@ -139,9 +140,11 @@ public class IrParser {
         int pushArgSize = 0;
         for (Node bb : f.getBasicBlocks()) {
             for (Node instr : ((BasicBlock) bb).getInstructions()) {
-                //TODO:尾递归
-                if (instr instanceof CallInstr) {
-                    List<Value> rParams = ((CallInstr) instr).getRParams();
+                if (instr instanceof CallInstr callInstr) {
+                    if (f.isTailRecursive() && callInstr.getFuncDef().getName().equals(f.getName())) {
+                        continue;
+                    }
+                    List<Value> rParams = callInstr.getRParams();
                     int size = rParams.size();
                     for (int i = 8; i < size; i++) {
                         if ((rParams.get(i)).getPointerLevel() != 0) {
@@ -249,6 +252,38 @@ public class IrParser {
 //                offset += 4;
 //            }
         }
+        if (f.isTailRecursive()) {
+            HashSet<AsmCall> callsToBeRemoved = new HashSet<>();
+            AsmBlock bstart = new AsmBlock(f.getName() + "_bstart", 0);
+            AsmBlock formerStart = (AsmBlock) (asmFunction.getHead());
+            bstart.addInstrTail(new AsmJ(formerStart));
+            asmFunction.addBlockToHead(bstart);
+            for (Node asmBlock : asmFunction.getBlocks()) {
+                boolean flag = false;
+                for (Node instr : ((AsmBlock) asmBlock).getInstrs()) {
+                    if (instr instanceof AsmCall call) {
+                        if (call.getFuncName().equals(f.getName())) {
+                            AsmJ asmJ = new AsmJ(formerStart);
+                            asmJ.insertBefore(call);
+                            callsToBeRemoved.add(call);
+                            flag = true;
+                            continue;
+                        }
+                        if (flag) {
+                            callsToBeRemoved.add(call);
+                        }
+                    }
+                }
+                if (!callsToBeRemoved.isEmpty()) {
+                    for (AsmCall call : callsToBeRemoved) {
+                        call.removeFromList();
+                    }
+                }
+                callsToBeRemoved.clear();
+            }
+        }
+
+
 //        offset = asmFunction.getWholeSize() - 8;
 //        if (asmFunction.getRaSize() != 0) {
 //            if (offset >= -2048 && offset <= 2047) {
@@ -1074,7 +1109,8 @@ public class IrParser {
                     asmBlock.addInstrTail(asmAdd);
                 }
             } else {
-                AsmOperand index = parseOperand(indexList.get(i), 0, f, bb);
+                Value indexVal = indexList.get(i) == null ? new ConstInt(0) : indexList.get(i);
+                AsmOperand index = parseOperand(indexVal, 0, f, bb);
                 AsmOperand tmp = genTmpReg(f);
                 AsmMul asmMul = new AsmMul(tmp, index, parseConstIntOperand(sizeList.get(i) * 4, 0, f, bb));
                 asmBlock.addInstrTail(asmMul);
