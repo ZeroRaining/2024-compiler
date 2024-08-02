@@ -37,7 +37,7 @@ public class Compiler {
         Ast ast = new Parser(tokenList).parseAst();
         // 生成 IR
         Program program = new Program(ast);
-        
+
         if (arg.getOptLevel() == 1) {
             FI.execute(program.getFunctionList());
             program.removeUselessFunc();
@@ -69,10 +69,10 @@ public class Compiler {
 //            program.printIR(irWriter);
 //            irWriter.close();
             //循环分析
-            DFG.execute(functions);
-            AnalysisLoop.execute(functions);
-//            LCSSA.execute(functions);
-            LoopInvariantMotion.execute(functions);
+//            DFG.execute(functions);
+//            AnalysisLoop.execute(functions);
+//            //LCSSA.execute(functions);
+//            LoopInvariantMotion.execute(functions);
 
             //BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
 //            irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
@@ -104,6 +104,7 @@ public class Compiler {
         }
         
         if (arg.getOptLevel() == 1 && !arg.toSkipBackEnd()) {
+            DetectTailRecursive.detect(functions);
             RemovePhi.phi2move(functions);
         }
         

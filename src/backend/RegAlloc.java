@@ -864,39 +864,39 @@ public class RegAlloc {
             AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
             HashSet<AsmReg> live = new HashSet<>(blockHead.LiveOut);
             while (instrTail != null) {
-//                if (instrTail instanceof AsmMove  && ((AsmMove) instrTail).getSrc() instanceof AsmReg && ((AsmMove) instrTail).getDst() instanceof  AsmReg) {
-//                    if (((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(10) &&
-//                            ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(5) &&
-//                            ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsFloat.get(10) &&
-//                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsInt.get(10) &&
-//                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsInt.get(5) &&
-//                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsFloat.get(10)) {
-//                                AsmMove instrMove = (AsmMove) instrTail;
-//                                 live.removeAll(instrMove.regUse);
-//                                HashSet<AsmOperand> union = new HashSet<>();
-//                                    //union.addAll(instrTail.regDef);
-//                                    //union.addAll(instrTail.regUse);
-//                        for (AsmOperand D : instrMove.regDef) {
-//                            if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
-//                                union.add(D);
-//                            }
-//                        }
-//                        for (AsmOperand U : instrMove.regUse) {
-//                            if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) {
-//                                union.add(U);
-//                            }
-//                        }
-//                        if (!union.isEmpty()) {
-//                            for (AsmOperand n : union) {
-//                                if (!moveList.containsKey(n)) {
-//                                    moveList.put(n, new HashSet<>());
-//                                }
-//                                moveList.get(n).add(instrMove);
-//                            }
-//                            worklistMoves.add(instrMove);
-//                        }
-//                    }
-//                }
+                if (instrTail instanceof AsmMove  && ((AsmMove) instrTail).getSrc() instanceof AsmReg && ((AsmMove) instrTail).getDst() instanceof  AsmReg) {
+                    if (((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(10) &&
+                            ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(5) &&
+                            ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsFloat.get(10) &&
+                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsInt.get(10) &&
+                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsInt.get(5) &&
+                            ((AsmMove) instrTail).getDst() != RegGeter.AllRegsFloat.get(10)) {
+                                AsmMove instrMove = (AsmMove) instrTail;
+                                 live.removeAll(instrMove.regUse);
+                                HashSet<AsmOperand> union = new HashSet<>();
+                                    //union.addAll(instrTail.regDef);
+                                    //union.addAll(instrTail.regUse);
+                        for (AsmOperand D : instrMove.regDef) {
+                            if (CanBeAddToRun(D) || (D instanceof AsmPhyReg && FI == 0) || (D instanceof AsmFPhyReg && FI == 1)) {
+                                union.add(D);
+                            }
+                        }
+                        for (AsmOperand U : instrMove.regUse) {
+                            if (CanBeAddToRun(U) || (U instanceof AsmPhyReg && FI == 0) || (U instanceof AsmFPhyReg && FI == 1)) {
+                                union.add(U);
+                            }
+                        }
+                        if (!union.isEmpty()) {
+                            for (AsmOperand n : union) {
+                                if (!moveList.containsKey(n)) {
+                                    moveList.put(n, new HashSet<>());
+                                }
+                                moveList.get(n).add(instrMove);
+                            }
+                            worklistMoves.add(instrMove);
+                        }
+                    }
+                }
                 if (instrTail instanceof AsmJ) {
                     int i = 0;
                 }
@@ -957,25 +957,23 @@ public class RegAlloc {
     }
 
     private void simplify() {
-        AsmOperand n = simplifyWorklist.iterator().next();
-//        AsmOperand n ;
-//        if (simplifyWorklist.size() > 20) {
-//             n = simplifyWorklist.iterator().next();
-//        } else {
-//            int small = -1;
-//             n = null;
-//            for (AsmOperand one: simplifyWorklist) {
-//                if (small == -1) {
-//                    n = one;
-//                    small = loopDepths.get(one);
-//                } else {
-//                    if ((loopDepths.get(one) * 100 + 5000 ) * (degree.get(n) * 10 + 100) < (loopDepths.get(n) * 100 + 5000) * (degree.get(one) * 10 + 100)) {
-//                        n = one;
-//                        small = loopDepths.get(one);
-//                    }
-//                }
-//            }
-//        }
+        //AsmOperand n = simplifyWorklist.iterator().next();
+        AsmOperand n ;
+
+            double small = -1;
+             n = null;
+            for (AsmOperand one: simplifyWorklist) {
+                if (small == -1) {
+                    n = one;
+                    small = (double) loopDepths.get(one) / degree.getOrDefault(one, 1);
+                } else {
+                    if ((double)loopDepths.get(one) / (degree.getOrDefault(one, 1)) < small) {
+                        n = one;
+                        small = (double)loopDepths.get(one) / (degree.getOrDefault(one, 1));
+                    }
+                }
+            }
+
         simplifyWorklist.remove(n);
         selectStack.push(n);
         for (AsmOperand m : Adjacent(n)) {
@@ -1099,20 +1097,22 @@ public class RegAlloc {
     }
 
     private void SelectSpill() {
-        AsmOperand m = spillWorkList.iterator().next();//目前是随机选，后面再换/todo/
-//        int small = -1;
-//        AsmOperand m = null;
-//        for (AsmOperand one: spillWorkList) {
-//            if (small == -1) {
-//                m = one;
-//                small = loopDepths.get(one);
-//            } else {
-//                if (loopDepths.get(one) * (degree.get(one) + 1 ) < loopDepths.get(m)  * (degree.get(m) + 1)) {
-//                    m = one;
-//                    small = loopDepths.get(one);
-//                }
-//            }
-//        }
+        //AsmOperand m = spillWorkList.iterator().next();//目前是随机选，后面再换/todo/
+
+
+        double small = -1;
+        AsmOperand m = null;
+        for (AsmOperand one: spillWorkList) {
+            if (small == -1) {
+                m = one;
+                small = (double) loopDepths.get(one) / degree.getOrDefault(one, 1);
+            } else {
+                if ((double)loopDepths.get(one) / (degree.getOrDefault(one, 1)) < small) {
+                    m = one;
+                    small = (double)loopDepths.get(one) / (degree.getOrDefault(one, 1));
+                }
+            }
+        }
         spillWorkList.remove(m);
         simplifyWorklist.add(m);
         FreezeMoves(m);
