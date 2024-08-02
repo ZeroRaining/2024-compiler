@@ -62,7 +62,7 @@ public class Compiler {
             SimplifyBranch.execute(functions);
 
             //合并删减块
-            MergeBlock.execute(functions);
+            MergeBlock.execute(functions, false);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
 
@@ -81,11 +81,11 @@ public class Compiler {
             OIS.execute(functions);
             GVN.execute(functions);
             SimplifyBranch.execute(functions);
-            MergeBlock.execute(functions);
+            MergeBlock.execute(functions, true);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
         }
-        Function.blkLabelReorder();
+//        Function.blkLabelReorder();
 
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();

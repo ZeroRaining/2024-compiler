@@ -10,9 +10,9 @@ import frontend.ir.structure.Function;
 import java.util.ArrayList;
 
 public class MergeBlock {
-    public static void execute(ArrayList<Function> functions) {
+    public static void execute(ArrayList<Function> functions, boolean isAgressive) {
         for (Function function : functions) {
-            merge(function);
+            merge(function, isAgressive);
         }
         RemoveUseLessPhi.execute(functions);
     }
@@ -25,19 +25,20 @@ public class MergeBlock {
         if (((JumpInstr) instr).getTarget().getPres().size() != 1) {
             return false;
         }
-        if (instr.getParentBB().isEntering() || ((JumpInstr) instr).getTarget().isEntering()) {
-            return false;
-        }
         return true;
     }
 
-    private static void merge(Function function) {
+    private static void merge(Function function, boolean isAgressive) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead().getNext();
         //合并不要的块
         while (blk != null) {
             Instruction last = blk.getEndInstr();
 
             if (check4merge(last)) {
+                if (!isAgressive && check4entering(last)) {
+                    blk = (BasicBlock) blk.getNext();
+                    continue;
+                }
                 last.removeFromList();
                 //效率太慢
                 BasicBlock nextBlk = ((JumpInstr) last).getTarget();
@@ -66,13 +67,7 @@ public class MergeBlock {
 
 
 
-    private static boolean check4remove(Instruction next) {
-        if (next.getParentBB().getInstructions().getSize() != 1) {
-            return false;
-        }
-        if (next.getParentBB().getPres().size() != 1) {
-            return false;
-        }
-        return true;
+    private static boolean check4entering(Instruction instr) {
+        return instr.getParentBB().isEntering() || ((JumpInstr) instr).getTarget().isEntering();
     }
 }
