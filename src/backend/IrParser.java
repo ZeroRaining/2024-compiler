@@ -1098,11 +1098,62 @@ public class IrParser {
             } else {
                 AsmOperand index = parseOperand(indexList.get(i), 0, f, bb);
                 AsmOperand tmp = genTmpReg(f);
-                AsmMul asmMul = new AsmMul(tmp, index, parseConstIntOperand(sizeList.get(i) * 4, 0, f, bb));
-                asmBlock.addInstrTail(asmMul);
+                GEPMul(tmp, index, new AsmImm32(sizeList.get(i) * 4), bb, f);
                 AsmAdd asmAdd = new AsmAdd(result, result, tmp);
                 asmBlock.addInstrTail(asmAdd);
             }
+        }
+    }
+
+    private void GEPMul(AsmOperand dst, AsmOperand src1, AsmOperand src2, BasicBlock bb, Function f) {
+        AsmBlock asmBlock = blockMap.get(bb);
+        int value = ((AsmImm32) src2).getValue();
+        if (value == 1) {
+            AsmMove asmMove = new AsmMove(dst, src1);
+            asmBlock.addInstrTail(asmMove);
+        } else if (value == 0) {
+            AsmMove asmMove = new AsmMove(dst, ZERO);
+            asmBlock.addInstrTail(asmMove);
+        } else if (value == -1) {
+            AsmSub asmSub = new AsmSub(dst, ZERO, src1);
+            asmSub.isWord = true;
+            asmBlock.addInstrTail(asmSub);
+        } else if (isTwoTimes(Math.abs(value))) {
+            int absValue = Math.abs(value);
+            int shift = -1;
+            while (absValue != 0) {
+                absValue >>= 1;
+                shift++;
+            }
+            AsmSll asmSll = new AsmSll(dst, src1, new AsmImm12(shift));
+            asmBlock.addInstrTail(asmSll);
+            if (value < 0) {
+                AsmSub asmSub = new AsmSub(dst, ZERO, dst);
+                asmSub.isWord = true;
+                asmBlock.addInstrTail(asmSub);
+            }
+        } else if (isTwoTimes(Math.abs(value) + 1)) {
+            int absValue = Math.abs(value) + 1;
+            int shift = -1;
+            while (absValue != 0) {
+                absValue >>= 1;
+                shift++;
+            }
+            AsmOperand tmpReg = genTmpReg(f);
+            AsmSll asmSll = new AsmSll(tmpReg, src1, new AsmImm12(shift));
+            asmBlock.addInstrTail(asmSll);
+            AsmSub asmSub1 = new AsmSub(dst, tmpReg, src1);
+            asmSub1.isWord = true;
+            asmBlock.addInstrTail(asmSub1);
+            if (value < 0) {
+                AsmSub asmSub2 = new AsmSub(dst, ZERO, dst);
+                asmSub2.isWord = true;
+                asmBlock.addInstrTail(asmSub2);
+            }
+        } else {
+            AsmMul asmMul = new AsmMul(dst, src1, parseConstIntOperand(value, 0, f, bb));
+            asmMul.isWord = true;
+            asmBlock.addInstrTail(asmMul);
         }
     }
 
