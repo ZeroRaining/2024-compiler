@@ -54,7 +54,7 @@ public class LCSSA {
                                 prts.add(pre);
                             }
                             PhiInstr phi = new PhiInstr(phiCnt++, instr.getDataType(), phiValues, prts);
-                            System.out.println(phi.print() + " " + phiCnt);
+//                            System.out.println(phi.print() + " " + phiCnt);
                             exitBlk.addInstrToHead(phi);
                             exit2phi.put(exitBlk, phi);
                         }
@@ -105,7 +105,7 @@ public class LCSSA {
             prtBlks.add(pre);
         }
         phi = new PhiInstr(phiCnt++, values.get(0).getDataType(), values, prtBlks);
-        System.out.println(phi.print() + " " + phiCnt);
+//        System.out.println(phi.print() + " " + phiCnt);
         userBlk.addInstrToHead(phi);
         exit2phi.put(userBlk, phi);
         return phi;

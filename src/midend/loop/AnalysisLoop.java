@@ -86,7 +86,7 @@ public class AnalysisLoop {
                     loop.addLatchBlk(pre);
                 }
             }
-            System.out.println(loop.getHeader() + " " + loop.getLatchs());
+//            System.out.println(loop.getHeader() + " " + loop.getLatchs());
         }
         for (Loop loop : allLoop) {
             for (BasicBlock blk : loop.getHeader().getPres()) {
@@ -217,7 +217,7 @@ public class AnalysisLoop {
         if (!loop.isSimpleLoop()) {
             return;
         }
-        loop.LoopPrint();
+//        loop.LoopPrint();
         {
         /*blk_0: anon: entering
             br label %blk_2
