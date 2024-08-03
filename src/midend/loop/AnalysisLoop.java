@@ -6,6 +6,7 @@ import frontend.ir.instr.binop.BinaryOperation;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.terminator.BranchInstr;
+import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import midend.SSA.DFG;
@@ -217,7 +218,8 @@ public class AnalysisLoop {
         if (!loop.isSimpleLoop()) {
             return;
         }
-//        loop.LoopPrint();
+        //TODO：短路求值？？
+        loop.LoopPrint();
         {
         /*blk_0: anon: entering
             br label %blk_2
@@ -237,6 +239,9 @@ public class AnalysisLoop {
 
         PhiInstr itVar;
         Value itEnd;
+        if (header.getEndInstr() instanceof JumpInstr) {
+            throw new RuntimeException(loop + " instr: " + header.getEndInstr().print());
+        }
         BranchInstr br = (BranchInstr) header.getEndInstr();
         Value cond = br.getCond();
 

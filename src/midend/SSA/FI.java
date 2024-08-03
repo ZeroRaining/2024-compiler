@@ -1,5 +1,6 @@
 package midend.SSA;
 
+import Utils.CustomList;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
@@ -71,10 +72,24 @@ public class FI {
                         newBB.insertAfter(basicBlock);
                     }
                     
-                    JumpInstr prev2func = new JumpInstr(bbList.get(bbList.size() - 1));
+//                    JumpInstr prev2func = new JumpInstr(bbList.get(bbList.size() - 1));
                     basicBlock.setRet(false);
-                    basicBlock.addInstruction(prev2func);
-                    
+                    BasicBlock firstBlkInFunc = bbList.get(bbList.size() - 1);
+                    bbList.remove(firstBlkInFunc);
+                    Instruction insInFirstBlk = (Instruction) firstBlkInFunc.getInstructions().getHead();
+                    while (insInFirstBlk != null) {
+                        basicBlock.addInstruction(insInFirstBlk);
+                        insInFirstBlk = (Instruction) insInFirstBlk.getNext();
+                    }
+                    HashMap<Value, Value> old22new = new HashMap<>();
+                    old22new.put(firstBlkInFunc, basicBlock);
+                    for (BasicBlock block : bbList) {
+                        CustomList.Node node = block.getInstructions().getHead();
+                        while (node instanceof PhiInstr) {
+                            ((PhiInstr) node).renewBlocks(old22new);
+                            node = node.getNext();
+                        }
+                    }
                     BasicBlock funcLastBB = bbList.get(0);
                     ReturnInstr retIns = (ReturnInstr) funcLastBB.getEndInstr();
                     if (retIns.getDataType() != DataType.VOID) {

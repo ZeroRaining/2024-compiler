@@ -61,6 +61,9 @@ public class Compiler {
             DeadCodeRemove.execute(functions);
             OIS.execute(functions);
             GVN.execute(functions);
+            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
+            program.printIR(irWriter);
+            irWriter.close();
             //循环优化1
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
