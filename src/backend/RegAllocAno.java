@@ -750,7 +750,7 @@ public class RegAllocAno {
                     for (int i = 0; i < instrHead.regDef.size(); i++) {
                         if (instrHead.regDef.get(i) instanceof AsmFVirReg) {
                             //int nowColor = color.get(instrHead.regDef.get(i));
-                            int nowColor = ((AsmFVirReg) instrHead.regUse.get(i)).color;
+                            int nowColor = ((AsmFVirReg) instrHead.regDef.get(i)).color;
                             if (nowColor != -1) {
                                 instrHead.changeDstReg(i, instrHead.regDef.get(i), RegGeter.AllRegsFloat.get(nowColor - 32));
                             }
