@@ -13,6 +13,7 @@ import frontend.ir.instr.otherop.PCInstr;
 import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
+import midend.loop.BlockType;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -27,6 +28,7 @@ public class BasicBlock extends Value {
     private int domDepth;
     private boolean isRet;
     private boolean isEntering;
+    private BlockType blockType;
     private HashSet<BasicBlock> pres;
     private HashSet<BasicBlock> sucs;
     private HashSet<BasicBlock> doms;
@@ -49,6 +51,15 @@ public class BasicBlock extends Value {
         DF = new HashSet<>();
         this.labelCnt = labelCnt;
         newTrue = newFalse = null;
+        blockType = BlockType.OUTOFLOOP;
+    }
+
+    public BlockType getBlockType() {
+        return blockType;
+    }
+
+    public void setBlockType(BlockType blockType) {
+        this.blockType = blockType;
     }
 
     public void setNewTrue(BasicBlock newTrue) {
@@ -299,6 +310,23 @@ public class BasicBlock extends Value {
         return newBlk;
     }
 
+    public BasicBlock clone4while(BasicBlock newBlk, Procedure procedure) {
+        HashMap<Value, Value> old2new = new HashMap<>();
+        Instruction instr = (Instruction) this.getInstructions().getHead();
+        while (instr != null) {
+            Instruction newIns = instr.cloneShell(procedure);
+            for (Value value : instr.getUseValueList()) {
+                Value newValue = old2new.get(value);
+                if (newValue != null) {
+                    newIns.modifyUse(value, newValue);
+                }
+            }
+            newBlk.addInstruction(newIns);
+            old2new.put(instr, newIns);
+            instr = (Instruction) instr.getNext();
+        }
+        return newBlk;
+    }
     public void setiDomor(BasicBlock iDomor) {
         this.iDomor = iDomor;
     }
