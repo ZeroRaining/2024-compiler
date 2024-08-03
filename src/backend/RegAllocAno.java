@@ -982,7 +982,13 @@ public class RegAllocAno {
         AsmBlock blockHead = (AsmBlock) function.getBlocks().getHead();
         while (blockHead != null) {
             AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
-            HashSet<AsmReg> live = new HashSet<>(blockHead.LiveOut);
+            //HashSet<AsmReg> live = new HashSet<>(blockHead.LiveOut);
+            HashSet<AsmReg> live = new HashSet<>();
+            for (AsmReg one : blockHead.LiveOut) {
+                if (RegCanBeAddToRun(one)) {
+                    live.add(one);
+                }
+            }
             while (instrTail != null) {
                 if (instrTail instanceof AsmMove  && ((AsmMove) instrTail).getSrc() instanceof AsmReg && ((AsmMove) instrTail).getDst() instanceof  AsmReg && RegCanBeAddToRun(((AsmMove) instrTail).getDst()) && RegCanBeAddToRun(((AsmMove) instrTail).getSrc())) {
                     if (((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(10) &&
@@ -1053,7 +1059,7 @@ public class RegAllocAno {
                     if (procedure == 0) {
                         N = 11;
                     } else {
-                        N = 24;
+                        N = 20;
                     }
                 } else {
                     if (procedure == 0) {
@@ -1077,7 +1083,7 @@ public class RegAllocAno {
                     if (procedure == 0) {
                         N = 11;
                     } else {
-                        N = 24;
+                        N = 20;
                     }
                 } else {
                     if (procedure == 0) {
@@ -1170,7 +1176,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 24;
+                N = 20;
             }
         } else {
             if (procedure == 0) {
@@ -1214,7 +1220,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 24;
+                N = 20;
             }
         } else {
             if (procedure == 0) {
@@ -1498,7 +1504,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 24;
+                N = 20;
             }
         } else {
             if (procedure == 0) {
@@ -1522,7 +1528,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 24;
+                N = 20;
             }
         } else {
             if (procedure == 0) {
@@ -1544,7 +1550,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 24;
+                N = 20;
             }
         } else {
             if (procedure == 0) {
@@ -1577,7 +1583,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 24;
+                N = 20;
             }
         } else {
             if (procedure == 0) {
