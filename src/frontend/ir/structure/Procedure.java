@@ -179,7 +179,7 @@ public class Procedure {
         } else if (item instanceof Ast.Break) {
             dealBreak();
         } else if (item instanceof Ast.WhileStmt) {
-            doWhile((Ast.WhileStmt)item, returnType, symTab);
+            ifWhile((Ast.WhileStmt)item, returnType, symTab);
         } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
@@ -211,6 +211,45 @@ public class Procedure {
         curBlock.addInstruction(new JumpInstr(whileEnds.peek()));
         curBlock = new BasicBlock(curDepth, curBlkIndex++);
         basicBlocks.addToTail(curBlock);
+    }
+    //if-while => ifCond-whileCond-whileBody-whileEnd
+    private void ifWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
+        BasicBlock cond1Blk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock bodyBlk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock endBlk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock cond2Blk;
+        curBlock.addInstruction(new JumpInstr(cond1Blk));//要为condBlk新建一个块吗
+
+        basicBlocks.addToTail(cond1Blk);
+        curBlock = cond1Blk;
+        Value cond = calculateLOr(item.cond, bodyBlk, endBlk, symTab);
+
+        cond2Blk = cond1Blk.clone4while(this);
+
+        cond2Blk.addInstruction(new BranchInstr(cond, cond2Blk, endBlk));
+
+        Instruction last = cond2Blk.getEndInstr();
+        cond2Blk.addInstruction(new BranchInstr(last, bodyBlk, endBlk));
+        basicBlocks.addToTail(cond2Blk);
+
+        //fixme：if和while同时创建一个新end块，会导致没有语句
+        basicBlocks.addToTail(bodyBlk);
+        curBlock = bodyBlk;
+        //todo: break & continue
+        whileBegins.push(cond2Blk);
+        whileEnds.push(endBlk);
+
+        bodyBlk.setLoopDepth(++curDepth);
+        dealStmt(item.body, returnType, new SymTab(symTab));
+        cond2Blk.setLoopDepth(curDepth);
+        bodyBlk.setLoopDepth(--curDepth);
+        whileBegins.pop();
+        whileEnds.pop();
+
+        curBlock.addInstruction(new JumpInstr(cond2Blk));
+
+        basicBlocks.addToTail(endBlk);
+        curBlock = endBlk;
     }
 
     private void doWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {

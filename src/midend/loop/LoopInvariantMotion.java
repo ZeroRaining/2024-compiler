@@ -98,8 +98,10 @@ public class LoopInvariantMotion {
             return false;
         }
         if (instr instanceof CallInstr) {
-            //TODO: no side effect should be lift;
-            return false;
+            //no side effect should be lift;
+            if (!((CallInstr) instr).checkNoSideEffect()) {
+                return false;
+            }
         }
         if (instr instanceof Terminator) {
             return false;
