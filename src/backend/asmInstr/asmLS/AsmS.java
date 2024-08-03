@@ -29,6 +29,14 @@ public class AsmS extends AsmInstr {
             this.addr = src;
         }
     }
+
+    public AsmOperand getOffset() {
+        return offset;
+    }
+
+    public AsmOperand getSrc() {
+        return src;
+    }
     public void allocNewSize(int newAllocSize) {
         ((AsmImm12)offset).addNewAllocSize(newAllocSize);
     }

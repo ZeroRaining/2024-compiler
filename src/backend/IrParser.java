@@ -1,5 +1,6 @@
 package backend;
 
+import backend.asmInstr.AsmInstr;
 import backend.asmInstr.asmBr.AsmBnez;
 import backend.asmInstr.asmBr.AsmJ;
 import backend.asmInstr.asmBinary.*;
@@ -139,9 +140,11 @@ public class IrParser {
         int pushArgSize = 0;
         for (Node bb : f.getBasicBlocks()) {
             for (Node instr : ((BasicBlock) bb).getInstructions()) {
-                //TODO:尾递归
-                if (instr instanceof CallInstr) {
-                    List<Value> rParams = ((CallInstr) instr).getRParams();
+                if (instr instanceof CallInstr callInstr) {
+                    if (f.isTailRecursive() && callInstr.getFuncDef().getName().equals(f.getName())) {
+                        continue;
+                    }
+                    List<Value> rParams = callInstr.getRParams();
                     int size = rParams.size();
                     for (int i = 8; i < size; i++) {
                         if ((rParams.get(i)).getPointerLevel() != 0) {
@@ -190,65 +193,62 @@ public class IrParser {
             AsmMove asmMove = new AsmMove(asmOperand, RegGeter.AregsFloat.get(i));
             blockMap.get(bb).addInstrHead(asmMove);
         }
-//        AsmMove asmMove = new AsmMove(, new AsmImm32(offset));
-//        blockMap.get(bb).addInstrHead()
+
         int offset = asmFunction.getWholeSize();
-        for (int i = 8; i < iargs.size(); i++) {
-            Value arg = iargs.get(i);
-            AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
-            if (arg.getPointerLevel() != 0) {
-//                if (offset >= -2048 && offset <= 2047) {
-                AsmLd asmLd = new AsmLd(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
-                blockMap.get(bb).addInstrHead(asmLd);
-                offset += 8;
-//                } else {
-//                    AsmOperand tmpMove = genTmpReg(f);
-//                    AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
-//                    AsmOperand tmpAdd = genTmpReg(f);
-//                    AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
-//                    AsmLd asmLd = new AsmLd(asmOperand, tmpAdd, new AsmImm12(0), 1);
-//                    blockMap.get(bb).addInstrHead(asmLd);
-//                    blockMap.get(bb).addInstrHead(asmAdd);
-//                    blockMap.get(bb).addInstrHead(asmMove);
-//                    offset += 8;
-//                }
-            } else {
-//                if (offset >= -2048 && offset <= 2047) {
-                AsmLw asmLw = new AsmLw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
-                blockMap.get(bb).addInstrHead(asmLw);
+        if (iargs.size() > 8 || fargs.size() > 8) {
+            for (int i = 8; i < iargs.size(); i++) {
+                Value arg = iargs.get(i);
+                AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
+                if (arg.getPointerLevel() != 0) {
+                    AsmLd asmLd = new AsmLd(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
+                    blockMap.get(bb).addInstrHead(asmLd);
+                    offset += 8;
+                } else {
+                    AsmLw asmLw = new AsmLw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
+                    blockMap.get(bb).addInstrHead(asmLw);
+                    offset += 4;
+                }
+            }
+            for (int i = 8; i < fargs.size(); i++) {
+                Value arg = fargs.get(i);
+                AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
+                AsmFlw asmFlw = new AsmFlw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
+                blockMap.get(bb).addInstrHead(asmFlw);
                 offset += 4;
-//                } else {
-//                    AsmOperand tmpMove = genTmpReg(f);
-//                    AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
-//                    AsmOperand tmpAdd = genTmpReg(f);
-//                    AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
-//                    AsmLw asmLw = new AsmLw(asmOperand, tmpAdd, new AsmImm12(0));
-//                    blockMap.get(bb).addInstrHead(asmLw);
-//                    blockMap.get(bb).addInstrHead(asmAdd);
-//                    blockMap.get(bb).addInstrHead(asmMove);
-//                    offset += 4;
-//                }
             }
         }
-        for (int i = 8; i < fargs.size(); i++) {
-            Value arg = fargs.get(i);
-            AsmOperand asmOperand = parseOperand(arg, 0, f, bb);
-//            if (offset >= -2048 && offset <= 2047) {
-            AsmFlw asmFlw = new AsmFlw(asmOperand, RegGeter.SP, new AsmImm32(offset), 1);
-            blockMap.get(bb).addInstrHead(asmFlw);
-            offset += 4;
-//            } else {
-//                AsmOperand tmpMove = genTmpReg(f);
-//                AsmMove asmMove = new AsmMove(tmpMove, new AsmImm32(offset));
-//                AsmOperand tmpAdd = genTmpReg(f);
-//                AsmAdd asmAdd = new AsmAdd(tmpAdd, RegGeter.SP, tmpMove);
-//                AsmFlw asmFlw = new AsmFlw(asmOperand, tmpAdd, new AsmImm12(0));
-//                blockMap.get(bb).addInstrHead(asmFlw);
-//                blockMap.get(bb).addInstrHead(asmAdd);
-//                blockMap.get(bb).addInstrHead(asmMove);
-//                offset += 4;
-//            }
+        if (f.isTailRecursive()) {
+            HashSet<AsmCall> callsToBeRemoved = new HashSet<>();
+            AsmBlock bstart = new AsmBlock(f.getName() + "_bstart", 0);
+            AsmBlock formerStart = (AsmBlock) (asmFunction.getHead());
+            bstart.addInstrTail(new AsmJ(formerStart));
+            asmFunction.addBlockToHead(bstart);
+            for (Node asmBlock : asmFunction.getBlocks()) {
+                boolean flag = false;
+                for (Node instr : ((AsmBlock) asmBlock).getInstrs()) {
+                    if (instr instanceof AsmCall call) {
+                        if (call.getFuncName().equals(f.getName())) {
+                            AsmJ asmJ = new AsmJ(formerStart, call.IntArgRegNum, call.floatArgRegNum);
+                            asmJ.insertBefore(call);
+                            callsToBeRemoved.add(call);
+                            flag = true;
+                            continue;
+                        }
+                        if (flag) {
+                            callsToBeRemoved.add(call);
+                        }
+                    }
+                }
+                if (!callsToBeRemoved.isEmpty()) {
+                    for (AsmCall call : callsToBeRemoved) {
+                        call.removeFromList();
+                    }
+                }
+                callsToBeRemoved.clear();
+            }
         }
+
+
 //        offset = asmFunction.getWholeSize() - 8;
 //        if (asmFunction.getRaSize() != 0) {
 //            if (offset >= -2048 && offset <= 2047) {
@@ -938,14 +938,36 @@ public class IrParser {
             AsmMove asmMove = new AsmMove(RegGeter.AregsFloat.get(i), argReg);
             asmBlock.addInstrTail(asmMove);
         }
-        if (false/*TODO:尾递归*/) {
-            assert true;
+        if (instr.getFuncDef().getName().equals(f.getName()) && f.isTailRecursive()) {
+            int offset = asmFunction.getWholeSize();
+            for (int i = 8; i < intArgs.size(); i++) {
+                Value arg = intArgs.get(i);
+                AsmOperand argReg = parseOperand(arg, 0, f, bb);
+                if (arg.getPointerLevel() == 0) {
+                    AsmSw asmSw = new AsmSw(argReg, RegGeter.SP, new AsmImm32(offset), 1);
+                    asmBlock.addInstrTail(asmSw);
+                    offset += 4;
+                } else {
+                    AsmSd asmSd = new AsmSd(argReg, RegGeter.SP, new AsmImm32(offset), 1);
+                    asmBlock.addInstrTail(asmSd);
+                    offset += 8;
+                }
+            }
+            for (int i = 8; i < floatArgs.size(); i++) {
+                AsmOperand argReg = parseOperand(floatArgs.get(i), 12, f, bb);
+                if (argReg instanceof AsmImm12) {
+                    AsmOperand tmpReg = genFloatTmpReg(f);
+                    AsmMove asmMove = new AsmMove(tmpReg, argReg);
+                    asmBlock.addInstrTail(asmMove);
+                    argReg = tmpReg;
+                }
+                AsmFsw asmFsw = new AsmFsw(argReg, RegGeter.SP, new AsmImm32(offset), 1);
+                asmBlock.addInstrTail(asmFsw);
+                offset += 4;
+            }
         } else {
             int offset = 0;
             for (int i = 8; i < intArgs.size(); i++) {
-//                if (offset == 236) {
-//                    System.out.println("debug");
-//                }
                 Value arg = intArgs.get(i);
                 AsmOperand argReg = parseOperand(arg, 0, f, bb);
                 if (arg.getPointerLevel() == 0) {

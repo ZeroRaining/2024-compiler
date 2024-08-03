@@ -37,7 +37,7 @@ public class Compiler {
         Ast ast = new Parser(tokenList).parseAst();
         // 生成 IR
         Program program = new Program(ast);
-        
+
         if (arg.getOptLevel() == 1) {
             FI.execute(program.getFunctionList());
             program.removeUselessFunc();
@@ -65,19 +65,19 @@ public class Compiler {
             MergeBlock.execute(functions, false);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
-            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
-            program.printIR(irWriter);
-            irWriter.close();
+//            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
+//            program.printIR(irWriter);
+//            irWriter.close();
             //循环分析
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
-            LCSSA.execute(functions);
+            //LCSSA.execute(functions);
             LoopInvariantMotion.execute(functions);
 
             //BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
-            irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
-            program.printIR(irWriter);
-            irWriter.close();
+//            irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
+//            program.printIR(irWriter);
+//            irWriter.close();
             //second
             DFG.execute(functions);
             DeadCodeRemove.execute(functions);
@@ -104,6 +104,7 @@ public class Compiler {
         }
         
         if (arg.getOptLevel() == 1 && !arg.toSkipBackEnd()) {
+            DetectTailRecursive.detect(functions);
             RemovePhi.phi2move(functions);
         }
         

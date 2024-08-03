@@ -74,7 +74,7 @@ public class LoopInvariantMotion {
                 loop.getPrtLoop().addBlk(tmpBlk);
             }
         }
-        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth() + " loopExit: " + loop.getExits());
+//        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth() + " loopExit: " + loop.getExits());
     }
 
     private static void addTmpBlk(BasicBlock entering, BasicBlock tmpBlk, BasicBlock next) {
@@ -98,8 +98,10 @@ public class LoopInvariantMotion {
             return false;
         }
         if (instr instanceof CallInstr) {
-            //TODO: no side effect should be lift;
-            return false;
+            //no side effect should be lift;
+            if (!((CallInstr) instr).checkNoSideEffect()) {
+                return false;
+            }
         }
         if (instr instanceof Terminator) {
             return false;
