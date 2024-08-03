@@ -140,6 +140,7 @@ public class LoopUnroll {
 //            }
 //        }
 
+        old2new = new HashMap<>(phiInHead);
         Group<BasicBlock, BasicBlock> oneLoop = new Group<>(headerNext, latch);
         for (int i = 0; i < times - 1; i++) {
             oneLoop = cloneBlks(oneLoop, procedure, begin2end, phiInHead);
@@ -160,11 +161,11 @@ public class LoopUnroll {
         }
 
     }
+    private static HashMap<Value, Value> old2new;
 
     private static Group<BasicBlock, BasicBlock> cloneBlks(Group<BasicBlock, BasicBlock> oneLoop, Procedure procedure,
                                                            HashMap<Value, Value> begin2end, HashMap<Value, Value> phiInHead) {
         ArrayList<BasicBlock> newBlks = new ArrayList<>();
-        HashMap<Value, Value> old2new = new HashMap<>(phiInHead);
 
         BasicBlock curBB = oneLoop.getFirst();
         BasicBlock stop = (BasicBlock) oneLoop.getSecond().getNext();
