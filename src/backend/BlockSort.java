@@ -1,10 +1,7 @@
 package backend;
 
 import backend.asmInstr.asmBr.AsmJ;
-import backend.itemStructure.AsmBlock;
-import backend.itemStructure.AsmFunction;
-import backend.itemStructure.AsmModule;
-import backend.itemStructure.AsmOperand;
+import backend.itemStructure.*;
 import frontend.ir.Value;
 import frontend.syntax.Ast;
 
@@ -26,7 +23,14 @@ public class BlockSort {
         return instance;
     }
     public void run(AsmModule module) {
-        AsmFunction function = module.
+
+    }
+    HashMap<Group, Double> BlocksEdge = new HashMap<>();
+    private void initial() {
+        BlocksEdge.clear();
+    }
+    private void CollectionInfo(AsmFunction function) {
+
     }
     private void selectMergeBlock(AsmFunction function) {
         boolean changed = true;

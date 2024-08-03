@@ -1147,6 +1147,11 @@ public class RegAlloc {
                 spilledNodes.add(n);
             } else {
                 coloredNodes.add(n);
+//                ArrayList<Integer> okCaller = new ArrayList<>();
+//                ArrayList<Integer> okCallee = new ArrayList<>();
+//                for (int i : okColors) {
+//                    if ()
+//                }
                 int c = okColors.iterator().next();
                 color.put(n, c);
             }
