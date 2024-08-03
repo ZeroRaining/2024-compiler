@@ -19,6 +19,7 @@ import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class LoopUnroll {
     private static int codeSize = 3000;
@@ -30,23 +31,42 @@ public class LoopUnroll {
     }
 
     private static void SimpleLoopUnroll(Function function) {
-        for (Loop loop : function.getOuterLoop()) {
-            dfs4LoopUnroll(loop);
+        Iterator<Loop> loopIterator = function.getOuterLoop().iterator();
+        while (loopIterator.hasNext()) {
+            Loop loop = loopIterator.next();
+            if (dfs4LoopUnroll(loop)) {
+                loopIterator.remove();
+                function.getAllLoop().remove(loop);
+                function.getHeader2loop().remove(loop.getHeader());
+                //remove from outLoop in function
+            }
         }
+//        for (int i = 0; i)
     }
 
-    private static void dfs4LoopUnroll(Loop loop) {
-        for (Loop inner : loop.getInnerLoops()) {
-            dfs4LoopUnroll(inner);
+    private static boolean dfs4LoopUnroll(Loop loop) {
+        Iterator<Loop> loopIterator = loop.getInnerLoops().iterator();
+        Function function = ((Procedure) loop.getHeader().getParent().getOwner()).getParentFunc();
+        while (loopIterator.hasNext()) {
+            Loop inner = loopIterator.next();
+            if (dfs4LoopUnroll(inner)) {
+                loopIterator.remove();
+                function.getAllLoop().remove(loop);
+                function.getHeader2loop().remove(loop.getHeader());
+                //remove from outLoop in function
+                for (Loop inInner : inner.getInnerLoops()) {
+                    inner.setPrtLoop(loop);
+                }
+            }
         }
         if (!loop.hasIndVar()) {
-            return;
+            return false;
         }
         Value itInit = loop.getBegin();
         Value itStep = loop.getStep();
         Value itEnd = loop.getEnd();
         if (!(itInit instanceof ConstValue) || !(itStep instanceof ConstValue) || !(itEnd instanceof ConstValue)) {
-            return;
+            return false;
         }
         BinaryOperation itAlu = loop.getAlu();
         Cmp condInstr = loop.getCond();
@@ -63,9 +83,10 @@ public class LoopUnroll {
             cnt += blk.getInstructions().getSize();
         }
         if (cnt * times > codeSize) {
-            return;
+            return false;
         }
         Unroll(loop, times);
+        return true;
     }
 
     private static void Unroll(Loop loop, int times) {
@@ -110,19 +131,14 @@ public class LoopUnroll {
         //获得dfs顺序？
         //假如有循环不能展开？
         Procedure procedure = (Procedure) header.getParent().getOwner();
-        Function function = procedure.getParentFunc();
-        Loop prtLoop = loop.getPrtLoop();
-        if (prtLoop != null) {
-            prtLoop.getInnerLoops().remove(loop);
-            for (Loop inner : loop.getInnerLoops()) {
-                inner.setPrtLoop(prtLoop);
-            }
-        } else {
-            function.getAllLoop().remove(loop);
-            function.getOuterLoop().remove(loop);
-            function.getHeader2loop().remove(header);
-            //remove from outLoop in function
-        }
+//        Function function = procedure.getParentFunc();
+//        Loop prtLoop = loop.getPrtLoop();
+//        if (prtLoop != null) {
+//            prtLoop.getInnerLoops().remove(loop);
+//            for (Loop inner : loop.getInnerLoops()) {
+//                inner.setPrtLoop(prtLoop);
+//            }
+//        }
 
         Group<BasicBlock, BasicBlock> oneLoop = new Group<>(headerNext, latch);
         for (int i = 0; i < times - 1; i++) {
@@ -136,9 +152,11 @@ public class LoopUnroll {
         while (phi instanceof PhiInstr) {
             for (Value value : ((PhiInstr) phi).getValues()) {
                 if (value instanceof Instruction && ((Instruction) value).getParentBB() == header) {
-                    ((PhiInstr) phi).modifyUse(value, begin2end.get(value));
+                    phi.modifyUse(value, begin2end.get(value));
+                    ((PhiInstr) phi).modifyPrtBlk(header, lastLatch);
                 }
             }
+            phi = (Instruction) phi.getNext();
         }
 
     }
@@ -204,6 +222,9 @@ public class LoopUnroll {
         }
 
         Group<BasicBlock, BasicBlock> newOneLoop = new Group<>(newBlks.get(0), newBlks.get(newBlks.size() - 1));
+
+        oneLoop.getSecond().addInstruction(new JumpInstr(newOneLoop.getFirst()));
+
         return newOneLoop;
     }
 
