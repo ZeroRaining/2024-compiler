@@ -139,7 +139,6 @@ public class RegAllocAno {
                         vreg1.color = color.get(vreg);
                     }
                     //LivenessAnalysis(function);//不确定是否要这样//删了
-
                     addOffSet += callerSave(function);
                     addOffSet += calleeSave(function);
                     allocRealReg(function);
@@ -151,6 +150,39 @@ public class RegAllocAno {
 
             K = 32;
             FI = 0;
+            procedure = 0;
+            while (true) {
+                initial();
+                LivenessAnalysis(function);
+                findLoopDepth(function);
+                build(function);
+                makeWorkList();
+                while (!simplifyWorklist.isEmpty() || !worklistMoves.isEmpty() ||
+                        !freezeWorkList.isEmpty() || !spillWorkList.isEmpty()) {
+                    if (!simplifyWorklist.isEmpty()) {
+                        simplify();
+                    } else if (!worklistMoves.isEmpty()) {
+                        Coalesce();
+                    } else if (!freezeWorkList.isEmpty()) {
+                        Freeze();
+                    } else if (!spillWorkList.isEmpty()) {
+                        SelectSpill();
+                    }
+                }
+                AssignColors();
+                if (spilledNodes.isEmpty()) {
+                    for (AsmOperand vreg : color.keySet()) {
+                        AsmVirReg vreg1 = (AsmVirReg) vreg;
+                        vreg1.color = color.get(vreg);
+                    }
+                    //不确定是否要这样
+                    allocRealReg(function);
+                    break;
+                } else {
+                    addOffSet += RewriteProgram(function);
+                }
+            }
+            procedure = 1;
             while (true) {
                 initial();
                 LivenessAnalysis(function);
@@ -184,7 +216,6 @@ public class RegAllocAno {
                     addOffSet += RewriteProgram(function);
                 }
             }
-
             allocAndRecycleSP(function);
             changeLoads(function);
             changeStores(function);
@@ -681,15 +712,21 @@ public class RegAllocAno {
                 AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
                 while (instrHead != null) {
                     for (int i = 0; i < instrHead.regUse.size(); i++) {
-                        if (instrHead.regUse.get(i) instanceof AsmVirReg) {
-                            int nowColor = color.get(instrHead.regUse.get(i));
-                            instrHead.changeUseReg(i, instrHead.regUse.get(i), RegGeter.AllRegsInt.get(nowColor));
+                        if (instrHead.regUse.get(i) instanceof AsmVirReg ) {
+                            //int nowColor = color.get(instrHead.regUse.get(i));
+                            int nowColor = ((AsmVirReg) instrHead.regUse.get(i)).color;
+                            if (nowColor != -1) {
+                                instrHead.changeUseReg(i, instrHead.regUse.get(i), RegGeter.AllRegsInt.get(nowColor));
+                            }
                         }
                     }
                     for (int i = 0; i < instrHead.regDef.size(); i++) {
                         if (instrHead.regDef.get(i) instanceof AsmVirReg) {
-                            int nowColor = color.get(instrHead.regDef.get(i));
-                            instrHead.changeDstReg(i, instrHead.regDef.get(i), RegGeter.AllRegsInt.get(nowColor));
+                            //int nowColor = color.get(instrHead.regDef.get(i));
+                            int nowColor = ((AsmVirReg) instrHead.regDef.get(i)).color;
+                            if (nowColor != -1) {
+                                instrHead.changeDstReg(i, instrHead.regDef.get(i), RegGeter.AllRegsInt.get(nowColor));
+                            }
                         }
                     }
                     instrHead = (AsmInstr) instrHead.getNext();
@@ -703,14 +740,20 @@ public class RegAllocAno {
                 while (instrHead != null) {
                     for (int i = 0; i < instrHead.regUse.size(); i++) {
                         if (instrHead.regUse.get(i) instanceof AsmFVirReg) {
-                            int nowColor = color.get(instrHead.regUse.get(i));
-                            instrHead.changeUseReg(i, instrHead.regUse.get(i), RegGeter.AllRegsFloat.get(nowColor - 32));
+                            //int nowColor = color.get(instrHead.regUse.get(i));
+                            int nowColor = ((AsmFVirReg) instrHead.regUse.get(i)).color;
+                            if (nowColor != -1) {
+                                instrHead.changeUseReg(i, instrHead.regUse.get(i), RegGeter.AllRegsFloat.get(nowColor - 32));
+                            }
                         }
                     }
                     for (int i = 0; i < instrHead.regDef.size(); i++) {
                         if (instrHead.regDef.get(i) instanceof AsmFVirReg) {
-                            int nowColor = color.get(instrHead.regDef.get(i));
-                            instrHead.changeDstReg(i, instrHead.regDef.get(i), RegGeter.AllRegsFloat.get(nowColor - 32));
+                            //int nowColor = color.get(instrHead.regDef.get(i));
+                            int nowColor = ((AsmFVirReg) instrHead.regUse.get(i)).color;
+                            if (nowColor != -1) {
+                                instrHead.changeDstReg(i, instrHead.regDef.get(i), RegGeter.AllRegsFloat.get(nowColor - 32));
+                            }
                         }
                     }
                     instrHead = (AsmInstr) instrHead.getNext();
@@ -941,7 +984,7 @@ public class RegAllocAno {
             AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
             HashSet<AsmReg> live = new HashSet<>(blockHead.LiveOut);
             while (instrTail != null) {
-                if (instrTail instanceof AsmMove  && ((AsmMove) instrTail).getSrc() instanceof AsmReg && ((AsmMove) instrTail).getDst() instanceof  AsmReg) {
+                if (instrTail instanceof AsmMove  && ((AsmMove) instrTail).getSrc() instanceof AsmReg && ((AsmMove) instrTail).getDst() instanceof  AsmReg && RegCanBeAddToRun(((AsmMove) instrTail).getDst()) && RegCanBeAddToRun(((AsmMove) instrTail).getSrc())) {
                     if (((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(10) &&
                             ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsInt.get(5) &&
                             ((AsmMove) instrTail).getSrc() != RegGeter.AllRegsFloat.get(10) &&
@@ -1003,27 +1046,53 @@ public class RegAllocAno {
     } //todo vir,phy划分
 
     private void makeWorkList() {
-        for (AsmOperand n : all) {
-            int N = 0;
-            if (FI == 0) {
-                if (procedure == 0) {
-                    N = 11;
+        if (procedure == 0) {
+            for (AsmOperand n : global) {
+                int N = 0;
+                if (FI == 0) {
+                    if (procedure == 0) {
+                        N = 11;
+                    } else {
+                        N = 24;
+                    }
                 } else {
-                    N = 24;
+                    if (procedure == 0) {
+                        N = 12;
+                    } else {
+                        N = 31;
+                    }
                 }
-            } else {
-                if (procedure == 0) {
-                    N = 12;
+                if (degree.get(n) >= N) {
+                    spillWorkList.add(n);
+                } else if (MoveRelated(n)) {
+                    freezeWorkList.add(n);
                 } else {
-                    N = 31;
+                    simplifyWorklist.add(n);
                 }
             }
-            if (degree.get(n) >= N) {
-                spillWorkList.add(n);
-            } else if (MoveRelated(n)) {
-                freezeWorkList.add(n);
-            } else {
-                simplifyWorklist.add(n);
+        } else {
+            for (AsmOperand n : temp) {
+                int N = 0;
+                if (FI == 0) {
+                    if (procedure == 0) {
+                        N = 11;
+                    } else {
+                        N = 24;
+                    }
+                } else {
+                    if (procedure == 0) {
+                        N = 12;
+                    } else {
+                        N = 31;
+                    }
+                }
+                if (degree.get(n) >= N) {
+                    spillWorkList.add(n);
+                } else if (MoveRelated(n)) {
+                    freezeWorkList.add(n);
+                } else {
+                    simplifyWorklist.add(n);
+                }
             }
         }
     }

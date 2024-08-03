@@ -162,12 +162,12 @@ public class RegAlloc {
         while (blockHead != null) {
             AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
             while (instrHead != null) {
-                instrHead = (AsmInstr) instrHead.getNext();
                 if (instrHead instanceof AsmMove) {
                     if (((AsmMove) instrHead).getDst() == ((AsmMove) instrHead).getSrc()) {
                         instrHead.removeFromList();
                     }
                 }
+                instrHead = (AsmInstr) instrHead.getNext();
             }
             blockHead = (AsmBlock) blockHead.getNext();
         }
