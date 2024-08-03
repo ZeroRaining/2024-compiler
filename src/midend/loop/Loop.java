@@ -1,11 +1,17 @@
 package midend.loop;
 
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstValue;
+import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.PhiInstr;
+import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
+import frontend.ir.structure.GlobalObject;
+import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 public class Loop {
     private BasicBlock entering; //进入循环的节点，有边指向header
@@ -178,6 +184,58 @@ public class Loop {
             if (block.getBlockType() == BlockType.OUTOFLOOP) {
                 block.setBlockType(BlockType.EXIT);
             }
+        }
+    }
+    
+    private void cloneBlks(BasicBlock header, BasicBlock latch, Procedure procedure) {
+        ArrayList<BasicBlock> newBlks = new ArrayList<>();
+        HashMap<Value, Value> old2new = new HashMap<>();
+        
+        BasicBlock curBB = header;
+        BasicBlock stop = (BasicBlock) latch.getNext();
+        while (curBB != stop) {
+            BasicBlock newBB = new BasicBlock(curBB.getLoopDepth(), procedure.getAndAddBlkIndex());
+            old2new.put(curBB, newBB);
+            newBlks.add(newBB);
+            
+            Instruction curIns = (Instruction) curBB.getInstructions().getHead();
+            while (curIns != null) {
+                Instruction newIns = curIns.cloneShell(procedure);
+                newBB.addInstruction(newIns);
+                old2new.put(curIns, newIns);
+                curIns = (Instruction) curIns.getNext();
+            }
+            
+            curBB = (BasicBlock) curBB.getNext();
+        }
+        
+        BasicBlock last = latch;
+        
+        for (BasicBlock newBB : newBlks) {
+            Instruction newIns = (Instruction) newBB.getInstructions().getHead();
+            while (newIns != null) {
+                if (newIns instanceof PhiInstr) {
+                    ((PhiInstr) newIns).renewBlocks(old2new);
+                }
+                
+                ArrayList<Value> usedValues = new ArrayList<>(newIns.getUseValueList());
+                for (Value toReplace : usedValues) {
+                    if (!old2new.containsKey(toReplace)) {
+                        if (newIns instanceof ReturnInstr && toReplace == newBB) {
+                            continue;
+                        }
+                        if (!(toReplace instanceof ConstValue) && !(toReplace instanceof GlobalObject)) {
+                            throw new RuntimeException("使用了未曾设想的 value");
+                        }
+                    } else {
+                        newIns.modifyUse(toReplace, old2new.get(toReplace));
+                    }
+                }
+                newIns = (Instruction) newIns.getNext();
+            }
+            
+            newBB.insertAfter(last);
+            last = newBB;
         }
     }
 }
