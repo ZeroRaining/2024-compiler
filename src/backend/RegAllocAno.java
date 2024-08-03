@@ -1065,7 +1065,7 @@ public class RegAllocAno {
                     if (procedure == 0) {
                         N = 12;
                     } else {
-                        N = 31;
+                        N = 28;
                     }
                 }
                 if (degree.get(n) >= N) {
@@ -1089,7 +1089,7 @@ public class RegAllocAno {
                     if (procedure == 0) {
                         N = 12;
                     } else {
-                        N = 31;
+                        N = 28;
                     }
                 }
                 if (degree.get(n) >= N) {
@@ -1182,7 +1182,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 31;
+                N = 28;
             }
         }
         if (freezeWorkList.contains(v)) {
@@ -1226,7 +1226,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 31;
+                N = 28;
             }
         }
         for (AsmInstr m : NodeMoves(u)) {
@@ -1510,7 +1510,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 31;
+                N = 28;
             }
         }
         int k = 0;
@@ -1534,7 +1534,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 31;
+                N = 28;
             }
         }
         if ((degree.containsKey(t) && degree.get(t) < N) || preColored.containsKey(t) || (adjSet.containsKey(t) && adjSet.get(t).contains(r))) {
@@ -1556,7 +1556,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 31;
+                N = 28;
             }
         }
         if (!preColored.containsKey(u) && !MoveRelated(u) && degree.get(u) < N) {
@@ -1589,7 +1589,7 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 31;
+                N = 28;
             }
         }
         if (d == N) {
