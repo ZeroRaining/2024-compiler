@@ -69,9 +69,9 @@ public class Compiler {
 
 
 //            SimplifyBranch.execute(functions);
-            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
-            program.printIR(irWriter);
-            irWriter.close();
+//            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
+//            program.printIR(irWriter);
+//            irWriter.close();
             //合并删减块
 //            MergeBlock.execute(functions, false);
 //            DeadBlockRemove.execute(functions);
