@@ -21,13 +21,12 @@ import java.util.*;
 
 public class Function extends Value implements FuncDef {
     private static final HashMap<String, Function> FUNCTION_MAP = new HashMap<>();
-    public static Function MAIN;
     private static final int whatIsLong = 100;  // 一个函数多少指令算是“多”，不能内联
     private final String name;
     private final DataType returnType;
     private final Procedure procedure;
-    private final SymTab symTab;
-    private final List<Ast.FuncFParam> fParams;
+    private final List<Ast.FuncFParam> astFParams;
+    private final List<FParam> fParams;
     private final HashSet<Function> myImmediateCallee = new HashSet<>(); // 被 this 直接调用的自定义函数列表
     private final HashSet<Function> allCallee = new HashSet<>(); // 本函数执行过程中会调用（包括间接调用）的所有函数，可能包括自己
     private ArrayList<Loop> allLoop = new ArrayList<>();
@@ -36,15 +35,15 @@ public class Function extends Value implements FuncDef {
     private int calledCnt = 0;
     private boolean isTailRecursive = false;
     private final boolean main;
-
+    private boolean neverUsed = false;
+    
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
         if (funcDef == null) {
             throw new NullPointerException();
         }
         name = funcDef.getIdent().getContent();
         main = name.equals("main");
-        MAIN = this;
-        symTab = new SymTab(globalSymTab);
+        SymTab symTab = new SymTab(globalSymTab);
         switch (funcDef.getType().getType()) {
             case INT:
                 returnType = DataType.INT;
@@ -58,9 +57,10 @@ public class Function extends Value implements FuncDef {
             default:
                 throw new RuntimeException("未定义的返回值类型");
         }
-        fParams = funcDef.getFParams();
+        astFParams = funcDef.getFParams();
+        fParams = new ArrayList<>();
         FUNCTION_MAP.put(name, this);
-        procedure = new Procedure(returnType, fParams, funcDef.getBody(), symTab, myImmediateCallee, this);
+        procedure = new Procedure(returnType, astFParams, funcDef.getBody(), symTab, myImmediateCallee, this, fParams);
         initAllCallee();
     }
     
@@ -92,45 +92,18 @@ public class Function extends Value implements FuncDef {
         if (writer == null) {
             throw new NullPointerException();
         }
-        for (int i = 0; i < fParams.size(); i++) {
-            Ast.FuncFParam param = fParams.get(i);
-            DataType type;
-            switch (param.getType().getType()) {
-                case INT:   type = DataType.INT;   break;
-                case FLOAT: type = DataType.FLOAT; break;
-                default: throw new RuntimeException("出现了奇怪的形参类型");
-            }
-            
-            if (param.isArray()) {
-                ArrayList<Integer> limList = new ArrayList<>();
-                limList.add(-1);
-                for (Ast.Exp exp : param.getArrayItemList()) {
-                    if (exp.checkConstType(symTab) != DataType.INT) {
-                        throw new RuntimeException("数组维度长度必须能求值到整数");
-                    }
-                    limList.add(exp.getConstInt(symTab));
-                }
-                StringBuilder stringBuilder = new StringBuilder();
-                int lim = limList.size();
-                for (int j = 1; j < lim; j++) {
-                    stringBuilder.append("[").append(limList.get(j)).append(" x ");
-                }
-                stringBuilder.append(type);
-                for (int j = 1; j < lim; j++) {
-                    stringBuilder.append("]");
-                }
-                writer.append(stringBuilder.append("*").toString());
-            } else {
-                writer.append(type.toString());
-            }
-            writer.append(" %reg_").append(Integer.toString(i));
-            if (i < fParams.size() - 1) {
+        int len = fParams.size();
+        for (int i = 0; i < len; i++) {
+            FParam fParam = fParams.get(i);
+            writer.append(fParam.type2string());
+            writer.append(" ").append(fParam.value2string());
+            if (i < len - 1) {
                 writer.append(", ");
             }
         }
     }
     
-    public List<Value> getFParamValueList() {
+    public List<FParam> getFParamValueList() {
         return this.procedure.getFParamValueList();
     }
 
@@ -157,16 +130,16 @@ public class Function extends Value implements FuncDef {
         if (rParams == null) {
             throw new NullPointerException();
         }
-        if (rParams.size() != fParams.size()) {
+        if (rParams.size() != astFParams.size()) {
             throw new RuntimeException();
         }
-        for (int i = 0; i < fParams.size(); i++) {
+        for (int i = 0; i < astFParams.size(); i++) {
             if (rParams.get(i).getDataType() == DataType.INT &&
-                    fParams.get(i).getType().getType() != TokenType.INT) {
+                    astFParams.get(i).getType().getType() != TokenType.INT) {
                 throw new RuntimeException();
             }
             if (rParams.get(i).getDataType() == DataType.FLOAT &&
-                    fParams.get(i).getType().getType() != TokenType.FLOAT) {
+                    astFParams.get(i).getType().getType() != TokenType.FLOAT) {
                 throw new RuntimeException();
             }
         }
@@ -174,7 +147,7 @@ public class Function extends Value implements FuncDef {
     }
     
     public List<Ast.FuncFParam> getFParams() {
-        return fParams;
+        return astFParams;
     }
     
     @Override
@@ -242,7 +215,7 @@ public class Function extends Value implements FuncDef {
         HashMap<Value, Value> old2new = new HashMap<>();
         
         // 准备替换参数
-        List<Value> fParamValueList = this.procedure.getFParamValueList();
+        List<FParam> fParamValueList = this.procedure.getFParamValueList();
         for (int i = 0; i < fParamValueList.size(); i++) {
             old2new.put(fParamValueList.get(i), rParams.get(i));
         }
@@ -290,6 +263,9 @@ public class Function extends Value implements FuncDef {
         return bbs;
     }
     
+    /**
+     * 用于将所有的 alloca 都集中到函数最开始以避免反复申请内存；
+     */
     public void allocaRearrangement() {
         this.procedure.allocaRearrangement();
     }
@@ -317,11 +293,16 @@ public class Function extends Value implements FuncDef {
         return calledCnt;
     }
     
-    public boolean noUse() {
-        if (this.name.equals("main")) {
-            return false;
+    public void updateUse() {
+        if (this.main) {
+            this.neverUsed = false;
+            return;
         }
-        return this.calledCnt == 0;
+        this.neverUsed = this.calledCnt <= 0;
+    }
+    
+    public boolean noUse() {
+        return this.neverUsed;
     }
 
     public Procedure getProcedure() {

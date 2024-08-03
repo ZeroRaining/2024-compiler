@@ -1,10 +1,15 @@
 package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.otherop.CallInstr;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
+
+import java.util.ArrayList;
 
 public class StoreInstr extends MemoryOperation {
     private Value value;
@@ -51,6 +56,11 @@ public class StoreInstr extends MemoryOperation {
         }
         return "store " + typeName + " " + value.value2string() + ", " + typeName + "* " + ptr.value2string();
     }
+    
+    @Override
+    public String toString() {
+        return "Store " + value.value2string() + " to " + ptr.value2string();
+    }
 
     @Override
     public void modifyValue(Value from, Value to) {
@@ -65,6 +75,41 @@ public class StoreInstr extends MemoryOperation {
     
     public Value getPtr() {
         return ptr;
+    }
+    
+    public boolean mayBeLoaded(ArrayList<BasicBlock> blks) {
+        for (BasicBlock blk : blks) {
+            Instruction ins = (Instruction) blk.getInstructions().getHead();
+            while (ins != null) {
+                if (ins instanceof LoadInstr) {
+                    if (this.symbol.isArray()) {
+                        if (!((LoadInstr) ins).getSymbol().isArray()) {
+                            ins = (Instruction) ins.getNext();
+                            continue;
+                        }
+                        Value yourPtr = ((LoadInstr) ins).getPtr();
+                        Value myPtr   = this.ptr;
+                        if (checkMayBeSameGEP(yourPtr, myPtr)) {
+                            return true;
+                        }
+                    } else if (this.symbol.isGlobal()) {
+                        return true;
+                    } else {
+                        throw new RuntimeException("这里应该不会对非数组、非全局的对象进行内存操作");
+                    }
+                } else {
+                    if (ins instanceof CallInstr) {
+                        if ((this.symbol.isGlobal() || this.symbol.isArray()) &&
+                                !((CallInstr) ins).checkNoSideEffect()) {
+                            return true;
+                        }
+                    }
+                }
+                ins = (Instruction) ins.getNext();
+            }
+        }
+        
+        return false;
     }
     
     @Override

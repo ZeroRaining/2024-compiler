@@ -1,7 +1,9 @@
 package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Procedure;
@@ -178,6 +180,30 @@ public class GEPInstr extends MemoryOperation {
             wholeIndexList.add(new ConstInt(0));
         }
         return wholeIndexList;
+    }
+    
+    public boolean hasNonConstIndex() {
+        for (Value index : indexList) {
+            if (!(index instanceof ConstValue)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    public boolean onlyOneZero() {
+        if (indexList.isEmpty()) {
+            return true;
+        }
+        if (symbol.isArrayFParam()) {
+            if (indexList.size() > 1) {
+                return false;
+            }
+            Value firstIdx = indexList.get(0);
+            return firstIdx instanceof ConstInt && firstIdx.getNumber().intValue() == 0;
+        }
+        return false;
     }
     
     @Override

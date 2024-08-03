@@ -32,7 +32,7 @@ public class LCSSA {
             dfs4addPhi(innerLoop);
         }
 
-        HashSet<BasicBlock> exits = loop.getExits();
+        ArrayList<BasicBlock> exits = loop.getExits();
         assert !exits.isEmpty();
         for (BasicBlock blk : loop.getBlks()) {
             Instruction instr = (Instruction) blk.getInstructions().getHead();

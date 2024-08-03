@@ -43,18 +43,19 @@ public class Procedure {
     private final BasicBlock retBlock;
     private final Stack<BasicBlock> whileBegins;
     private final Stack<BasicBlock> whileEnds;
-    private final ArrayList<Value> fParamValueList = new ArrayList<>();
+    private final List<FParam> fParamValueList;
     private final HashSet<Function> myCallee;
     private final Function parentFunc;
     private final HashSet<CallInstr> selfCallingInstrSet = new HashSet<>();
 
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block,
-                     SymTab funcSymTab, HashSet<Function> myCallee, Function parentFunc) {
+                     SymTab funcSymTab, HashSet<Function> myCallee, Function parentFunc, List<FParam> fParamValueList) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
         this.myCallee = myCallee;
         this.parentFunc = parentFunc;
+        this.fParamValueList = fParamValueList;
         BasicBlock firstBasicBlock = new BasicBlock(curDepth, curBlkIndex++);
         basicBlocks.addToTail(firstBasicBlock);
         curBlock = firstBasicBlock;
@@ -73,7 +74,7 @@ public class Procedure {
     
     public void allocaRearrangement() {
         BasicBlock blk = (BasicBlock) basicBlocks.getHead();
-        ArrayList<AllocaInstr> allocaList = new ArrayList<>();
+        ArrayList<MemoryOperation> allocaList = new ArrayList<>();
         while (blk != null) {
             allocaList.addAll(blk.popAllAlloca());
             blk = (BasicBlock) blk.getNext();
@@ -141,7 +142,7 @@ public class Procedure {
             }
             Symbol symbol = new Symbol(name, dataType, limList, false, false, initVal);
             symTab.addSym(symbol);
-            FParam fParam = new FParam(curRegIndex++, dataType, symbol.getDim());
+            FParam fParam = new FParam(curRegIndex++, dataType, symbol.getLimitList());
             symbol2FParam.put(symbol, fParam);
             fParamValueList.add(fParam);
         }
@@ -154,7 +155,7 @@ public class Procedure {
         }
     }
 
-    public List<Value> getFParamValueList() {
+    public List<FParam> getFParamValueList() {
         return this.fParamValueList;
     }
 
@@ -179,7 +180,7 @@ public class Procedure {
         } else if (item instanceof Ast.Break) {
             dealBreak();
         } else if (item instanceof Ast.WhileStmt) {
-            ifWhile((Ast.WhileStmt)item, returnType, symTab);
+            doWhile((Ast.WhileStmt)item, returnType, symTab);
         } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {

@@ -91,6 +91,7 @@ public class Program {
         Iterator<Function> iterator = functionList.iterator();
         while (iterator.hasNext()) {
             Function function = iterator.next();
+            function.updateUse();
             if (function.noUse()) {
                 iterator.remove();
                 functionList.remove(function);
