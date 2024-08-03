@@ -73,7 +73,7 @@ public class Procedure {
     
     public void allocaRearrangement() {
         BasicBlock blk = (BasicBlock) basicBlocks.getHead();
-        ArrayList<AllocaInstr> allocaList = new ArrayList<>();
+        ArrayList<MemoryOperation> allocaList = new ArrayList<>();
         while (blk != null) {
             allocaList.addAll(blk.popAllAlloca());
             blk = (BasicBlock) blk.getNext();

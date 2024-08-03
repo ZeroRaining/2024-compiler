@@ -2,9 +2,12 @@ package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
+
+import java.util.ArrayList;
 
 public class LoadInstr extends MemoryOperation {
     private final int result;
@@ -71,6 +74,32 @@ public class LoadInstr extends MemoryOperation {
     
     public Value getPtr() {
         return ptr;
+    }
+    
+    public boolean mayBeStored(ArrayList<BasicBlock> blks) {
+        for (BasicBlock blk : blks) {
+            Instruction ins = (Instruction) blk.getInstructions().getHead();
+            while (ins != null) {
+                if (ins instanceof StoreInstr) {
+                    if (((StoreInstr) ins).getSymbol() == this.symbol) {
+                        if (this.symbol.isArray()) {
+                            Value yourPtr = ((StoreInstr) ins).getPtr();
+                            Value myPtr   = this.ptr;
+                            if (checkMayBeSameGEP(yourPtr, myPtr)) {
+                                return true;
+                            }
+                        } else if (this.symbol.isGlobal()) {
+                            return true;
+                        } else {
+                            throw new RuntimeException("这里应该不会对非数组、非全局的对象进行内存操作");
+                        }
+                    }
+                }
+                ins = (Instruction) ins.getNext();
+            }
+        }
+        
+        return false;
     }
     
     @Override

@@ -7,6 +7,8 @@ import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.AllocaInstr;
+import frontend.ir.instr.memop.LoadInstr;
+import frontend.ir.instr.memop.MemoryOperation;
 import frontend.ir.instr.otherop.PCInstr;
 import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
@@ -148,20 +150,21 @@ public class BasicBlock extends Value {
         return labelCnt;
     }
     
-    public List<AllocaInstr> popAllAlloca() {
+    public List<MemoryOperation> popAllAlloca() {
         Instruction instr = (Instruction) instructions.getHead();
-        ArrayList<AllocaInstr> allocaList = new ArrayList<>();
+        ArrayList<MemoryOperation> allocaList = new ArrayList<>();
         while (instr != null) {
+            Instruction tmp = (Instruction) instr.getNext();
             if (instr instanceof AllocaInstr) {
                 allocaList.add((AllocaInstr) instr);
-                instr.removeFromList();
+                instr.removeFromListWithUseRemain();
             }
-            instr = (Instruction) instr.getNext();
+            instr = tmp;
         }
         return allocaList;
     }
     
-    public void reAddAllAlloca(List<AllocaInstr> allocaInstrList) {
+    public void reAddAllAlloca(List<MemoryOperation> allocaInstrList) {
         if (allocaInstrList == null) {
             throw new NullPointerException();
         }

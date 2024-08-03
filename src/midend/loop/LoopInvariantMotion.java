@@ -93,10 +93,15 @@ public class LoopInvariantMotion {
         if (!loop.getBlks().contains(instr.getParentBB())) {
             return false;
         }
-        //phi指令
         if (instr instanceof LoadInstr || instr instanceof StoreInstr) {
             return false;
         }
+//        if (instr instanceof LoadInstr && ((LoadInstr) instr).mayBeStored(loop.getBlks())) {
+//            return false;
+//        }
+//        if (instr instanceof StoreInstr && ((StoreInstr) instr).mayBeLoaded(loop.getBlks())) {
+//            return false;
+//        }
         if (instr instanceof CallInstr) {
             //no side effect should be lift;
             if (!((CallInstr) instr).checkNoSideEffect()) {

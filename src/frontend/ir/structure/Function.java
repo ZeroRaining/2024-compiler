@@ -290,6 +290,9 @@ public class Function extends Value implements FuncDef {
         return bbs;
     }
     
+    /**
+     * 用于将所有的 alloca 都集中到函数最开始以避免反复申请内存；
+     */
     public void allocaRearrangement() {
         this.procedure.allocaRearrangement();
     }
