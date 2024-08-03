@@ -21,7 +21,9 @@ public class MergeBlock {
         if (instr.getParentBB().getSucs().size() != 1) {
             return false;
         }
-        assert instr instanceof JumpInstr;
+        if (!(instr instanceof JumpInstr)) {
+            throw new RuntimeException(instr.print() + "\nParentBB: " + instr.getParentBB() + "\nSucs: " + instr.getParentBB().getSucs());
+        }
         if (((JumpInstr) instr).getTarget().getPres().size() != 1) {
             return false;
         }

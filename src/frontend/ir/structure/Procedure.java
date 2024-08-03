@@ -180,7 +180,7 @@ public class Procedure {
         } else if (item instanceof Ast.Break) {
             dealBreak();
         } else if (item instanceof Ast.WhileStmt) {
-            doWhile((Ast.WhileStmt)item, returnType, symTab);
+            dealWhile((Ast.WhileStmt)item, returnType, symTab);
         } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
@@ -216,24 +216,25 @@ public class Procedure {
     //if-while => ifCond-whileCond-whileBody-whileEnd
     private void ifWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
         BasicBlock cond1Blk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock cond2Blk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock bodyBlk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock endBlk = new BasicBlock(curDepth, curBlkIndex++);
-        BasicBlock cond2Blk;
-        curBlock.addInstruction(new JumpInstr(cond1Blk));//要为condBlk新建一个块吗
+        curBlock.addInstruction(new JumpInstr(cond1Blk));
 
+        //cond1Blk: 解析条件
         basicBlocks.addToTail(cond1Blk);
         curBlock = cond1Blk;
-        Value cond = calculateLOr(item.cond, bodyBlk, endBlk, symTab);
+        Value cond = calculateLOr(item.cond, cond2Blk, endBlk, symTab);//这里不应该是个body
 
-        cond2Blk = cond1Blk.clone4while(this);
+        //cond2Blk
+        cond2Blk = cond1Blk.clone4while(cond2Blk, this);
 
-        cond2Blk.addInstruction(new BranchInstr(cond, cond2Blk, endBlk));
+        curBlock.addInstruction(new BranchInstr(cond, cond2Blk, endBlk));
 
         Instruction last = cond2Blk.getEndInstr();
         cond2Blk.addInstruction(new BranchInstr(last, bodyBlk, endBlk));
         basicBlocks.addToTail(cond2Blk);
 
-        //fixme：if和while同时创建一个新end块，会导致没有语句
         basicBlocks.addToTail(bodyBlk);
         curBlock = bodyBlk;
         //todo: break & continue
@@ -306,6 +307,7 @@ public class Procedure {
         whileBegins.push(condBlk);
         whileEnds.push(endBlk);
         bodyBlk.setLoopDepth(++curDepth);
+        condBlk.setDomDepth(curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
         bodyBlk.setLoopDepth(--curDepth);
         whileBegins.pop();
