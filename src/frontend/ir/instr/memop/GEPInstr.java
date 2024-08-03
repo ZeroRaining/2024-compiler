@@ -192,6 +192,20 @@ public class GEPInstr extends MemoryOperation {
         return false;
     }
     
+    public boolean onlyOneZero() {
+        if (indexList.isEmpty()) {
+            return true;
+        }
+        if (symbol.isArrayFParam()) {
+            if (indexList.size() > 1) {
+                return false;
+            }
+            Value firstIdx = indexList.get(0);
+            return firstIdx instanceof ConstInt && firstIdx.getNumber().intValue() == 0;
+        }
+        return false;
+    }
+    
     @Override
     public String myHash() {
         return this.printTypeAndIndex();

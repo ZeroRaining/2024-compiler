@@ -4,6 +4,7 @@ import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.BinaryOperation;
 import frontend.ir.instr.convop.ConversionOperation;
+import frontend.ir.instr.memop.GEPInstr;
 import frontend.ir.instr.memop.MemoryOperation;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.PhiInstr;
@@ -14,6 +15,7 @@ import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class DeadCodeRemove {
@@ -32,6 +34,9 @@ public class DeadCodeRemove {
             while (instr != null) {
                 if (instr.getBeginUse() == null && checkNoSideEffect(instr)) {
                     noUse.add(instr);
+                } else if (instr instanceof GEPInstr && ((GEPInstr) instr).onlyOneZero()) {
+                    instr.replaceUseTo(((GEPInstr) instr).getPtrVal());
+                    noUse.add(instr);
                 }
                 instr = (Instruction) instr.getNext();
             }
@@ -40,13 +45,13 @@ public class DeadCodeRemove {
 
         while (!noUse.isEmpty()) {
             Instruction instr = noUse.poll();
+            instr.removeFromList();
             for (Value value : instr.getUseValueList()) {
                 if (checkNoSideEffect(value) && value.getBeginUse() == null) {
                     assert value instanceof Instruction;
                     noUse.add((Instruction) value);
                 }
             }
-            instr.removeFromList();
         }
 
     }
