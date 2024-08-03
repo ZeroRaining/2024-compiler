@@ -226,7 +226,7 @@ public class Procedure {
 
         cond2Blk = cond1Blk.clone4while(this);
 
-        curBlock.addInstruction(new BranchInstr(cond, cond2Blk, endBlk));
+        cond2Blk.addInstruction(new BranchInstr(cond, cond2Blk, endBlk));
 
         Instruction last = cond2Blk.getEndInstr();
         cond2Blk.addInstruction(new BranchInstr(last, bodyBlk, endBlk));
