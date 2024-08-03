@@ -23,14 +23,11 @@ import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.terminator.*;
 import frontend.ir.instr.memop.*;
 import frontend.ir.instr.unaryop.FNegInstr;
-import frontend.ir.structure.BasicBlock;
-import frontend.ir.structure.GlobalObject;
-import frontend.ir.structure.Program;
+import frontend.ir.structure.*;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.symbols.Symbol;
-import frontend.ir.structure.Function;
 import Utils.CustomList.Node;
 
 import java.util.*;
@@ -165,7 +162,7 @@ public class IrParser {
         }
 
         BasicBlock bb = (BasicBlock) f.getBasicBlocks().getHead();
-        List<Value> args = f.getFParamValueList();
+        List<FParam> args = f.getFParamValueList();
         List<Value> iargs = new ArrayList<>();
         List<Value> fargs = new ArrayList<>();
         for (int i = 0; i < args.size(); i++) {

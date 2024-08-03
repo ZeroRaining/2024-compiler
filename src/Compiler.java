@@ -10,7 +10,6 @@ import frontend.syntax.Parser;
 import midend.RemovePhi;
 import midend.SSA.*;
 import midend.loop.AnalysisLoop;
-import midend.loop.LCSSA;
 import midend.loop.LoopInvariantMotion;
 
 import java.io.*;
@@ -56,6 +55,7 @@ public class Compiler {
         if (arg.getOptLevel() == 1) {
             //简化代码
             Mem2Reg.execute(functions);
+            ArrayFParamMem2Reg.execute(functions);
             DeadCodeRemove.execute(functions);
             OIS.execute(functions);
             GVN.execute(functions);

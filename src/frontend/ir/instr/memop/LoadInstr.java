@@ -2,6 +2,7 @@ package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
@@ -81,17 +82,26 @@ public class LoadInstr extends MemoryOperation {
             Instruction ins = (Instruction) blk.getInstructions().getHead();
             while (ins != null) {
                 if (ins instanceof StoreInstr) {
-                    if (((StoreInstr) ins).getSymbol() == this.symbol) {
-                        if (this.symbol.isArray()) {
-                            Value yourPtr = ((StoreInstr) ins).getPtr();
-                            Value myPtr   = this.ptr;
-                            if (checkMayBeSameGEP(yourPtr, myPtr)) {
-                                return true;
-                            }
-                        } else if (this.symbol.isGlobal()) {
+                    if (this.symbol.isArray()) {
+                        if (!((StoreInstr) ins).getSymbol().isArray()) {
+                            ins = (Instruction) ins.getNext();
+                            continue;
+                        }
+                        Value yourPtr = ((StoreInstr) ins).getPtr();
+                        Value myPtr   = this.ptr;
+                        if (checkMayBeSameGEP(yourPtr, myPtr)) {
                             return true;
-                        } else {
-                            throw new RuntimeException("这里应该不会对非数组、非全局的对象进行内存操作");
+                        }
+                    } else if (this.symbol.isGlobal()) {
+                        return true;
+                    } else {
+                        throw new RuntimeException("这里应该不会对非数组、非全局的对象进行内存操作");
+                    }
+                } else {
+                    if (ins instanceof CallInstr) {
+                        if ((this.symbol.isGlobal() || this.symbol.isArray()) &&
+                                !((CallInstr) ins).checkNoSideEffect()) {
+                            return true;
                         }
                     }
                 }

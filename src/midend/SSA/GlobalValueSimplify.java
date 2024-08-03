@@ -51,7 +51,7 @@ public class GlobalValueSimplify {
                 
                 if (onlyMain) { // 仅当目前还只有 main 使用过该对象时才需要做进一步判断
                     Function func = getFunction((Instruction) user);
-                    if (!func.isMain()) {
+                    if (!func.isMain() && !func.noUse()) {
                         onlyMain = false;
                     }
                 }
@@ -104,11 +104,11 @@ public class GlobalValueSimplify {
     private static void localize(Symbol symbol) {
         Symbol localizedSym = new Symbol("@L_" + symbol.getName(), symbol.getType(), new ArrayList<>(),
                 symbol.isConstant(), false, null);
-        AllocaInstr allocaInstr = new AllocaInstr(Function.MAIN.getAndAddRegIndex(), localizedSym);
+        AllocaInstr allocaInstr = new AllocaInstr(Function.getFunction("main").getAndAddRegIndex(), localizedSym);
         localizedSym.setAllocValue(allocaInstr);
         StoreInstr storeInstr = new StoreInstr(symbol.getInitVal(), localizedSym);
         
-        BasicBlock mainBeginBlk = (BasicBlock) Function.MAIN.getBasicBlocks().getHead();
+        BasicBlock mainBeginBlk = (BasicBlock) Function.getFunction("main").getBasicBlocks().getHead();
         mainBeginBlk.addInstrToHead(allocaInstr);
         mainBeginBlk.addInstrToHead(storeInstr);
         
