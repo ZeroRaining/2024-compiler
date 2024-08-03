@@ -23,7 +23,11 @@ public abstract class BinaryOperation extends Instruction {
         setUse(op1);
         setUse(op2);
     }
-    
+
+    public String getOperationName() {
+        return operationName;
+    }
+
     @Override
     public Integer getNumber() {
         return result;

@@ -69,10 +69,10 @@ public class Compiler {
 //            program.printIR(irWriter);
 //            irWriter.close();
             //循环分析
-//            DFG.execute(functions);
-//            AnalysisLoop.execute(functions);
-//            //LCSSA.execute(functions);
-//            LoopInvariantMotion.execute(functions);
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+            //LCSSA.execute(functions);
+            LoopInvariantMotion.execute(functions);
 
             //BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
 //            irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
