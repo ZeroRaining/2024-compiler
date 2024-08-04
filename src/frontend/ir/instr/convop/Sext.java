@@ -2,6 +2,8 @@ package frontend.ir.instr.convop;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstInt;
+import frontend.ir.constvalue.ConstLongInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
@@ -21,6 +23,9 @@ public class Sext extends ConversionOperation{
     
     @Override
     public Value operationSimplify() {
+        if (value instanceof ConstInt) {
+            return new ConstLongInt(((ConstInt) value).getNumber());
+        }
         return null;
     }
 }
