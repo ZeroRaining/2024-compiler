@@ -5,8 +5,7 @@ public enum DataType {
     FLOAT("float"),
     VOID("void"),
     VOID_("i8*"),  // void*, 通用的指针
-    BOOL("i1"),   // 1 位整数
-    LONG_INT("i64");    // 64 位整数，用于指针运算
+    BOOL("i1");   // 1 位整数
     
     private final String name;
     

@@ -22,12 +22,6 @@ public class MulInstr extends BinaryOperation implements Swappable {
     public Instruction cloneShell(Procedure procedure) {
         return new MulInstr(procedure.getAndAddRegIndex(), this.op1, this.op2);
     }
-
-    public void swapOp() {
-        Value tmp = op1;
-        op1 = op2;
-        op2 = tmp;
-    }
     
     public void trySwapOp() {
         if (op1 instanceof ConstInt && !(op2 instanceof ConstInt)) {

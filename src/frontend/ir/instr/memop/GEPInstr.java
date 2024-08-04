@@ -168,10 +168,10 @@ public class GEPInstr extends MemoryOperation {
         stringBuilder.append(arrayTypeName).append("* ");
         stringBuilder.append(ptrVal.value2string());
         if (!symbol.isArrayFParam()) {
-            stringBuilder.append(", i64 0");
+            stringBuilder.append(", i32 0");
         }
         for (Value index : indexList) {
-            stringBuilder.append(", i64 ").append(index.value2string());
+            stringBuilder.append(", i32 ").append(index.value2string());
         }
         return stringBuilder.toString();
     }

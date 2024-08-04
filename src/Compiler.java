@@ -95,12 +95,11 @@ public class Compiler {
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
         }
-        RemovePhi.phi2move(functions);
+        
 
         // 打印 IR
         if (arg.toPrintIR()) {
 //            Function.blkLabelReorder();
-            
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
             program.printIR(irWriter);
             irWriter.close();
@@ -108,7 +107,7 @@ public class Compiler {
         
         if (arg.getOptLevel() == 1 && !arg.toSkipBackEnd()) {
             DetectTailRecursive.detect(functions);
-
+            RemovePhi.phi2move(functions);
         }
         
         // 运行后端

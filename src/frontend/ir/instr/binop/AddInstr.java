@@ -16,6 +16,14 @@ public class AddInstr extends BinaryOperation implements Swappable {
         assert op2.getDataType() == DataType.INT;
     }
     
+    public void trySwapOp() {
+        if (op1 instanceof ConstInt && !(op2 instanceof ConstInt)) {
+            Value tmp = op1;
+            op1 = op2;
+            op2 = tmp;
+        }
+    }
+    
     @Override
     public Value operationSimplify() {
         Value res = null;

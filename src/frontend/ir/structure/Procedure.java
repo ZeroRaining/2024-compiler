@@ -897,10 +897,6 @@ public class Procedure {
             if (innerRes.getDataType() != DataType.INT) {
                 throw new RuntimeException("数组下标不是整数？");
             }
-            if (innerRes instanceof Instruction) {
-                innerRes = new Sext(curRegIndex++, innerRes);
-                curBlock.addInstruction((Instruction) innerRes);
-            }
             indexList.add(innerRes);
         }
         return indexList;
