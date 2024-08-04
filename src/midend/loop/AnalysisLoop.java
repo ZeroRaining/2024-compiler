@@ -225,7 +225,7 @@ public class AnalysisLoop {
             return;
         }
         //TODO：短路求值？？
-        loop.LoopPrint();
+//        loop.LoopPrint();
         {
         /*blk_0: anon: entering
             br label %blk_2
