@@ -68,9 +68,6 @@ public class FI {
                     ArrayList<BasicBlock> bbList = callee.func2blocks(curDepth, rParams, function);
                     
                     Collections.reverse(bbList);
-                    for (BasicBlock newBB : bbList) {
-                        newBB.insertAfter(basicBlock);
-                    }
                     
 //                    JumpInstr prev2func = new JumpInstr(bbList.get(bbList.size() - 1));
                     basicBlock.setRet(false);
@@ -78,18 +75,30 @@ public class FI {
                     bbList.remove(firstBlkInFunc);
                     Instruction insInFirstBlk = (Instruction) firstBlkInFunc.getInstructions().getHead();
                     while (insInFirstBlk != null) {
-                        basicBlock.addInstruction(insInFirstBlk);
-                        insInFirstBlk = (Instruction) insInFirstBlk.getNext();
+                        Instruction tmp = (Instruction) insInFirstBlk.getNext();
+                        if (insInFirstBlk instanceof Terminator) {
+                            basicBlock.addInstruction(insInFirstBlk.cloneShell(function));
+                            insInFirstBlk.removeFromList();
+                        } else {
+                            insInFirstBlk.removeFromListWithUseRemain();
+                            basicBlock.addInstruction(insInFirstBlk);
+                        }
+                        
+                        insInFirstBlk = tmp;
                     }
-                    HashMap<Value, Value> old22new = new HashMap<>();
-                    old22new.put(firstBlkInFunc, basicBlock);
+
                     for (BasicBlock block : bbList) {
                         CustomList.Node node = block.getInstructions().getHead();
                         while (node instanceof PhiInstr) {
-                            ((PhiInstr) node).renewBlocks(old22new);
+                            ((PhiInstr) node).modifyPrtBlk(firstBlkInFunc, basicBlock);
                             node = node.getNext();
                         }
                     }
+                    
+                    for (BasicBlock newBB : bbList) {
+                        newBB.insertAfter(basicBlock);
+                    }
+                    
                     BasicBlock funcLastBB = bbList.get(0);
                     ReturnInstr retIns = (ReturnInstr) funcLastBB.getEndInstr();
                     if (retIns.getDataType() != DataType.VOID) {

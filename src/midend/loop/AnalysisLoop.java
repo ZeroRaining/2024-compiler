@@ -240,7 +240,8 @@ public class AnalysisLoop {
         PhiInstr itVar;
         Value itEnd;
         if (header.getEndInstr() instanceof JumpInstr) {
-            throw new RuntimeException(loop + " instr: " + header.getEndInstr().print());
+            return;
+//            throw new RuntimeException(loop + " instr: " + header.getEndInstr().print());
         }
         BranchInstr br = (BranchInstr) header.getEndInstr();
         Value cond = br.getCond();
