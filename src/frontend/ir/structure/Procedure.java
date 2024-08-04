@@ -804,7 +804,7 @@ public class Procedure {
                         res = load;
                     } else {
                         if (ptr instanceof GEPInstr) {
-                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr);
+                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr, ptr.getSymbol());
                             curBlock.addInstruction(newPtr);
                             res = newPtr;
                         } else {
@@ -879,7 +879,7 @@ public class Procedure {
                 return load;
             }
             curBlock.addInstruction(load);
-            ptr = new GEPInstr(curRegIndex++, load, indexList);
+            ptr = new GEPInstr(curRegIndex++, load, indexList, load.getSymbol());
         } else {
             ptr = new GEPInstr(curRegIndex++, indexList, symbol);
         }

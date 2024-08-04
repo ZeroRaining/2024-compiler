@@ -58,19 +58,19 @@ public class Compiler {
             //简化代码
             Mem2Reg.execute(functions);
             ArrayFParamMem2Reg.execute(functions);
-//            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
-//            program.printIR(irWriter);
-//            irWriter.close();
+            
+            //循环优化1
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
             LCSSA.execute(functions);
             LoopUnroll.execute(functions);
+            
             DeadCodeRemove.execute(functions);
             OIS.execute(functions);
             GVN.execute(functions);
-
-            //循环优化1
-
+            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
+            program.printIR(irWriter);
+            irWriter.close();
 
 
             SimplifyBranch.execute(functions);
