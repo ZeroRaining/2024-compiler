@@ -16,6 +16,7 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
 import midend.SSA.MergeBlock;
+import midend.SSA.OIS;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -168,6 +169,7 @@ public class LoopUnroll {
             phi = (Instruction) phi.getNext();
         }
         MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
+        OIS.OSI4blks(header, oneLoop.getSecond());
     }
     private static HashMap<Value, Value> old2new;
 
