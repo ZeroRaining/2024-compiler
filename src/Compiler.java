@@ -68,32 +68,18 @@ public class Compiler {
             DeadCodeRemove.execute(functions);
             OIS.execute(functions);
             GVN.execute(functions);
-            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
-            program.printIR(irWriter);
-            irWriter.close();
-
 
             SimplifyBranch.execute(functions);
-//            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
-//            program.printIR(irWriter);
-//            irWriter.close();
             //合并删减块
             MergeBlock.execute(functions, false);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
-//            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
-//            program.printIR(irWriter);
-//            irWriter.close();
             //循环分析
 //            DFG.execute(functions);
 //            AnalysisLoop.execute(functions);
 //            //LCSSA.execute(functions);
 //            LoopInvariantMotion.execute(functions);
-
-            //BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
-            //irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
-            //program.printIR(irWriter);
-            //irWriter.close();
+            
             //second
             DFG.execute(functions);
             DeadCodeRemove.execute(functions);
