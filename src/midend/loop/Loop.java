@@ -208,15 +208,18 @@ public class Loop {
 
     public void colorBlk() {
         for (BasicBlock block : latchs) {
-            if (block.getBlockType() == BlockType.OUTOFLOOP) {
-                block.setBlockType(BlockType.LATCH);
-            }
+            block.setBlockType(BlockType.LATCH);
         }
         for (BasicBlock block : exits) {
-            if (block.getBlockType() == BlockType.OUTOFLOOP) {
-                block.setBlockType(BlockType.EXIT);
-            }
+            block.setBlockType(BlockType.EXIT);
         }
+        for (BasicBlock block : exitings) {
+            block.setBlockType(BlockType.EXITING);
+        }
+        for (BasicBlock block : blks) {
+            block.setBlockType(BlockType.INLOOP);
+        }
+        header.setBlockType(BlockType.HEADER);
     }
 
 }

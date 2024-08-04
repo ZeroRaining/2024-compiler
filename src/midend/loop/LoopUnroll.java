@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class LoopUnroll {
-    private static int codeSize = 3000;
+    private static long codeSize = Integer.MAX_VALUE;
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
             AnalysisLoop.LoopIndVars(function);
@@ -77,15 +77,23 @@ public class LoopUnroll {
             throw new RuntimeException("what happened? Bro!");
         }
         int times = calculateLoopTimes(itAlu.getOperationName(), condInstr.getCond(), init, step, end);
-        int cnt = 0;
-        for (BasicBlock blk : loop.getBlks()) {
-            cnt += blk.getInstructions().getSize();
-        }
+        long cnt = dfs4cnt(loop);
         if (cnt * times > codeSize) {
             return false;
         }
         Unroll(loop, times);
         return true;
+    }
+
+    private static long dfs4cnt(Loop loop) {
+        long cnt = 0;
+        for (Loop inner : loop.getInnerLoops()) {
+            cnt += dfs4cnt(inner);
+        }
+        for (BasicBlock blk : loop.getBlks()) {
+            cnt += blk.getInstructions().getSize();
+        }
+        return cnt;
     }
 
     private static void Unroll(Loop loop, int times) {

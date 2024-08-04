@@ -12,6 +12,7 @@ import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.*;
 import frontend.ir.instr.memop.*;
 import frontend.ir.instr.otherop.CallInstr;
+import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.otherop.cmp.FCmpInstr;
 import frontend.ir.instr.otherop.cmp.ICmpInstr;
@@ -225,15 +226,16 @@ public class Procedure {
         basicBlocks.addToTail(cond1Blk);
         curBlock = cond1Blk;
         Value cond = calculateLOr(item.cond, cond2Blk, endBlk, symTab);//这里不应该是个body
-
-        //cond2Blk
-        cond2Blk = cond1Blk.clone4while(cond2Blk, this);
-
         curBlock.addInstruction(new BranchInstr(cond, cond2Blk, endBlk));
 
-        Instruction last = cond2Blk.getEndInstr();
-        cond2Blk.addInstruction(new BranchInstr(last, bodyBlk, endBlk));
-        basicBlocks.addToTail(cond2Blk);
+        //cond2Blk
+        HashMap<Value, Value> old2new = new HashMap<>();
+        old2new.put(cond2Blk, bodyBlk);
+        clone4cond(cond1Blk, curBlock, cond2Blk, old2new);
+//        cond2Blk = cond1Blk.clone4while(cond2Blk, this);
+//        Instruction last = cond2Blk.getEndInstr();
+//        cond2Blk.addInstruction(new BranchInstr(last, bodyBlk, endBlk));
+//        basicBlocks.addToTail(cond2Blk);
 
         basicBlocks.addToTail(bodyBlk);
         curBlock = bodyBlk;
@@ -243,7 +245,7 @@ public class Procedure {
 
         bodyBlk.setLoopDepth(++curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
-        cond2Blk.setLoopDepth(curDepth);
+//        cond2Blk.setLoopDepth(curDepth);
         bodyBlk.setLoopDepth(--curDepth);
         whileBegins.pop();
         whileEnds.pop();
@@ -252,6 +254,57 @@ public class Procedure {
 
         basicBlocks.addToTail(endBlk);
         curBlock = endBlk;
+    }
+
+    private void clone4cond(BasicBlock cond1Blk, BasicBlock curBlock, BasicBlock cond2Blk, HashMap<Value, Value> old2new) {
+        BasicBlock curBB = cond1Blk;
+        BasicBlock stop = curBlock;
+        ArrayList<BasicBlock> newBlks = new ArrayList<>();
+        while (curBB != null) {
+            BasicBlock newBB = curBB == cond1Blk ? cond2Blk : new BasicBlock(curBB.getLoopDepth(), this.getAndAddBlkIndex());
+            old2new.put(curBB, newBB);
+            newBlks.add(newBB);
+
+            Instruction curIns = (Instruction) curBB.getInstructions().getHead();
+            while (curIns != null) {
+                Instruction newIns = curIns.cloneShell(this);
+                newBB.addInstruction(newIns);
+                old2new.put(curIns, newIns);
+                curIns = (Instruction) curIns.getNext();
+            }
+
+            curBB = (BasicBlock) curBB.getNext();
+        }
+
+        BasicBlock last = stop;
+
+        for (BasicBlock newBB : newBlks) {
+            Instruction newIns = (Instruction) newBB.getInstructions().getHead();
+            while (newIns != null) {
+                if (newIns instanceof PhiInstr) {
+                    ((PhiInstr) newIns).renewBlocks(old2new);
+                }
+
+                ArrayList<Value> usedValues = new ArrayList<>(newIns.getUseValueList());
+                for (Value toReplace : usedValues) {
+                    if (!old2new.containsKey(toReplace)) {
+                        if (newIns instanceof ReturnInstr && toReplace == newBB) {
+                            continue;
+                        }
+//                        if (!(toReplace instanceof ConstValue) && !(toReplace instanceof GlobalObject)) {
+//                            throw new RuntimeException("使用了未曾设想的 value " + toReplace.toString());
+//                        }
+                    } else {
+                        newIns.modifyUse(toReplace, old2new.get(toReplace));
+                    }
+                }
+                newIns = (Instruction) newIns.getNext();
+            }
+
+            newBB.insertAfter(last);
+            last = newBB;
+        }
+        curBlock = (BasicBlock) basicBlocks.getTail();
     }
 
     private void doWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {

@@ -71,14 +71,14 @@ public class Compiler {
             LoopUnroll.execute(functions);
 
 
-//            SimplifyBranch.execute(functions);
+            SimplifyBranch.execute(functions);
 //            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
 //            program.printIR(irWriter);
 //            irWriter.close();
             //合并删减块
-//            MergeBlock.execute(functions, false);
-//            DeadBlockRemove.execute(functions);
-//            RemoveUseLessPhi.execute(functions);
+            MergeBlock.execute(functions, false);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
 //            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
 //            program.printIR(irWriter);
 //            irWriter.close();
@@ -93,14 +93,14 @@ public class Compiler {
             //program.printIR(irWriter);
             //irWriter.close();
             //second
-//            DFG.execute(functions);
-//            DeadCodeRemove.execute(functions);
-//            OIS.execute(functions);
-//            GVN.execute(functions);
-//            SimplifyBranch.execute(functions);
-//            MergeBlock.execute(functions, true);
-//            DeadBlockRemove.execute(functions);
-//            RemoveUseLessPhi.execute(functions);
+            DFG.execute(functions);
+            DeadCodeRemove.execute(functions);
+            OIS.execute(functions);
+            GVN.execute(functions);
+            SimplifyBranch.execute(functions);
+            MergeBlock.execute(functions, true);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
         }
 //        Function.blkLabelReorder();
 

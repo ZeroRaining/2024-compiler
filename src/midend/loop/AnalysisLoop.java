@@ -1,5 +1,6 @@
 package midend.loop;
 
+import Utils.CustomList;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.binop.BinaryOperation;
@@ -19,7 +20,7 @@ public class AnalysisLoop {
     private static ArrayList<Loop> allLoop = new ArrayList<>();
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
-            init();
+            init(function);
             findAllLoop(function);
             fillInLoop();
             finalized(function);
@@ -67,10 +68,15 @@ public class AnalysisLoop {
             loop.colorBlk();
         }
     }
-    private static void init() {
+    private static void init(Function function) {
         header2loop = new HashMap<>();
         outLoop = new ArrayList<>();
         allLoop = new ArrayList<>();
+        CustomList.Node block =  function.getBasicBlocks().getHead();
+        while (block != null) {
+            ((BasicBlock) block).setBlockType(BlockType.OUTOFLOOP);
+            block =  block.getNext();
+        }
     }
     private static void fillInLoop() {
         for (Loop loop : allLoop) {
