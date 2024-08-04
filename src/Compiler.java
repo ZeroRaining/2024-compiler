@@ -93,6 +93,7 @@ public class Compiler {
         if (arg.toTime()) {
             optimizeEndTime = System.currentTimeMillis();
         }
+        RemovePhi.phi2move(functions);
 
         // 打印 IR
         if (arg.toPrintIR()) {
@@ -105,19 +106,21 @@ public class Compiler {
         
         if (arg.getOptLevel() == 1 && !arg.toSkipBackEnd()) {
             DetectTailRecursive.detect(functions);
-            RemovePhi.phi2move(functions);
+
         }
         
         // 运行后端
         if (!arg.toSkipBackEnd()) {
             IrParser parser = new IrParser(program);
             AsmModule asmModule = parser.parse();
-            RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
-            alloc.run(asmModule);
-//            RegAllocAno allocAno = RegAllocAno.getInstance(parser.downOperandMap);
-//            allocAno.run(asmModule);
+//            RegAlloc alloc = RegAlloc.getInstance(parser.downOperandMap);
+//            alloc.run(asmModule);
+            RegAllocAno allocAno = RegAllocAno.getInstance(parser.downOperandMap);
+            allocAno.run(asmModule);
 //            RegAllocLinear alloc = RegAllocLinear.getInstance(parser.downOperandMap);
 //            alloc.debug(asmModule);
+            DeleteUnusedBlock deleteUnusedBlock = new DeleteUnusedBlock();
+            deleteUnusedBlock.run(asmModule);
             BackendPrinter backendPrinter = new BackendPrinter(asmModule, true, output);
             backendPrinter.printBackend();
         }

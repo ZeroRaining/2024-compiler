@@ -25,4 +25,12 @@ public class AsmBnez extends AsmInstr {
         this.cond = src;
     }
 
+    public AsmBlock getTarget() {
+        return target;
+    }
+
+    public void setTarget(AsmBlock target) {
+        this.target = target;
+    }
+
 }

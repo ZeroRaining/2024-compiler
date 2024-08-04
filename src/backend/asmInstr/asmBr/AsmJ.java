@@ -26,4 +26,12 @@ public class AsmJ extends AsmInstr {
         sb.append(target);
         return sb.toString();
     }
+
+    public AsmBlock getTarget() {
+        return target;
+    }
+
+    public void setTarget(AsmBlock target) {
+        this.target = target;
+    }
 }
