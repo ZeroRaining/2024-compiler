@@ -167,11 +167,12 @@ public class Loop {
         if(exitings.size() != 1){
             return false;
         }
-//        for(BasicBlock exitingBlock : exitings){
-//            if(exitingBlock != header){
-//                return false;
-//            }
-//        }
+        //短路求值
+        for(BasicBlock exitingBlock : exitings){
+            if(exitingBlock != header){
+                return false;
+            }
+        }
         return exits.size() == 1;
     }
 
