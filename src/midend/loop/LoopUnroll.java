@@ -15,6 +15,7 @@ import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
+import midend.SSA.DeadCodeRemove;
 import midend.SSA.MergeBlock;
 import midend.SSA.OIS;
 
@@ -170,6 +171,7 @@ public class LoopUnroll {
         }
         MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
         OIS.OSI4blks(header, oneLoop.getSecond());
+        DeadCodeRemove.removeCode(header, oneLoop.getSecond());
     }
     private static HashMap<Value, Value> old2new;
 
