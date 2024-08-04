@@ -5,7 +5,6 @@ import frontend.ir.constvalue.ConstInt;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.FParam;
-import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
 
@@ -16,7 +15,6 @@ import java.util.List;
  * getelementptr
  * 获取指针的指令，主要用于数组操作
  * 目前的设计是无论几层都一个指令取出来，之后可能需要改成分不同情况分开或合并
- * 此外值得注意的是因为现在后端大概率是 64 位，这里的指针类型用的都是 i64
  */
 public class GEPInstr extends MemoryOperation {
     private final int result;
