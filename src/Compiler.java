@@ -60,10 +60,10 @@ public class Compiler {
             ArrayFParamMem2Reg.execute(functions);
             
             //循环优化1
-//            DFG.execute(functions);
-//            AnalysisLoop.execute(functions);
-//            LCSSA.execute(functions);
-//            LoopUnroll.execute(functions);
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+            LCSSA.execute(functions);
+            LoopUnroll.execute(functions);
             
             DeadCodeRemove.execute(functions);
             OIS.execute(functions);
