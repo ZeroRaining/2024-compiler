@@ -12,6 +12,7 @@ import frontend.ir.instr.Instruction;
 import frontend.ir.instr.convop.*;
 import frontend.ir.instr.memop.*;
 import frontend.ir.instr.otherop.CallInstr;
+import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.instr.otherop.cmp.FCmpInstr;
 import frontend.ir.instr.otherop.cmp.ICmpInstr;
@@ -180,7 +181,7 @@ public class Procedure {
         } else if (item instanceof Ast.Break) {
             dealBreak();
         } else if (item instanceof Ast.WhileStmt) {
-            doWhile((Ast.WhileStmt)item, returnType, symTab);
+            dealWhile((Ast.WhileStmt)item, returnType, symTab);
         } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
@@ -216,24 +217,26 @@ public class Procedure {
     //if-while => ifCond-whileCond-whileBody-whileEnd
     private void ifWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
         BasicBlock cond1Blk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock cond2Blk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock bodyBlk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock endBlk = new BasicBlock(curDepth, curBlkIndex++);
-        BasicBlock cond2Blk;
-        curBlock.addInstruction(new JumpInstr(cond1Blk));//要为condBlk新建一个块吗
+        curBlock.addInstruction(new JumpInstr(cond1Blk));
 
+        //cond1Blk: 解析条件
         basicBlocks.addToTail(cond1Blk);
         curBlock = cond1Blk;
-        Value cond = calculateLOr(item.cond, bodyBlk, endBlk, symTab);
+        Value cond = calculateLOr(item.cond, cond2Blk, endBlk, symTab);//这里不应该是个body
+        curBlock.addInstruction(new BranchInstr(cond, cond2Blk, endBlk));
 
-        cond2Blk = cond1Blk.clone4while(this);
+        //cond2Blk
+        HashMap<Value, Value> old2new = new HashMap<>();
+        old2new.put(cond2Blk, bodyBlk);
+        clone4cond(cond1Blk, curBlock, cond2Blk, old2new);
+//        cond2Blk = cond1Blk.clone4while(cond2Blk, this);
+//        Instruction last = cond2Blk.getEndInstr();
+//        cond2Blk.addInstruction(new BranchInstr(last, bodyBlk, endBlk));
+//        basicBlocks.addToTail(cond2Blk);
 
-        cond2Blk.addInstruction(new BranchInstr(cond, cond2Blk, endBlk));
-
-        Instruction last = cond2Blk.getEndInstr();
-        cond2Blk.addInstruction(new BranchInstr(last, bodyBlk, endBlk));
-        basicBlocks.addToTail(cond2Blk);
-
-        //fixme：if和while同时创建一个新end块，会导致没有语句
         basicBlocks.addToTail(bodyBlk);
         curBlock = bodyBlk;
         //todo: break & continue
@@ -242,7 +245,7 @@ public class Procedure {
 
         bodyBlk.setLoopDepth(++curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
-        cond2Blk.setLoopDepth(curDepth);
+//        cond2Blk.setLoopDepth(curDepth);
         bodyBlk.setLoopDepth(--curDepth);
         whileBegins.pop();
         whileEnds.pop();
@@ -251,6 +254,57 @@ public class Procedure {
 
         basicBlocks.addToTail(endBlk);
         curBlock = endBlk;
+    }
+
+    private void clone4cond(BasicBlock cond1Blk, BasicBlock curBlock, BasicBlock cond2Blk, HashMap<Value, Value> old2new) {
+        BasicBlock curBB = cond1Blk;
+        BasicBlock stop = curBlock;
+        ArrayList<BasicBlock> newBlks = new ArrayList<>();
+        while (curBB != null) {
+            BasicBlock newBB = curBB == cond1Blk ? cond2Blk : new BasicBlock(curBB.getLoopDepth(), this.getAndAddBlkIndex());
+            old2new.put(curBB, newBB);
+            newBlks.add(newBB);
+
+            Instruction curIns = (Instruction) curBB.getInstructions().getHead();
+            while (curIns != null) {
+                Instruction newIns = curIns.cloneShell(this);
+                newBB.addInstruction(newIns);
+                old2new.put(curIns, newIns);
+                curIns = (Instruction) curIns.getNext();
+            }
+
+            curBB = (BasicBlock) curBB.getNext();
+        }
+
+        BasicBlock last = stop;
+
+        for (BasicBlock newBB : newBlks) {
+            Instruction newIns = (Instruction) newBB.getInstructions().getHead();
+            while (newIns != null) {
+                if (newIns instanceof PhiInstr) {
+                    ((PhiInstr) newIns).renewBlocks(old2new);
+                }
+
+                ArrayList<Value> usedValues = new ArrayList<>(newIns.getUseValueList());
+                for (Value toReplace : usedValues) {
+                    if (!old2new.containsKey(toReplace)) {
+                        if (newIns instanceof ReturnInstr && toReplace == newBB) {
+                            continue;
+                        }
+//                        if (!(toReplace instanceof ConstValue) && !(toReplace instanceof GlobalObject)) {
+//                            throw new RuntimeException("使用了未曾设想的 value " + toReplace.toString());
+//                        }
+                    } else {
+                        newIns.modifyUse(toReplace, old2new.get(toReplace));
+                    }
+                }
+                newIns = (Instruction) newIns.getNext();
+            }
+
+            newBB.insertAfter(last);
+            last = newBB;
+        }
+        curBlock = (BasicBlock) basicBlocks.getTail();
     }
 
     private void doWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
@@ -306,6 +360,7 @@ public class Procedure {
         whileBegins.push(condBlk);
         whileEnds.push(endBlk);
         bodyBlk.setLoopDepth(++curDepth);
+        condBlk.setDomDepth(curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
         bodyBlk.setLoopDepth(--curDepth);
         whileBegins.pop();
@@ -749,7 +804,7 @@ public class Procedure {
                         res = load;
                     } else {
                         if (ptr instanceof GEPInstr) {
-                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr);
+                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr, ptr.getSymbol());
                             curBlock.addInstruction(newPtr);
                             res = newPtr;
                         } else {
@@ -824,7 +879,7 @@ public class Procedure {
                 return load;
             }
             curBlock.addInstruction(load);
-            ptr = new GEPInstr(curRegIndex++, load, indexList);
+            ptr = new GEPInstr(curRegIndex++, load, indexList, load.getSymbol());
         } else {
             ptr = new GEPInstr(curRegIndex++, indexList, symbol);
         }

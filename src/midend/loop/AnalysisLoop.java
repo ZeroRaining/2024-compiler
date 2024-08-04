@@ -1,11 +1,13 @@
 package midend.loop;
 
+import Utils.CustomList;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.binop.BinaryOperation;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.terminator.BranchInstr;
+import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import midend.SSA.DFG;
@@ -18,7 +20,7 @@ public class AnalysisLoop {
     private static ArrayList<Loop> allLoop = new ArrayList<>();
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
-            init();
+            init(function);
             findAllLoop(function);
             fillInLoop();
             finalized(function);
@@ -66,10 +68,15 @@ public class AnalysisLoop {
             loop.colorBlk();
         }
     }
-    private static void init() {
+    private static void init(Function function) {
         header2loop = new HashMap<>();
         outLoop = new ArrayList<>();
         allLoop = new ArrayList<>();
+        CustomList.Node block =  function.getBasicBlocks().getHead();
+        while (block != null) {
+            ((BasicBlock) block).setBlockType(BlockType.OUTOFLOOP);
+            block =  block.getNext();
+        }
     }
     private static void fillInLoop() {
         for (Loop loop : allLoop) {
@@ -86,7 +93,7 @@ public class AnalysisLoop {
                     loop.addLatchBlk(pre);
                 }
             }
-            System.out.println(loop.getHeader() + " " + loop.getLatchs());
+//            System.out.println(loop.getHeader() + " " + loop.getLatchs());
         }
         for (Loop loop : allLoop) {
             for (BasicBlock blk : loop.getHeader().getPres()) {
@@ -217,6 +224,7 @@ public class AnalysisLoop {
         if (!loop.isSimpleLoop()) {
             return;
         }
+        //TODO：短路求值？？
         loop.LoopPrint();
         {
         /*blk_0: anon: entering
@@ -237,6 +245,10 @@ public class AnalysisLoop {
 
         PhiInstr itVar;
         Value itEnd;
+        if (header.getEndInstr() instanceof JumpInstr) {
+//            return;
+            throw new RuntimeException(loop + " instr: " + header.getEndInstr().print());
+        }
         BranchInstr br = (BranchInstr) header.getEndInstr();
         Value cond = br.getCond();
 

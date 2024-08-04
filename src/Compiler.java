@@ -10,6 +10,8 @@ import frontend.syntax.Parser;
 import midend.RemovePhi;
 import midend.SSA.*;
 import midend.loop.AnalysisLoop;
+import midend.loop.LCSSA;
+import midend.loop.LoopUnroll;
 import midend.loop.LoopInvariantMotion;
 
 import java.io.*;
@@ -56,11 +58,25 @@ public class Compiler {
             //简化代码
             Mem2Reg.execute(functions);
             ArrayFParamMem2Reg.execute(functions);
+            
+            //循环优化1
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+            LCSSA.execute(functions);
+            LoopUnroll.execute(functions);
+            
             DeadCodeRemove.execute(functions);
             OIS.execute(functions);
             GVN.execute(functions);
-            SimplifyBranch.execute(functions);
+            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
+            program.printIR(irWriter);
+            irWriter.close();
 
+
+            SimplifyBranch.execute(functions);
+//            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
+//            program.printIR(irWriter);
+//            irWriter.close();
             //合并删减块
             MergeBlock.execute(functions, false);
             DeadBlockRemove.execute(functions);
@@ -69,15 +85,15 @@ public class Compiler {
 //            program.printIR(irWriter);
 //            irWriter.close();
             //循环分析
-            DFG.execute(functions);
-            AnalysisLoop.execute(functions);
-            //LCSSA.execute(functions);
-            LoopInvariantMotion.execute(functions);
+//            DFG.execute(functions);
+//            AnalysisLoop.execute(functions);
+//            //LCSSA.execute(functions);
+//            LoopInvariantMotion.execute(functions);
 
             //BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
-//            irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
-//            program.printIR(irWriter);
-//            irWriter.close();
+            //irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
+            //program.printIR(irWriter);
+            //irWriter.close();
             //second
             DFG.execute(functions);
             DeadCodeRemove.execute(functions);

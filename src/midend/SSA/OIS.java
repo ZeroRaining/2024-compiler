@@ -17,19 +17,26 @@ public class OIS {
             throw new NullPointerException();
         }
         for (Function function : functions) {
-            BasicBlock basicBlock = (BasicBlock) function.getBasicBlocks().getHead();
-            while (basicBlock != null) {
-                Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
-                while (instruction != null) {
-                    Value simplified = instruction.operationSimplify();
-                    if (simplified != null) {
-                        instruction.replaceUseTo(simplified);
-                        instruction.removeFromList();
-                    }
-                    instruction = (Instruction) instruction.getNext();
+            BasicBlock begin = (BasicBlock) function.getBasicBlocks().getHead();
+            BasicBlock end   = (BasicBlock) function.getBasicBlocks().getTail();
+            OSI4blks(begin, end);
+        }
+    }
+    
+    public static void OSI4blks(BasicBlock begin, BasicBlock end) {
+        BasicBlock stop = (BasicBlock) end.getNext();
+        BasicBlock basicBlock = begin;
+        while (basicBlock != stop) {
+            Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
+            while (instruction != null) {
+                Value simplified = instruction.operationSimplify();
+                if (simplified != null) {
+                    instruction.replaceUseTo(simplified);
+                    instruction.removeFromList();
                 }
-                basicBlock = (BasicBlock) basicBlock.getNext();
+                instruction = (Instruction) instruction.getNext();
             }
+            basicBlock = (BasicBlock) basicBlock.getNext();
         }
     }
 }
