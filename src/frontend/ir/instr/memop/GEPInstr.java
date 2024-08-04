@@ -1,10 +1,10 @@
 package frontend.ir.instr.memop;
 
 import frontend.ir.Value;
-import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
+import frontend.ir.structure.FParam;
 import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
@@ -81,6 +81,20 @@ public class GEPInstr extends MemoryOperation {
         }
     }
     
+    public GEPInstr(int result, FParam base, List<Value> indexList, Symbol symbol) {
+        super(symbol);
+        this.result = result;
+        this.indexList = indexList;
+        this.pointerLevel = symbol.getDim() + 1 - indexList.size();
+        String superType = base.type2string();
+        this.arrayTypeName = superType.substring(0, superType.length() - 1);
+        this.ptrVal = base;
+        setUse(base);
+        for (Value value : indexList) {
+            setUse(value);
+        }
+    }
+    
     @Override
     public Instruction cloneShell(Procedure procedure) {
         if (ptrVal instanceof GlobalObject || ptrVal instanceof AllocaInstr) {
@@ -89,6 +103,8 @@ public class GEPInstr extends MemoryOperation {
             return new GEPInstr(procedure.getAndAddRegIndex(), (GEPInstr) ptrVal);
         } else if (ptrVal instanceof LoadInstr) {
             return new GEPInstr(procedure.getAndAddRegIndex(), (LoadInstr) ptrVal, new ArrayList<>(indexList));
+        } else if (ptrVal instanceof FParam) {
+            return new GEPInstr(procedure.getAndAddRegIndex(), (FParam) ptrVal, new ArrayList<>(indexList), symbol);
         } else {
             throw new RuntimeException("GEP 的指针基址还有什么其它可能吗？");
         }
