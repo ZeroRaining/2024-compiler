@@ -13,7 +13,8 @@ public enum BlockType {
     EXIT(1 << 2),
     LATCH(1 << 3),
     INLOOP(1 << 4),
-    EXITING(1 << 5);
+    EXITING(1 << 5),
+    NOTSIMPLE(Integer.MAX_VALUE);
 
     private int num;
 

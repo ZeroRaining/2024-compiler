@@ -15,13 +15,14 @@ import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
+import midend.SSA.MergeBlock;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
 public class LoopUnroll {
-    private static long codeSize = Integer.MAX_VALUE;
+    private static long codeSize = 5000;
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
             AnalysisLoop.LoopIndVars(function);
@@ -166,7 +167,7 @@ public class LoopUnroll {
             }
             phi = (Instruction) phi.getNext();
         }
-
+        MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
     }
     private static HashMap<Value, Value> old2new;
 

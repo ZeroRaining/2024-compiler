@@ -33,7 +33,9 @@ public class LCSSA {
         }
 
         ArrayList<BasicBlock> exits = loop.getExits();
-        assert !exits.isEmpty();
+        if (exits.isEmpty()) {
+            return;
+        }
         for (BasicBlock blk : loop.getBlks()) {
             Instruction instr = (Instruction) blk.getInstructions().getHead();
             while (instr != null) {

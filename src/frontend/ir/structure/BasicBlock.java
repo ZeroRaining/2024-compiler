@@ -7,7 +7,6 @@ import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.AllocaInstr;
-import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.MemoryOperation;
 import frontend.ir.instr.otherop.PCInstr;
 import frontend.ir.instr.terminator.BranchInstr;
