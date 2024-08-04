@@ -14,7 +14,6 @@ import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
-import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
@@ -143,7 +142,7 @@ public class LoopUnroll {
         old2new = new HashMap<>(phiInHead);
         Group<BasicBlock, BasicBlock> oneLoop = new Group<>(headerNext, latch);
         for (int i = 0; i < times - 1; i++) {
-            oneLoop = cloneBlks(oneLoop, procedure, begin2end, phiInHead);
+            oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop());
         }
 
         BasicBlock lastLatch = oneLoop.getSecond();
@@ -164,7 +163,7 @@ public class LoopUnroll {
     private static HashMap<Value, Value> old2new;
 
     private static Group<BasicBlock, BasicBlock> cloneBlks(Group<BasicBlock, BasicBlock> oneLoop, Procedure procedure,
-                                                           HashMap<Value, Value> begin2end, HashMap<Value, Value> phiInHead) {
+                                                           HashMap<Value, Value> begin2end, Loop prtLoop) {
         ArrayList<BasicBlock> newBlks = new ArrayList<>();
 
         BasicBlock curBB = oneLoop.getFirst();
@@ -188,6 +187,9 @@ public class LoopUnroll {
         BasicBlock last = oneLoop.getSecond();
 
         for (BasicBlock newBB : newBlks) {
+            if (prtLoop != null) {
+                prtLoop.addBlk(newBB);
+            }
             Instruction newIns = (Instruction) newBB.getInstructions().getHead();
             while (newIns != null) {
                 if (newIns instanceof PhiInstr) {
