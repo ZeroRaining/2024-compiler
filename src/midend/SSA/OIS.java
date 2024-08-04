@@ -2,8 +2,11 @@ package midend.SSA;
 
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.binop.BinaryOperation;
+import frontend.ir.instr.binop.SRemInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 
@@ -34,6 +37,16 @@ public class OIS {
                     instruction.replaceUseTo(simplified);
                     instruction.removeFromList();
                 }
+                
+                // 针对累加取模操作的特殊化简
+                if (instruction instanceof SRemInstr) {
+                    Procedure curPro = (Procedure) basicBlock.getParent().getOwner();
+                    BinaryOperation newIns = ((SRemInstr) instruction).sumSimplify(curPro);
+                    if (newIns != null) {
+                        newIns.insertBefore(instruction);
+                    }
+                }
+                
                 instruction = (Instruction) instruction.getNext();
             }
             basicBlock = (BasicBlock) basicBlock.getNext();

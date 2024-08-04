@@ -14,6 +14,7 @@ public class AddInstr extends BinaryOperation implements Swappable {
         super(result, op1, op2, "add", DataType.INT);
         assert op1.getDataType() == DataType.INT;
         assert op2.getDataType() == DataType.INT;
+        trySwapOp();
     }
     
     public void trySwapOp() {
@@ -22,6 +23,12 @@ public class AddInstr extends BinaryOperation implements Swappable {
             op1 = op2;
             op2 = tmp;
         }
+    }
+    
+    @Override
+    public void modifyValue(Value from, Value to) {
+        super.modifyValue(from, to);
+        trySwapOp();
     }
     
     @Override
