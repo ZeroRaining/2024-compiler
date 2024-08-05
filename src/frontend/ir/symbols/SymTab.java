@@ -79,7 +79,7 @@ public class SymTab {
             if (init != null) {
                 initVal = createInitVal(dataType, init, limList);
             } else if (!limList.isEmpty()) {
-                initVal = new ArrayInitVal(dataType, limList);
+                initVal = new ArrayInitVal(dataType, limList, false);
             } else if (isGlobal()) {
                 initVal = dataType == DataType.FLOAT ? ConstFloat.Zero :
                                                        ConstInt.Zero;
@@ -145,7 +145,7 @@ public class SymTab {
             throw new RuntimeException("不是，哥们，你这数组连一个维度都没有的吗？");
         }
         
-        ArrayInitVal myInitVal = new ArrayInitVal(type, limList);
+        ArrayInitVal myInitVal = new ArrayInitVal(type, limList, true);
         Iterator<Ast.Init> it = initList.iterator();
         
         if (dim == 1) {

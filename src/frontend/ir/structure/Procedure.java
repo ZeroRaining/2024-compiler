@@ -139,7 +139,7 @@ public class Procedure {
                     }
                     limList.add(exp.getConstInt(symTab));
                 }
-                initVal = new ArrayInitVal(dataType, limList);
+                initVal = new ArrayInitVal(dataType, limList, false);
             }
             Symbol symbol = new Symbol(name, dataType, limList, false, false, initVal);
             symTab.addSym(symbol);
@@ -464,17 +464,20 @@ public class Procedure {
                     for (int i = 0; i < ((ArrayInitVal) initVal).getDim(); i++) {
                         baseIndexList.add(new ConstInt(0));
                     }
-                    GEPInstr toBase = new GEPInstr(curRegIndex++, baseIndexList, symbol);
-                    curBlock.addInstruction(toBase);
-                    Bitcast toI8 = new Bitcast(curRegIndex++, toBase);
-                    curBlock.addInstruction(toI8);
-                    ArrayList<Value> rParams = new ArrayList<>();
-                    rParams.add(toI8);
-                    rParams.add(new ConstInt(0));
-                    rParams.add(new ConstInt(((ArrayInitVal) initVal).getSize()));
-                    LibFunc libFunc = Lib.getInstance().getLibFunc("memset");
-                    CallInstr memset = libFunc.makeCall(curRegIndex++, rParams);
-                    curBlock.addInstruction(memset);
+                    
+                    if (((ArrayInitVal) initVal).checkHasInit()) {
+                        GEPInstr toBase = new GEPInstr(curRegIndex++, baseIndexList, symbol);
+                        curBlock.addInstruction(toBase);
+                        Bitcast toI8 = new Bitcast(curRegIndex++, toBase);
+                        curBlock.addInstruction(toI8);
+                        ArrayList<Value> rParams = new ArrayList<>();
+                        rParams.add(toI8);
+                        rParams.add(new ConstInt(0));
+                        rParams.add(new ConstInt(((ArrayInitVal) initVal).getSize()));
+                        LibFunc libFunc = Lib.getInstance().getLibFunc("memset");
+                        CallInstr memset = libFunc.makeCall(curRegIndex++, rParams);
+                        curBlock.addInstruction(memset);
+                    }
                     
                     List<List<Integer>> toInit = new ArrayList<>();
                     ((ArrayInitVal) initVal).getNonZeroIndex(toInit, new ArrayList<>());
