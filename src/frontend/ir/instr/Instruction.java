@@ -72,6 +72,17 @@ public abstract class Instruction extends Value {
         this.setPrev(null);
     }
 
+    public void removeUse(Value value) {
+        useValueList.remove(value);
+        for (Use use : useList) {
+            if (use.getUsed() == value) {
+                useList.remove(use);
+                use.removeFromList();
+                return;
+            }
+        }
+    }
+
     public ArrayList<Value> getUseValueList() {
         return useValueList;
     }
