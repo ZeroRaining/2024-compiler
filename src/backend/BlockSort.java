@@ -47,8 +47,9 @@ public class BlockSort {
     private void selectMergeBlock(AsmFunction function) {
         AsmBlock asmBlock = (AsmBlock) (function.getBlocks().getHead());
         while (asmBlock != null) {
-            while (asmBlock.getInstrTail() instanceof AsmJ asmJ && asmJ.getTarget().pres.size() == 1) {
+            while (asmBlock.getInstrTail() instanceof AsmJ asmJ && asmJ.getTarget().jumpToInstrs.size() == 1) {
                 mergeBlock(asmBlock, asmJ.getTarget());
+                asmJ.getTarget().removeJumpToInstr(asmJ);
             }
             asmBlock = (AsmBlock) asmBlock.getNext();
         }
@@ -60,6 +61,7 @@ public class BlockSort {
 //        }
         i.getInstrTail().removeFromList();
         i.getInstrs().addCustomListToTail(j.getInstrs());
+        //这个地方其实有点问题，但是希望以后不要用前驱后继了(
         i.sucs.remove(j);
         i.sucs.addAll(j.sucs);
         for (CustomList.Node instr : j.getInstrs()) {
