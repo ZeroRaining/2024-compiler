@@ -6,9 +6,9 @@ import java.util.NoSuchElementException;
 public class CustomList implements Iterable<CustomList.Node> {
     private Node head;
     private Node tail;
-//    private L value;
+    //    private L value;
     private int size;
-    
+
     private Object owner;
 
     public CustomList() {
@@ -25,11 +25,11 @@ public class CustomList implements Iterable<CustomList.Node> {
         this.size = 0;
         this.owner = owner;
     }
-    
+
     public Object getOwner() {
         return owner;
     }
-    
+
     public Node getHead() {
         return head;
     }
@@ -91,6 +91,7 @@ public class CustomList implements Iterable<CustomList.Node> {
         node.parent = this;
         incrementSize();
     }
+
     public void addCustomListToTail(CustomList other) {
         if (other == null || other.isEmpty()) {
             return; // 如果要合并的链表为空，则无需操作
@@ -108,19 +109,19 @@ public class CustomList implements Iterable<CustomList.Node> {
         }
 
         // 更新当前链表的大小
-        this.size += other.size;
+        this.size = this.size + other.size;
 
         // 更新合并后节点的父引用
         Node current = other.head;
         while (current != null) {
-            current.setParent(this.head);
+            current.parent = this;
             current = current.next;
         }
 
         // 清空其他链表的引用
-        other.head = null;
-        other.tail = null;
-        other.size = 0;
+//        other.head = null;
+//        other.tail = null;
+//        other.size = 0;
     }
 
 //    public N getHeadValue() {
@@ -222,7 +223,7 @@ public class CustomList implements Iterable<CustomList.Node> {
             }
             if (this.next != null) {
                 this.next.prev = this.prev;
-             } else {
+            } else {
                 this.parent.tail = this.prev;
             }
             this.parent.decrementSize();
