@@ -2,6 +2,7 @@ package midend.SSA;
 
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.convop.Bitcast;
 import frontend.ir.instr.memop.GEPInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
@@ -13,6 +14,7 @@ import frontend.ir.structure.GlobalObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * 针对指针的 mem2reg，可以认为是在做别名分析
@@ -70,9 +72,19 @@ public class PtrMem2Reg {
         Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
         while (instruction != null) {
             if (instruction instanceof CallInstr) {
-                // todo: 遇到函数调用直接摆烂，之后要确认一下是不是真的跟指针有关系。
-                defMap.clear();
-                DONT_MOVE = true;
+                // todo: 之后要确认一下跟哪些指针有关系。
+                List<Value> rParams = ((CallInstr) instruction).getRParams();
+                boolean relatedToPtr = false;
+                for (Value rp : rParams) {
+                    if (rp instanceof GEPInstr || rp instanceof Bitcast) {
+                        relatedToPtr = true;
+                        break;
+                    }
+                }
+                if (relatedToPtr) {
+                    defMap.clear();
+                    DONT_MOVE = true;
+                }
             } else if (instruction instanceof StoreInstr) {
                 Value ptr = ((StoreInstr) instruction).getPtr();
                 if (ptr instanceof GEPInstr) {
