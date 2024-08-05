@@ -903,7 +903,18 @@ public class IrParser {
         Value src1 = instr.getOp1();
         Value src2 = instr.getOp2();
         if (src2 instanceof ConstInt) {
-            if (isTwoTimes(((ConstInt) src2).getNumber())) {
+            if (src1 instanceof ConstInt) {
+                int value1 = ((ConstInt) src1).getNumber();
+                int value2 = ((ConstInt) src2).getNumber();
+                AsmOperand dst = parseOperand(instr, 0, f, bb);
+                AsmOperand imm = new AsmImm32(value1 % value2);
+                AsmMove asmMove = new AsmMove(dst, imm);
+                asmBlock.addInstrTail(asmMove);
+            } else if (((ConstInt) src2).getNumber() == 1) {
+                AsmOperand dst = parseOperand(instr, 0, f, bb);
+                AsmMove asmMove = new AsmMove(dst, ZERO);
+                asmBlock.addInstrTail(asmMove);
+            } else if (isTwoTimes(((ConstInt) src2).getNumber())) {
                 AsmOperand dst = parseOperand(instr, 0, f, bb);
                 AsmOperand src = parseOperand(src1, 0, f, bb);
                 int value = ((ConstInt) src2).getNumber() - 1;
@@ -920,18 +931,23 @@ public class IrParser {
                 asmBlock.addInstrTail(asmSub);
             }
         } else {
-            AsmOperand dst = parseOperand(instr, 0, f, bb);
-            AsmOperand src1Op = parseOperand(src1, 0, f, bb);
-            AsmOperand src2Op = parseOperand(src2, 0, f, bb);
-            AsmDiv asmDiv = new AsmDiv(dst, src1Op, src2Op);
-            asmDiv.isWord = true;
-            asmBlock.addInstrTail(asmDiv);
-            AsmMul asmMul = new AsmMul(dst, dst, src2Op);
-            asmMul.isWord = true;
-            asmBlock.addInstrTail(asmMul);
-            AsmSub asmSub = new AsmSub(dst, src1Op, dst);
-            asmSub.isWord = true;
-            asmBlock.addInstrTail(asmSub);
+            if (src1 instanceof ConstInt constInt && constInt.getNumber() == 0) {
+                AsmMove asmMove = new AsmMove(parseOperand(instr, 0, f, bb), ZERO);
+                asmBlock.addInstrTail(asmMove);
+            } else {
+                AsmOperand dst = parseOperand(instr, 0, f, bb);
+                AsmOperand src1Op = parseOperand(src1, 0, f, bb);
+                AsmOperand src2Op = parseOperand(src2, 0, f, bb);
+                AsmDiv asmDiv = new AsmDiv(dst, src1Op, src2Op);
+                asmDiv.isWord = true;
+                asmBlock.addInstrTail(asmDiv);
+                AsmMul asmMul = new AsmMul(dst, dst, src2Op);
+                asmMul.isWord = true;
+                asmBlock.addInstrTail(asmMul);
+                AsmSub asmSub = new AsmSub(dst, src1Op, dst);
+                asmSub.isWord = true;
+                asmBlock.addInstrTail(asmSub);
+            }
         }
     }
 
