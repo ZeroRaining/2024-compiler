@@ -85,8 +85,19 @@ public class Compiler {
 //        //LCSSA.execute(functions);
 //        LoopInvariantMotion.execute(functions);
         
-        //second
+        // second
         DFG.execute(functions);
+        DeadCodeRemove.execute(functions);
+        OIS.execute(functions);
+        GVN.execute(functions);
+        SimplifyBranch.execute(functions);
+        MergeBlock.execute(functions, true);
+        DeadBlockRemove.execute(functions);
+        RemoveUseLessPhi.execute(functions);
+        
+        // third
+        DFG.execute(functions);
+        PtrMem2Reg.execute(functions);
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
