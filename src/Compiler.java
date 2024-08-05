@@ -105,6 +105,8 @@ public class Compiler {
         MergeBlock.execute(functions, true);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
+        
+        DFG.execute(functions);
         AnalysisLoop.execute(functions);
 
 
