@@ -230,7 +230,11 @@ public class BasicBlock extends Value {
     
     @Override
     public String value2string() {
-        return "blk_" + labelCnt;
+        if (DEBUG.debug1) {
+            return "blk_" + labelCnt  + "_@" + ((Procedure) this.getParent().getOwner()).getParentFunc().toString();
+        } else {
+            return "blk_" + labelCnt;
+        }
     }
 
     public CustomList getInstructions() {

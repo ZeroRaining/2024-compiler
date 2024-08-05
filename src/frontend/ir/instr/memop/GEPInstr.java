@@ -204,21 +204,26 @@ public class GEPInstr extends MemoryOperation {
             }
         }
         
+        if (ptrVal instanceof GEPInstr) {
+            return ((GEPInstr) ptrVal).hasNonConstIndex();
+        }
+        
         return false;
     }
     
-    public boolean onlyOneZero() {
-        if (indexList.isEmpty()) {
-            return true;
+    public boolean isUseless() {
+        return indexList.isEmpty();
+    }
+    
+    /**
+     * 用来寻找一个指针指向对象的定义，从而确定两个指针有没有可能是指向同一个对象
+     * root 只能是 AllocaInstr，GlobalObject，FParam 三种
+     */
+    public Value getRoot() {
+        if (this.ptrVal instanceof GEPInstr) {
+            return ((GEPInstr) this.ptrVal).getRoot();
         }
-        if (symbol.isArrayFParam()) {
-            if (indexList.size() > 1) {
-                return false;
-            }
-            Value firstIdx = indexList.get(0);
-            return firstIdx instanceof ConstInt && firstIdx.getNumber().intValue() == 0;
-        }
-        return false;
+        return this.ptrVal;
     }
     
     @Override
