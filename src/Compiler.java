@@ -96,18 +96,20 @@ public class Compiler {
         RemoveUseLessPhi.execute(functions);
         
         // third
-        DFG.execute(functions);
-        PtrMem2Reg.execute(functions);
-        DeadCodeRemove.execute(functions);
-        OIS.execute(functions);
-        GVN.execute(functions);
-        SimplifyBranch.execute(functions);
-        MergeBlock.execute(functions, true);
-        DeadBlockRemove.execute(functions);
-        RemoveUseLessPhi.execute(functions);
-        
-        DFG.execute(functions);
-        AnalysisLoop.execute(functions);
+        if (arg.getOptLevel() == 1) {
+            DFG.execute(functions);
+            PtrMem2Reg.execute(functions);
+            DeadCodeRemove.execute(functions);
+            OIS.execute(functions);
+            GVN.execute(functions);
+            SimplifyBranch.execute(functions);
+            MergeBlock.execute(functions, true);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
+            
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+        }
 
 
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
