@@ -95,6 +95,11 @@ public class Compiler {
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
 
+        //维护循环深度与CFG图
+        DFG.execute(functions);
+        AnalysisLoop.execute(functions);
+
+
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
         // 中端优化结束
 

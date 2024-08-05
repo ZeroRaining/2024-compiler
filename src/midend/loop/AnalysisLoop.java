@@ -64,10 +64,18 @@ public class AnalysisLoop {
         function.setAllLoop(allLoop);
         function.setHeader2loop(header2loop);
         function.setOuterLoop(outLoop);
-        for (Loop loop : allLoop) {
-            loop.colorBlk();
+        for (Loop loop : outLoop) {
+            dfs4color(loop, 1);
         }
     }
+
+    private static void dfs4color(Loop loop, int depth) {
+        loop.colorBlk(depth);
+        for (Loop inner : loop.getInnerLoops()) {
+            dfs4color(loop, depth + 1);
+        }
+    }
+
     private static void init(Function function) {
         header2loop = new HashMap<>();
         outLoop = new ArrayList<>();
@@ -75,6 +83,7 @@ public class AnalysisLoop {
         CustomList.Node block =  function.getBasicBlocks().getHead();
         while (block != null) {
             ((BasicBlock) block).setBlockType(BlockType.OUTOFLOOP);
+            ((BasicBlock) block).setLoopDepth(0);
             block =  block.getNext();
         }
     }
