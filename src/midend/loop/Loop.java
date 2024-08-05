@@ -135,6 +135,10 @@ public class Loop {
         return exits;
     }
 
+    public ArrayList<BasicBlock> getExitings() {
+        return exitings;
+    }
+
     public ArrayList<Loop> getInnerLoops() {
         return innerLoops;
     }

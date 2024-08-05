@@ -69,6 +69,9 @@ public class Compiler {
             LCSSA.execute(functions);
             LoopUnroll.execute(functions);
         }
+        DFG.execute(functions);
+        AnalysisLoop.rotateLoop(functions);
+        RemoveUseLessPhi.execute(functions);
         
 //        DeadCodeRemove.execute(functions);
 //        OIS.execute(functions);

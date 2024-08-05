@@ -2,6 +2,7 @@ package frontend.ir;
 
 import Utils.CustomList;
 import frontend.ir.instr.Instruction;
+import frontend.ir.structure.BasicBlock;
 
 import java.util.HashSet;
 
@@ -67,7 +68,19 @@ public abstract class Value extends CustomList.Node {
             use = nextUse;
         }
     }
-    
+
+    public void replaceUseInRange(HashSet<BasicBlock> range, Value to) {
+        Use use = this.getBeginUse();
+        while (use != null) {
+            Instruction user = use.getUser();
+            if (range.contains(user.getParentBB())) {
+                user.modifyUse(this, to);
+            }
+            use = (Use) use.getNext();
+        }
+
+    }
+
     @Override
     public String toString() {
         return value2string();
