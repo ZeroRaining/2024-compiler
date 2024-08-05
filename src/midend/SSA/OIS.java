@@ -2,8 +2,11 @@ package midend.SSA;
 
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.binop.BinaryOperation;
+import frontend.ir.instr.binop.SRemInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 
@@ -17,19 +20,36 @@ public class OIS {
             throw new NullPointerException();
         }
         for (Function function : functions) {
-            BasicBlock basicBlock = (BasicBlock) function.getBasicBlocks().getHead();
-            while (basicBlock != null) {
-                Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
-                while (instruction != null) {
-                    Value simplified = instruction.operationSimplify();
-                    if (simplified != null) {
-                        instruction.replaceUseTo(simplified);
-                        instruction.removeFromList();
-                    }
-                    instruction = (Instruction) instruction.getNext();
+            BasicBlock begin = (BasicBlock) function.getBasicBlocks().getHead();
+            BasicBlock end   = (BasicBlock) function.getBasicBlocks().getTail();
+            OSI4blks(begin, end);
+        }
+    }
+    
+    public static void OSI4blks(BasicBlock begin, BasicBlock end) {
+        BasicBlock stop = (BasicBlock) end.getNext();
+        BasicBlock basicBlock = begin;
+        while (basicBlock != stop) {
+            Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
+            while (instruction != null) {
+                Value simplified = instruction.operationSimplify();
+                if (simplified != null) {
+                    instruction.replaceUseTo(simplified);
+                    instruction.removeFromList();
                 }
-                basicBlock = (BasicBlock) basicBlock.getNext();
+                
+                // 针对累加取模操作的特殊化简
+                if (instruction instanceof SRemInstr) {
+                    Procedure curPro = (Procedure) basicBlock.getParent().getOwner();
+                    BinaryOperation newIns = ((SRemInstr) instruction).sumSimplify(curPro);
+                    if (newIns != null) {
+                        newIns.insertBefore(instruction);
+                    }
+                }
+                
+                instruction = (Instruction) instruction.getNext();
             }
+            basicBlock = (BasicBlock) basicBlock.getNext();
         }
     }
 }

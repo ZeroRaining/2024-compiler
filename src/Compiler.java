@@ -10,6 +10,8 @@ import frontend.syntax.Parser;
 import midend.RemovePhi;
 import midend.SSA.*;
 import midend.loop.AnalysisLoop;
+import midend.loop.LCSSA;
+import midend.loop.LoopUnroll;
 import midend.loop.LoopInvariantMotion;
 
 import java.io.*;
@@ -36,77 +38,78 @@ public class Compiler {
         Ast ast = new Parser(tokenList).parseAst();
         // 生成 IR
         Program program = new Program(ast);
-
-        if (arg.getOptLevel() == 1) {
-            FI.execute(program.getFunctionList());
-            program.removeUselessFunc();
-            GlobalValueSimplify.execute(program.getGlobalVars());
-            program.deleteUselessGlobalVars();
-        }
         
+        // 中端优化开始
+        if (arg.toTime()) { optimizeStartTime = System.currentTimeMillis(); }
+        
+        // 函数内联，之后删除没用的函数定义
+        FI.execute(program.getFunctionList());
+        program.removeUselessFunc();
+        // 全局变量简化，之后删掉没用的全局变量定义
+        GlobalValueSimplify.execute(program.getGlobalVars());
+        program.deleteUselessGlobalVars();
+        
+        // 获取函数列表用于优化
         ArrayList<Function> functions = program.getFunctionList();
+        
+        // 删除没用的基本块
         DeadBlockRemove.execute(functions);
+        
+        // 构建初版 DFG
         DFG.execute(functions);
-
-        // 开启优化
-        if (arg.toTime()) {
-            optimizeStartTime = System.currentTimeMillis();
-        }
+        
+        // 简化代码
+        Mem2Reg.execute(functions);
+        ArrayFParamMem2Reg.execute(functions);
+        
+        // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
-            //简化代码
-            Mem2Reg.execute(functions);
-            ArrayFParamMem2Reg.execute(functions);
-            DeadCodeRemove.execute(functions);
-            OIS.execute(functions);
-            GVN.execute(functions);
-            SimplifyBranch.execute(functions);
-
-            //合并删减块
-            MergeBlock.execute(functions, false);
-            DeadBlockRemove.execute(functions);
-            RemoveUseLessPhi.execute(functions);
-//            BufferedWriter irWriter = new BufferedWriter(new FileWriter("loopBefore"));
-//            program.printIR(irWriter);
-//            irWriter.close();
-            //循环分析
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
-            //LCSSA.execute(functions);
-            LoopInvariantMotion.execute(functions);
-
-            //BufferedWriter irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
-//            irWriter = new BufferedWriter(new FileWriter("gvnBefore"));
-//            program.printIR(irWriter);
-//            irWriter.close();
-            //second
-            DFG.execute(functions);
-            DeadCodeRemove.execute(functions);
-            OIS.execute(functions);
-            GVN.execute(functions);
-            SimplifyBranch.execute(functions);
-            MergeBlock.execute(functions, true);
-            DeadBlockRemove.execute(functions);
-            RemoveUseLessPhi.execute(functions);
+            LCSSA.execute(functions);
+            LoopUnroll.execute(functions);
         }
-//        Function.blkLabelReorder();
+        
+        DeadCodeRemove.execute(functions);
+        OIS.execute(functions);
+        GVN.execute(functions);
+        
+        SimplifyBranch.execute(functions);
+        //合并删减块
+        MergeBlock.execute(functions, false);
+        DeadBlockRemove.execute(functions);
+        RemoveUseLessPhi.execute(functions);
+        //循环分析
+//        DFG.execute(functions);
+//        AnalysisLoop.execute(functions);
+//        //LCSSA.execute(functions);
+//        LoopInvariantMotion.execute(functions);
+        
+        //second
+        DFG.execute(functions);
+        DeadCodeRemove.execute(functions);
+        OIS.execute(functions);
+        GVN.execute(functions);
+        SimplifyBranch.execute(functions);
+        MergeBlock.execute(functions, true);
+        DeadBlockRemove.execute(functions);
+        RemoveUseLessPhi.execute(functions);
 
-        if (arg.toTime()) {
-            optimizeEndTime = System.currentTimeMillis();
-        }
-        RemovePhi.phi2move(functions);
+        if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
+        // 中端优化结束
 
         // 打印 IR
         if (arg.toPrintIR()) {
 //            Function.blkLabelReorder();
-            
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());
             program.printIR(irWriter);
             irWriter.close();
         }
         
-        if (arg.getOptLevel() == 1 && !arg.toSkipBackEnd()) {
+        // 中后端衔接部分
+        if (!arg.toSkipBackEnd()) {
             DetectTailRecursive.detect(functions);
-
+            RemovePhi.phi2move(functions);
         }
         
         // 运行后端
@@ -119,8 +122,7 @@ public class Compiler {
             allocAno.run(asmModule);
 //            RegAllocLinear alloc = RegAllocLinear.getInstance(parser.downOperandMap);
 //            alloc.debug(asmModule);
-            DeleteUnusedBlock deleteUnusedBlock = new DeleteUnusedBlock();
-            deleteUnusedBlock.run(asmModule);
+            DeleteUnusedBlock.run(asmModule);
             BackendPrinter backendPrinter = new BackendPrinter(asmModule, true, output);
             backendPrinter.printBackend();
         }

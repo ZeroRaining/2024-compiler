@@ -5,7 +5,6 @@ import frontend.ir.constvalue.ConstInt;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.structure.FParam;
-import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
 
@@ -16,16 +15,17 @@ import java.util.List;
  * getelementptr
  * 获取指针的指令，主要用于数组操作
  * 目前的设计是无论几层都一个指令取出来，之后可能需要改成分不同情况分开或合并
- * 此外值得注意的是因为现在后端大概率是 64 位，这里的指针类型用的都是 i64
  */
 public class GEPInstr extends MemoryOperation {
     private final int result;
     private final List<Value> indexList;
     private final String arrayTypeName;
     private Value ptrVal;    // 指针基质：全局变量名，或者局部变量申请指令，或上一条 GEP
+    private final int type;
     
     public GEPInstr(int result, List<Value> indexList, Symbol symbol) {
         super(symbol);
+        type = 1;
         if (indexList == null) {
             throw new NullPointerException();
         }
@@ -42,6 +42,7 @@ public class GEPInstr extends MemoryOperation {
     
     private GEPInstr(int result, List<Value> indexList, Value allocValue, Symbol symbol) {
         super(symbol);
+        type = 1;
         if (indexList == null) {
             throw new NullPointerException();
         }
@@ -56,8 +57,9 @@ public class GEPInstr extends MemoryOperation {
         }
     }
     
-    public GEPInstr(int result, GEPInstr base) {
-        super(base.symbol);
+    public GEPInstr(int result, GEPInstr base, Symbol symbol) {
+        super(symbol);
+        type = 2;
         this.result = result;
         this.indexList = new ArrayList<>();
         indexList.add(new ConstInt(0));
@@ -67,27 +69,26 @@ public class GEPInstr extends MemoryOperation {
         setUse(base);
     }
     
-    public GEPInstr(int result, LoadInstr base, List<Value> indexList) {
-        super(base.symbol);
-        this.result = result;
-        this.indexList = indexList;
-        this.pointerLevel = symbol.getDim() + 1 - indexList.size();
-        String superType = base.printBaseType();
-        this.arrayTypeName = superType.substring(0, superType.length() - 1);
-        this.ptrVal = base;
-        setUse(base);
-        for (Value value : indexList) {
-            setUse(value);
-        }
-    }
-    
-    public GEPInstr(int result, FParam base, List<Value> indexList, Symbol symbol) {
+    public GEPInstr(int result, Value base, List<Value> indexList, Symbol symbol) {
         super(symbol);
+        type = 3;
         this.result = result;
         this.indexList = indexList;
         this.pointerLevel = symbol.getDim() + 1 - indexList.size();
-        String superType = base.type2string();
-        this.arrayTypeName = superType.substring(0, superType.length() - 1);
+        String superType;
+        if (base instanceof FParam) {
+            superType = base.type2string();
+        } else if (base instanceof MemoryOperation) {
+            superType = ((MemoryOperation) base).printBaseType();
+        }  else {
+            throw new RuntimeException("未曾设想的基指针类型");
+        }
+        if (superType.charAt(superType.length() - 1) == '*') {
+            this.arrayTypeName = superType.substring(0, superType.length() - 1);
+        } else {
+            this.arrayTypeName = superType;
+        }
+        
         this.ptrVal = base;
         setUse(base);
         for (Value value : indexList) {
@@ -97,16 +98,14 @@ public class GEPInstr extends MemoryOperation {
     
     @Override
     public Instruction cloneShell(Procedure procedure) {
-        if (ptrVal instanceof GlobalObject || ptrVal instanceof AllocaInstr) {
+        if (type == 1) {
             return new GEPInstr(procedure.getAndAddRegIndex(), new ArrayList<>(indexList), ptrVal, symbol);
-        } else if (ptrVal instanceof GEPInstr) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), (GEPInstr) ptrVal);
-        } else if (ptrVal instanceof LoadInstr) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), (LoadInstr) ptrVal, new ArrayList<>(indexList));
-        } else if (ptrVal instanceof FParam) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), (FParam) ptrVal, new ArrayList<>(indexList), symbol);
+        } else if (type == 2) {
+            return new GEPInstr(procedure.getAndAddRegIndex(), (GEPInstr) ptrVal, symbol);
+        } else if (type == 3) {
+            return new GEPInstr(procedure.getAndAddRegIndex(), ptrVal, new ArrayList<>(indexList), symbol);
         } else {
-            throw new RuntimeException("GEP 的指针基址还有什么其它可能吗？");
+            throw new RuntimeException("type 已经穷尽了");
         }
     }
     
@@ -167,10 +166,10 @@ public class GEPInstr extends MemoryOperation {
         stringBuilder.append(arrayTypeName).append("* ");
         stringBuilder.append(ptrVal.value2string());
         if (!symbol.isArrayFParam()) {
-            stringBuilder.append(", i64 0");
+            stringBuilder.append(", i32 0");
         }
         for (Value index : indexList) {
-            stringBuilder.append(", i64 ").append(index.value2string());
+            stringBuilder.append(", i32 ").append(index.value2string());
         }
         return stringBuilder.toString();
     }

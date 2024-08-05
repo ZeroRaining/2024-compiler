@@ -7,7 +7,6 @@ import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.AllocaInstr;
-import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.MemoryOperation;
 import frontend.ir.instr.otherop.PCInstr;
 import frontend.ir.instr.terminator.BranchInstr;
@@ -28,7 +27,7 @@ public class BasicBlock extends Value {
     private int domDepth;
     private boolean isRet;
     private boolean isEntering;
-    private BlockType blockType;
+    private int blockType;
     private HashSet<BasicBlock> pres;
     private HashSet<BasicBlock> sucs;
     private HashSet<BasicBlock> doms;
@@ -51,15 +50,15 @@ public class BasicBlock extends Value {
         DF = new HashSet<>();
         this.labelCnt = labelCnt;
         newTrue = newFalse = null;
-        blockType = BlockType.OUTOFLOOP;
+        blockType = BlockType.OUTOFLOOP.getNum();
     }
 
-    public BlockType getBlockType() {
-        return blockType;
+    public boolean isBlockType(BlockType blockType) {
+        return (this.blockType & blockType.getNum()) != 0;
     }
 
     public void setBlockType(BlockType blockType) {
-        this.blockType = blockType;
+        this.blockType = blockType.getNum() | this.blockType;
     }
 
     public void setNewTrue(BasicBlock newTrue) {

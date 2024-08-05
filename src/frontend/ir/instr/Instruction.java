@@ -88,6 +88,11 @@ public abstract class Instruction extends Value {
         super.insertAfter(node);
         this.parentBB = ((Instruction) node).parentBB;
     }
+    
+    public void insertBefore(CustomList.Node node) {
+        super.insertBefore(node);
+        this.parentBB = ((Instruction) node).parentBB;
+    }
 
     @Override
     public void setParent(CustomList.Node node) {

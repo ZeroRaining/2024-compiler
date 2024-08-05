@@ -1,5 +1,6 @@
 package midend.SSA;
 
+import Utils.CustomList;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
@@ -67,13 +68,36 @@ public class FI {
                     ArrayList<BasicBlock> bbList = callee.func2blocks(curDepth, rParams, function);
                     
                     Collections.reverse(bbList);
+                    
+//                    JumpInstr prev2func = new JumpInstr(bbList.get(bbList.size() - 1));
+                    basicBlock.setRet(false);
+                    BasicBlock firstBlkInFunc = bbList.get(bbList.size() - 1);
+                    bbList.remove(firstBlkInFunc);
+                    Instruction insInFirstBlk = (Instruction) firstBlkInFunc.getInstructions().getHead();
+                    while (insInFirstBlk != null) {
+                        Instruction tmp = (Instruction) insInFirstBlk.getNext();
+                        if (insInFirstBlk instanceof Terminator) {
+                            basicBlock.addInstruction(insInFirstBlk.cloneShell(function));
+                            insInFirstBlk.removeFromList();
+                        } else {
+                            insInFirstBlk.removeFromListWithUseRemain();
+                            basicBlock.addInstruction(insInFirstBlk);
+                        }
+                        
+                        insInFirstBlk = tmp;
+                    }
+
+                    for (BasicBlock block : bbList) {
+                        CustomList.Node node = block.getInstructions().getHead();
+                        while (node instanceof PhiInstr) {
+                            ((PhiInstr) node).modifyPrtBlk(firstBlkInFunc, basicBlock);
+                            node = node.getNext();
+                        }
+                    }
+                    
                     for (BasicBlock newBB : bbList) {
                         newBB.insertAfter(basicBlock);
                     }
-                    
-                    JumpInstr prev2func = new JumpInstr(bbList.get(bbList.size() - 1));
-                    basicBlock.setRet(false);
-                    basicBlock.addInstruction(prev2func);
                     
                     BasicBlock funcLastBB = bbList.get(0);
                     ReturnInstr retIns = (ReturnInstr) funcLastBB.getEndInstr();

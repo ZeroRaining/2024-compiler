@@ -15,21 +15,23 @@ import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 public class DeadCodeRemove {
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
-            removeCode(function);
+            BasicBlock begin = (BasicBlock) function.getBasicBlocks().getHead();
+            BasicBlock end   = (BasicBlock) function.getBasicBlocks().getTail();
+            removeCode(begin, end);
         }
     }
 
-    private static void removeCode(Function function) {
+    public static void removeCode(BasicBlock begin, BasicBlock end) {
         //获得从未被使用的变量
         Queue<Instruction> noUse = new LinkedList<>();
-        BasicBlock block = (BasicBlock) function.getBasicBlocks().getHead();
-        while (block != null) {
+        BasicBlock block = begin;
+        BasicBlock stop  = (BasicBlock) end.getNext();
+        while (block != stop) {
             Instruction instr = (Instruction) block.getInstructions().getHead();
             while (instr != null) {
                 if (instr.getBeginUse() == null && checkNoSideEffect(instr)) {
