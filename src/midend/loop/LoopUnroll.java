@@ -57,7 +57,7 @@ public class LoopUnroll {
                 function.getHeader2loop().remove(loop.getHeader());
                 //remove from outLoop in function
                 for (Loop inInner : inner.getInnerLoops()) {
-                    inner.setPrtLoop(loop);
+                    inInner.setPrtLoop(loop);
                 }
             }
         }
@@ -125,8 +125,7 @@ public class LoopUnroll {
         for (PhiInstr phi : headPhis) {
             int index = phi.getPrtBlks().indexOf(latch);
             Value newValue = phi.getValues().get(index);
-            phi.getPrtBlks().remove(index);
-            phi.getValues().remove(index);
+            phi.removeUse(newValue);
             phiInHead.put(phi, newValue);
             begin2end.put(phi, newValue);
         }
@@ -169,9 +168,9 @@ public class LoopUnroll {
             }
             phi = (Instruction) phi.getNext();
         }
-        MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
         OIS.OSI4blks(header, oneLoop.getSecond());
         DeadCodeRemove.removeCode(header, oneLoop.getSecond());
+        MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
     }
     private static HashMap<Value, Value> old2new;
 

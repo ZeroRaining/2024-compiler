@@ -70,15 +70,15 @@ public class Compiler {
             LoopUnroll.execute(functions);
         }
         
-        DeadCodeRemove.execute(functions);
-        OIS.execute(functions);
-        GVN.execute(functions);
-        
-        SimplifyBranch.execute(functions);
-        //合并删减块
-        MergeBlock.execute(functions, false);
-        DeadBlockRemove.execute(functions);
-        RemoveUseLessPhi.execute(functions);
+//        DeadCodeRemove.execute(functions);
+//        OIS.execute(functions);
+//        GVN.execute(functions);
+//
+//        SimplifyBranch.execute(functions);
+//        //合并删减块
+//        MergeBlock.execute(functions, false);
+//        DeadBlockRemove.execute(functions);
+//        RemoveUseLessPhi.execute(functions);
         //循环分析
 //        DFG.execute(functions);
 //        AnalysisLoop.execute(functions);
@@ -86,14 +86,14 @@ public class Compiler {
 //        LoopInvariantMotion.execute(functions);
         
         //second
-        DFG.execute(functions);
-        DeadCodeRemove.execute(functions);
-        OIS.execute(functions);
-        GVN.execute(functions);
-        SimplifyBranch.execute(functions);
-        MergeBlock.execute(functions, true);
-        DeadBlockRemove.execute(functions);
-        RemoveUseLessPhi.execute(functions);
+//        DFG.execute(functions);
+//        DeadCodeRemove.execute(functions);
+//        OIS.execute(functions);
+//        GVN.execute(functions);
+//        SimplifyBranch.execute(functions);
+//        MergeBlock.execute(functions, true);
+//        DeadBlockRemove.execute(functions);
+//        RemoveUseLessPhi.execute(functions);
 
         //维护循环深度与CFG图
         DFG.execute(functions);

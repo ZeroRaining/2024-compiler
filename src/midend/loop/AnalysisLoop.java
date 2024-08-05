@@ -72,7 +72,7 @@ public class AnalysisLoop {
     private static void dfs4color(Loop loop, int depth) {
         loop.colorBlk(depth);
         for (Loop inner : loop.getInnerLoops()) {
-            dfs4color(loop, depth + 1);
+            dfs4color(inner, depth + 1);
         }
     }
 
