@@ -13,6 +13,7 @@ import java.util.HashSet;
 public class AsmBlock extends Node {
     private String name;
     private int index;
+    public HashSet<AsmInstr> jumpToInstrs = new HashSet<>();
 
     private CustomList instrs = new CustomList();
     public AsmBlock(String name, int deepth) {
@@ -67,5 +68,11 @@ public class AsmBlock extends Node {
 
     public String toString() {
         return name;
+    }
+    public void addJumpToInstr(AsmInstr instr) {
+        jumpToInstrs.add(instr);
+    }
+    public void removeJumpToInstr(AsmInstr instr) {
+        jumpToInstrs.remove(instr);
     }
 }

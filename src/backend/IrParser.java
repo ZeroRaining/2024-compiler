@@ -219,7 +219,9 @@ public class IrParser {
             HashSet<AsmCall> callsToBeRemoved = new HashSet<>();
             AsmBlock bstart = new AsmBlock(f.getName() + "_bstart", 0);
             AsmBlock formerStart = (AsmBlock) (asmFunction.getHead());
-            bstart.addInstrTail(new AsmJ(formerStart));
+            AsmJ asmJ0 = new AsmJ(formerStart);
+            bstart.addInstrTail(asmJ0);
+            formerStart.addJumpToInstr(asmJ0);
             asmFunction.addBlockToHead(bstart);
             for (Node asmBlock : asmFunction.getBlocks()) {
                 boolean flag = false;
@@ -228,6 +230,7 @@ public class IrParser {
                         if (call.getFuncName().equals(f.getName())) {
                             AsmJ asmJ = new AsmJ(formerStart, call.IntArgRegNum, call.floatArgRegNum);
                             asmJ.insertBefore(call);
+                            formerStart.addJumpToInstr(asmJ);
                             callsToBeRemoved.add(call);
                             flag = true;
                             continue;
@@ -903,7 +906,18 @@ public class IrParser {
         Value src1 = instr.getOp1();
         Value src2 = instr.getOp2();
         if (src2 instanceof ConstInt) {
-            if (isTwoTimes(((ConstInt) src2).getNumber())) {
+            if (src1 instanceof ConstInt) {
+                int value1 = ((ConstInt) src1).getNumber();
+                int value2 = ((ConstInt) src2).getNumber();
+                AsmOperand dst = parseOperand(instr, 0, f, bb);
+                AsmOperand imm = new AsmImm32(value1 % value2);
+                AsmMove asmMove = new AsmMove(dst, imm);
+                asmBlock.addInstrTail(asmMove);
+            } else if (((ConstInt) src2).getNumber() == 1) {
+                AsmOperand dst = parseOperand(instr, 0, f, bb);
+                AsmMove asmMove = new AsmMove(dst, ZERO);
+                asmBlock.addInstrTail(asmMove);
+            } else if (isTwoTimes(((ConstInt) src2).getNumber())) {
                 AsmOperand dst = parseOperand(instr, 0, f, bb);
                 AsmOperand src = parseOperand(src1, 0, f, bb);
                 int value = ((ConstInt) src2).getNumber() - 1;
@@ -920,18 +934,23 @@ public class IrParser {
                 asmBlock.addInstrTail(asmSub);
             }
         } else {
-            AsmOperand dst = parseOperand(instr, 0, f, bb);
-            AsmOperand src1Op = parseOperand(src1, 0, f, bb);
-            AsmOperand src2Op = parseOperand(src2, 0, f, bb);
-            AsmDiv asmDiv = new AsmDiv(dst, src1Op, src2Op);
-            asmDiv.isWord = true;
-            asmBlock.addInstrTail(asmDiv);
-            AsmMul asmMul = new AsmMul(dst, dst, src2Op);
-            asmMul.isWord = true;
-            asmBlock.addInstrTail(asmMul);
-            AsmSub asmSub = new AsmSub(dst, src1Op, dst);
-            asmSub.isWord = true;
-            asmBlock.addInstrTail(asmSub);
+            if (src1 instanceof ConstInt constInt && constInt.getNumber() == 0) {
+                AsmMove asmMove = new AsmMove(parseOperand(instr, 0, f, bb), ZERO);
+                asmBlock.addInstrTail(asmMove);
+            } else {
+                AsmOperand dst = parseOperand(instr, 0, f, bb);
+                AsmOperand src1Op = parseOperand(src1, 0, f, bb);
+                AsmOperand src2Op = parseOperand(src2, 0, f, bb);
+                AsmDiv asmDiv = new AsmDiv(dst, src1Op, src2Op);
+                asmDiv.isWord = true;
+                asmBlock.addInstrTail(asmDiv);
+                AsmMul asmMul = new AsmMul(dst, dst, src2Op);
+                asmMul.isWord = true;
+                asmBlock.addInstrTail(asmMul);
+                AsmSub asmSub = new AsmSub(dst, src1Op, dst);
+                asmSub.isWord = true;
+                asmBlock.addInstrTail(asmSub);
+            }
         }
     }
 
@@ -945,9 +964,11 @@ public class IrParser {
             if (value != 0) {
                 AsmJ asmJ = new AsmJ(blockMap.get(trueBB));
                 asmBlock.addInstrTail(asmJ);
+                blockMap.get(trueBB).addJumpToInstr(asmJ);
             } else {
                 AsmJ asmJ = new AsmJ(blockMap.get(falseBB));
                 asmBlock.addInstrTail(asmJ);
+                blockMap.get(falseBB).addJumpToInstr(asmJ);
             }
         } else {
             //TODO:为什么需要区分CmpInstr?
@@ -956,8 +977,10 @@ public class IrParser {
             AsmBlock falseAsmBlock = blockMap.get(falseBB);
             AsmBnez asmBnez = new AsmBnez(cmp, trueAsmBlock);
             asmBlock.addInstrTail(asmBnez);
+            trueAsmBlock.addJumpToInstr(asmBnez);
             AsmJ asmJ = new AsmJ(falseAsmBlock);
             asmBlock.addInstrTail(asmJ);
+            falseAsmBlock.addJumpToInstr(asmJ);
             //TODO:setTrueBlock和setFalseBlock?
         }
     }
@@ -967,6 +990,7 @@ public class IrParser {
         BasicBlock target = instr.getTarget();
         AsmJ asmJ = new AsmJ(blockMap.get(target));
         asmBlock.addInstrTail(asmJ);
+        blockMap.get(target).addJumpToInstr(asmJ);
         //TODO:setTrueBlock和setFalseBlock?
     }
 

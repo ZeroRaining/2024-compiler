@@ -1,5 +1,8 @@
 package backend;
 
+import Utils.CustomList;
+import backend.asmInstr.AsmInstr;
+import backend.asmInstr.asmBr.AsmBnez;
 import backend.asmInstr.asmBr.AsmJ;
 import backend.itemStructure.*;
 import frontend.ir.Value;
@@ -22,41 +25,57 @@ public class BlockSort {
         }
         return instance;
     }
-    public void run(AsmModule module) {
 
+    public void run(AsmModule module) {
+        for (AsmFunction function : module.getFunctions()) {
+            //initial();
+            //CollectionInfo(function);
+            selectMergeBlock(function);
+        }
     }
+
     HashMap<Group, Double> BlocksEdge = new HashMap<>();
+
     private void initial() {
         BlocksEdge.clear();
     }
+
     private void CollectionInfo(AsmFunction function) {
 
     }
+
     private void selectMergeBlock(AsmFunction function) {
-        boolean changed = true;
-        while (changed) {
-            changed = false;
-            AsmBlock i = (AsmBlock) function.getBlocks().getHead();
-            while (i != null) {
-                if (i.sucs.size() == 1) {
-                    AsmBlock j = i.sucs.iterator().next();
-                    if (j.pres.size() == 1) {
-                        AsmBlock k = j.pres.iterator().next();
-                        if (k == i) {
-                            mergeBlock(i, j);
-                            changed = true;
-                        }
-                    }
-                }
-                i = (AsmBlock) i.getNext();
+        AsmBlock asmBlock = (AsmBlock) (function.getBlocks().getHead());
+        while (asmBlock != null) {
+            while (asmBlock.getInstrTail() instanceof AsmJ asmJ && asmJ.getTarget().jumpToInstrs.size() == 1) {
+                mergeBlock(asmBlock, asmJ.getTarget());
+                asmJ.getTarget().removeJumpToInstr(asmJ);
             }
+            asmBlock = (AsmBlock) asmBlock.getNext();
         }
     }
+
     private void mergeBlock(AsmBlock i, AsmBlock j) {//把j合进i
-        if (i.getInstrTail() instanceof AsmJ) {
-            i.getInstrTail().removeFromList();
-        }
+//        if (j.getInstrTail() == null) {
+//            throw new RuntimeException(j.getName());
+//        }
+        i.getInstrTail().removeFromList();
         i.getInstrs().addCustomListToTail(j.getInstrs());
+        //这个地方其实有点问题，但是希望以后不要用前驱后继了(
+        i.sucs.remove(j);
+        i.sucs.addAll(j.sucs);
+        for (CustomList.Node instr : j.getInstrs()) {
+            if (instr instanceof AsmJ asmJ) {
+                AsmBlock target = asmJ.getTarget();
+                target.pres.remove(j);
+                target.pres.add(i);
+            }
+            if (instr instanceof AsmBnez asmBnez) {
+                AsmBlock target = asmBnez.getTarget();
+                target.pres.remove(j);
+                target.pres.add(i);
+            }
+        }
         j.removeFromList();
     }
 }

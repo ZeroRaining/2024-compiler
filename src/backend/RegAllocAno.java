@@ -1364,12 +1364,12 @@ public class RegAllocAno {
 //                }
                 //int c = okColors.iterator().next();
                 int c = -1;
-                if (!okS.isEmpty()) {
-                    c = okS.get(0);
-                } else if (!okT.isEmpty()) {
+                if (!okT.isEmpty()) {
                     c = okT.get(0);
-                } else {
+                } else if (!okA.isEmpty()) {
                     c = okA.get(0);
+                } else {
+                    c = okS.get(0);
                 }
                 color.put(n, c);
             }
