@@ -2,18 +2,12 @@ package midend.loop;
 
 import frontend.ir.Value;
 import frontend.ir.instr.binop.BinaryOperation;
-import frontend.ir.constvalue.ConstValue;
-import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
-import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
-import frontend.ir.structure.GlobalObject;
-import frontend.ir.structure.Procedure;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 
 public class Loop {
     private BasicBlock entering; //进入循环的节点，有边指向header
@@ -206,7 +200,7 @@ public class Loop {
         hasIndVar = true;
     }
 
-    public void colorBlk() {
+    public void colorBlk(int depth) {
         for (BasicBlock block : latchs) {
             block.setBlockType(BlockType.LATCH);
         }
@@ -218,6 +212,7 @@ public class Loop {
         }
         for (BasicBlock block : blks) {
             block.setBlockType(BlockType.INLOOP);
+            block.setLoopDepth(depth);
         }
         header.setBlockType(BlockType.HEADER);
     }
