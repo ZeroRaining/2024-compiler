@@ -51,7 +51,7 @@ public class Compiler {
         
         // 删除没用的基本块
         DeadBlockRemove.execute(functions);
-        
+
         // 构建初版 DFG
         DFG.execute(functions);
         
@@ -63,8 +63,8 @@ public class Compiler {
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
-            LCSSA.execute(functions);
-            LoopUnroll.execute(functions);
+//            LCSSA.execute(functions);
+//            LoopUnroll.execute(functions);
         }
         DFG.execute(functions);
 //        LCSSA.execute(functions);

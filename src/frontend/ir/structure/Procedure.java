@@ -231,7 +231,7 @@ public class Procedure {
         //cond2Blk
         HashMap<Value, Value> old2new = new HashMap<>();
         old2new.put(cond2Blk, bodyBlk);
-        clone4cond(cond1Blk, curBlock, cond2Blk, old2new);
+//        clone4cond(cond1Blk, cond2Blk, old2new);
 //        cond2Blk = cond1Blk.clone4while(cond2Blk, this);
 //        Instruction last = cond2Blk.getEndInstr();
 //        cond2Blk.addInstruction(new BranchInstr(last, bodyBlk, endBlk));
@@ -256,27 +256,27 @@ public class Procedure {
         curBlock = endBlk;
     }
 
-    private void clone4cond(BasicBlock cond1Blk, BasicBlock curBlock, BasicBlock cond2Blk, HashMap<Value, Value> old2new) {
+    private void clone4cond(BasicBlock cond1Blk, BasicBlock cond2Blk, BasicBlock stopBlk, HashMap<Value, Value> old2new) {
         BasicBlock curBB = cond1Blk;
-        BasicBlock stop = curBlock;
+        BasicBlock stop = stopBlk;
         ArrayList<BasicBlock> newBlks = new ArrayList<>();
-        while (curBB != null) {
+        while (curBB != stop) {
             BasicBlock newBB = curBB == cond1Blk ? cond2Blk : new BasicBlock(curBB.getLoopDepth(), this.getAndAddBlkIndex());
-            old2new.put(curBB, newBB);
+            old2new.putIfAbsent(curBB, newBB);
             newBlks.add(newBB);
 
             Instruction curIns = (Instruction) curBB.getInstructions().getHead();
             while (curIns != null) {
                 Instruction newIns = curIns.cloneShell(this);
                 newBB.addInstruction(newIns);
-                old2new.put(curIns, newIns);
+                old2new.putIfAbsent(curIns, newIns);
                 curIns = (Instruction) curIns.getNext();
             }
 
             curBB = (BasicBlock) curBB.getNext();
         }
 
-        BasicBlock last = stop;
+        BasicBlock last = cond2Blk;
 
         for (BasicBlock newBB : newBlks) {
             Instruction newIns = (Instruction) newBB.getInstructions().getHead();
@@ -287,14 +287,7 @@ public class Procedure {
 
                 ArrayList<Value> usedValues = new ArrayList<>(newIns.getUseValueList());
                 for (Value toReplace : usedValues) {
-                    if (!old2new.containsKey(toReplace)) {
-                        if (newIns instanceof ReturnInstr && toReplace == newBB) {
-                            continue;
-                        }
-//                        if (!(toReplace instanceof ConstValue) && !(toReplace instanceof GlobalObject)) {
-//                            throw new RuntimeException("使用了未曾设想的 value " + toReplace.toString());
-//                        }
-                    } else {
+                    if (old2new.containsKey(toReplace)) {
                         newIns.modifyUse(toReplace, old2new.get(toReplace));
                     }
                 }
@@ -310,6 +303,7 @@ public class Procedure {
     private void doWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
         BasicBlock cond1Blk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock bodyBlk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock cond2Blk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock endBlk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock loopPreHeader = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock loopExit = new BasicBlock(curDepth, curBlkIndex++);
@@ -323,11 +317,6 @@ public class Procedure {
 
         loopPreHeader.addInstruction(new JumpInstr(bodyBlk));
         basicBlocks.addToTail(loopPreHeader);
-
-        HashMap<Value, Value> old2new = new HashMap<>();
-        old2new.put(endBlk, loopExit);
-        old2new.put(loopPreHeader, bodyBlk);
-        BasicBlock cond2Blk = cond1Blk.clone4while(this, old2new);
 
         //fixme：if和while同时创建一个新end块，会导致没有语句
         basicBlocks.addToTail(bodyBlk);
@@ -345,6 +334,11 @@ public class Procedure {
 
         curBlock.addInstruction(new JumpInstr(cond2Blk));
         basicBlocks.addToTail(cond2Blk);
+
+        HashMap<Value, Value> old2new = new HashMap<>();
+        old2new.put(endBlk, loopExit);
+        old2new.put(loopPreHeader, bodyBlk);
+        clone4cond(cond1Blk, cond2Blk, loopPreHeader, old2new);
 
         basicBlocks.addToTail(loopExit);
         loopExit.addInstruction(new JumpInstr(endBlk));
