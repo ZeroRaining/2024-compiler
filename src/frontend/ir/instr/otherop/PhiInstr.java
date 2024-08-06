@@ -144,8 +144,14 @@ public class PhiInstr extends Instruction {
     }
     @Override /*TODO: 删掉最后一个use？*/
     public void removeUse(Value value) {
-        int index = values.indexOf(value);
-        super.removeUse(value);
+        int index;
+        if (value instanceof BasicBlock) {
+            index = prtBlks.indexOf(value);
+            super.removeUse(values.get(index));
+        } else {
+            index = values.indexOf(value);
+            super.removeUse(value);
+        }
         prtBlks.remove(index);
         values.remove(index);
     }
