@@ -72,7 +72,7 @@ public class Compiler {
 //        LCSSA.execute(functions);这里可能会有问题
 //        RemoveUseLessPhi.execute(functions);
         
-//        DeadCodeRemove.execute(functions);
+        DeadCodeRemove.execute(functions);
 //        OIS.execute(functions);
 //        GVN.execute(functions);
 //
