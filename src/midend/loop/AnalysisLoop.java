@@ -237,23 +237,6 @@ public class AnalysisLoop {
         if (!loop.isSimpleLoop()) {
             return;
         }
-        //TODO：短路求值？？
-//        loop.LoopPrint();
-
-        /*blk_0: anon: entering
-            br label %blk_2
-        blk_2: anon: header loopCondition exiting
-            %phi_0 = phi i32 [ 1, %blk_0 ], [ %reg_6, %blk_3 ]
-            %reg_3 = call i32 @getint()
-            %reg_4 = icmp slt i32 %phi_0, %reg_3 anon: cond
-            br i1 %reg_4, label %blk_3, label %blk_1 anon: br
-        blk_3: anon: latch
-            %reg_6 = add i32 %phi_0, 1
-            br label %blk_2
-        blk_1: anon: exit
-            %phi_2 = phi i32 [ %phi_0, %blk_2 ]
-            ret i32 %phi_2*/
-
         /*
         define i32 @main() {
         blk_0:
@@ -331,76 +314,6 @@ public class AnalysisLoop {
         }
         BasicBlock preHeader = loop.getPreHeader();//TODO:fix preHeader & preCond
         Value itInit = itVar.getValues().get(itVar.getPrtBlks().indexOf(preHeader));
-
-//        if (op1 instanceof PhiInstr) {
-//            itVar = (PhiInstr) op1;
-//            itEnd = op2;
-//        } else if (op2 instanceof PhiInstr) {
-//            itVar = (PhiInstr) op2;
-//            itEnd = op1;
-//        } else {
-//            return;
-//            /*部分情况下可能没有一个phi作为循环变量，这种的可以直接被优化掉
-//            *
-//            * TODO：
-//            *  int main() {
-//            *     int a= 1;
-//            *     while (a < 100) {
-//            *         a = a + 1;
-//            *     }
-//            *     return a;
-//            *  }
-//            *  这种要被循环不变量后提干掉！！
-//            *
-//            * */
-//            //throw new RuntimeException("op1: " + op1 + " op2: " + op2);
-//        }
-
-        {
-        /*blk_0: anon: entering
-            br label %blk_2
-        blk_2: anon: header loopCondition exiting
-            %phi_0 = phi i32 [ 1, %blk_0 ], [ %reg_6, %blk_3 ] anon: op1
-            %reg_3 = call i32 @getint() anon: op2
-            %reg_4 = icmp slt i32 %phi_0, %reg_3 anon: cond
-            br i1 %reg_4, label %blk_3, label %blk_1 anon: br
-        blk_3: anon: latch
-            %reg_6 = add i32 %phi_0, 1
-            br label %blk_2
-        blk_1: anon: exit
-            %phi_2 = phi i32 [ %phi_0, %blk_2 ]
-            ret i32 %phi_2*/
-        }
-
-//        Value itAlu;
-//        Value itInit;
-//        if (itVar.getPrtBlks().size() > 2) {
-//            return;
-//        }
-//        BasicBlock latch = loop.getLatchs().get(0);
-//        int index = itVar.getPrtBlks().indexOf(latch);
-//        if (index == 1) {
-//            itAlu = itVar.getValues().get(1);
-//            itInit = itVar.getValues().get(0);
-//        } else if (index == 0) {
-//            itAlu = itVar.getValues().get(0);
-//            itInit = itVar.getValues().get(1);
-//        } else {
-//            return;
-//        }
-//
-//        Value itStep;
-//        if (!(itAlu instanceof BinaryOperation)) {
-//            return;
-////            throw new RuntimeException(itAlu.toString());
-//        }
-//        if (((BinaryOperation) itAlu).getOp1() == itVar) {
-//            itStep = ((BinaryOperation) itAlu).getOp2();
-//        } else if (((BinaryOperation) itAlu).getOp2() == itVar) {
-//            itStep = ((BinaryOperation) itAlu).getOp1();
-//        } else {
-//            return;
-//        }
 
         String opName = ((BinaryOperation) itAlu).getOperationName();
         if (opName.contains("add") || opName.contains("sub") || opName.contains("mul")) {
