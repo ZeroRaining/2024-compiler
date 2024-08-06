@@ -67,11 +67,9 @@ public class Compiler {
             LoopUnroll.execute(functions);
         }
         DFG.execute(functions);
-        LCSSA.execute(functions);
-        LoopRotate.execute(functions);
-//        LCSSA.execute(functions);这里可能会有问题
-//        RemoveUseLessPhi.execute(functions);
-        
+        LoopInvariantMotion.execute(functions);
+        RemoveUseLessPhi.execute(functions);
+
         DeadCodeRemove.execute(functions);
 //        OIS.execute(functions);
 //        GVN.execute(functions);
@@ -86,7 +84,7 @@ public class Compiler {
 //        AnalysisLoop.execute(functions);
 //        //LCSSA.execute(functions);
 //        LoopInvariantMotion.execute(functions);
-        
+
         //second
 //        DFG.execute(functions);
 //        DeadCodeRemove.execute(functions);
