@@ -2,7 +2,6 @@ package midend.SSA;
 
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
-import frontend.ir.instr.convop.Bitcast;
 import frontend.ir.instr.memop.GEPInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
@@ -17,14 +16,14 @@ import java.util.*;
  * 针对指针的 mem2reg，可以认为是在做别名分析
  * 现在的想法是按照控制树 dfs，保存对于一个地址的赋值记录，如果 dom 分叉（直接控制块不止一个）则清空当前列表，以避免多重定义导致冲突。
  * 对于 call 需要特殊处理，函数中可能出现修改指针指向内存内容的操作。
- * 必须在 GVN 之后，因为需要判断是不是同一个指针
  * 还有一个前置任务是要合并 GEP，避免相同指针的表现形式不同导致错误删除和不当替换
+ * 对于只定义过一次的值可以直接替换
  */
 public class PtrMem2Reg {
     private static HashSet<String> gepHashUsed;
     private static HashSet<Value> rootsIndefinitelyUsed; // 这些基址对应的任何一个指针都有可能被使用
     private static HashSet<Value> rootsDefinitelyUsed;   // 这些基址对应的某些特定指针会被使用
-    private static boolean DONT_MOVE;
+    private static HashMap<String, StoreInstr> onlyDefVal;
     
     public static void execute(ArrayList<Function> functions) {
         if (functions == null) {
@@ -34,27 +33,66 @@ public class PtrMem2Reg {
         gepHashUsed = new HashSet<>();
         rootsIndefinitelyUsed = new HashSet<>();
         rootsDefinitelyUsed = new HashSet<>();
-        DONT_MOVE = false;
+        onlyDefVal = new HashMap<>();
+        
+        searchOnlyDef(functions);
         
         for (Function function : functions) {
             BasicBlock basicBlock = (BasicBlock) function.getBasicBlocks().getHead();
-            dfsIdoms(basicBlock, new HashMap<>(), new HashMap<>());
+            dfsIdoms(basicBlock, new HashMap<>(), new HashMap<>(), new HashSet<>());
         }
         
+        removeUselessStore(functions);
+    }
+    
+    private static void searchOnlyDef(List<Function> functions) {
+        HashMap<String, GEPInstr> keyMap = new HashMap<>();
+        onlyDefVal.clear();
         for (Function function : functions) {
             BasicBlock basicBlock = (BasicBlock) function.getBasicBlocks().getHead();
             while (basicBlock != null) {
                 Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
                 while (instruction != null) {
-                    if (instruction instanceof StoreInstr) {
+                    if (instruction instanceof CallInstr) {
+                        List<Value> rParams = ((CallInstr) instruction).getRParams();
+                        for (Value rp : rParams) {
+                            if (rp instanceof GEPInstr) {
+                                Value root = ((GEPInstr) rp).getRoot();
+                                Iterator<String> it = keyMap.keySet().iterator();
+                                while (it.hasNext()) {
+                                    String key = it.next();
+                                    GEPInstr gepKey = keyMap.get(key);
+                                    if (gepKey != null && gepKey.getRoot().equals(root)) {
+                                        onlyDefVal.put(key, null);
+                                        it.remove();
+                                    }
+                                }
+                            }
+                        }
+                    } else if (instruction instanceof StoreInstr) {
                         Value ptr = ((StoreInstr) instruction).getPtr();
                         if (ptr instanceof GEPInstr) {
-                            boolean mightBeUsed = (rootsDefinitelyUsed.contains(((GEPInstr) ptr).getRoot())
-                                    && ((GEPInstr) ptr).hasNonConstIndex());
-                            if (!DONT_MOVE && !gepHashUsed.contains(((GEPInstr) ptr).myHash()) &&
-                                    !rootsIndefinitelyUsed.contains(((GEPInstr) ptr).getRoot()) &&
-                                    !mightBeUsed) {
-                                instruction.removeFromList();
+                            // root 只能是 AllocaInstr，GlobalObject，FParam 三种
+                            if (((GEPInstr) ptr).hasNonConstIndex()) {
+                                Value root = ((GEPInstr) ptr).getRoot();
+                                Iterator<String> it = keyMap.keySet().iterator();
+                                while (it.hasNext()) {
+                                    String key = it.next();
+                                    GEPInstr gepKey = keyMap.get(key);
+                                    if (gepKey != null && gepKey.getRoot().equals(root)) {
+                                        onlyDefVal.put(key, null);
+                                        it.remove();
+                                    }
+                                }
+                            } else {
+                                String key = ((GEPInstr) ptr).myHash();
+                                if (onlyDefVal.containsKey(key)) {
+                                    onlyDefVal.put(key, null);
+                                    keyMap.remove(key);
+                                } else {
+                                    onlyDefVal.put(key, (StoreInstr) instruction);
+                                    keyMap.put(key, (GEPInstr) ptr);
+                                }
                             }
                         } else if (!(ptr instanceof GlobalObject)) {
                             throw new RuntimeException("这里 load 和 store 的指针应该只能是 gep 或者全局对象");
@@ -68,7 +106,7 @@ public class PtrMem2Reg {
     }
     
     private static void dfsIdoms(BasicBlock basicBlock, HashMap<String, Value> defMap,
-                                 HashMap<String, GEPInstr> keyMap) {
+                                 HashMap<String, GEPInstr> keyMap, HashSet<Instruction> done) {
         if (basicBlock == null) {
             throw new NullPointerException();
         }
@@ -78,19 +116,13 @@ public class PtrMem2Reg {
             OIS.simpleOIS4ins(instruction);
             
             if (instruction instanceof CallInstr) {
-                // todo: 之后要确认一下跟哪些指针有关系。
                 List<Value> rParams = ((CallInstr) instruction).getRParams();
-                boolean relatedToPtr = false;
                 for (Value rp : rParams) {
-                    if (rp instanceof GEPInstr || rp instanceof Bitcast) {
-                        relatedToPtr = true;
-                        break;
+                    if (rp instanceof GEPInstr) {
+                        Value root = ((GEPInstr) rp).getRoot();
+                        rootsIndefinitelyUsed.add(root);
+                        clearSameRoot(root, defMap, keyMap);
                     }
-                }
-                if (relatedToPtr) {
-                    defMap.clear();
-                    keyMap.clear();
-                    DONT_MOVE = true;
                 }
             } else if (instruction instanceof StoreInstr) {
                 Value ptr = ((StoreInstr) instruction).getPtr();
@@ -98,14 +130,7 @@ public class PtrMem2Reg {
                     // root 只能是 AllocaInstr，GlobalObject，FParam 三种
                     Value root = ((GEPInstr) ptr).getRoot();
                     if (((GEPInstr) ptr).hasNonConstIndex()) {
-                        Iterator<String> it = defMap.keySet().iterator();
-                        while (it.hasNext()) {
-                            String key = it.next();
-                            if (keyMap.get(key).getRoot().equals(root)) {
-                                it.remove();
-                                keyMap.remove(key);
-                            }
-                        }
+                        clearSameRoot(root, defMap, keyMap);
                     } else {
                         String key = ((GEPInstr) ptr).myHash();
                         defMap.put(key, ((StoreInstr) instruction).getValue());
@@ -118,7 +143,19 @@ public class PtrMem2Reg {
                 Value ptr = ((LoadInstr) instruction).getPtr();
                 if (ptr instanceof GEPInstr) {
                     if (!((GEPInstr) ptr).hasNonConstIndex()) {
-                        Value defVal = defMap.get(((GEPInstr) ptr).myHash());
+                        Value defVal;
+                        StoreInstr onlyDef;
+                        String key = ((GEPInstr) ptr).myHash();
+                        onlyDef = onlyDefVal.get(key);
+                        if (onlyDef == null) {
+                            defVal = defMap.get(key);
+                        } else {
+                            if (done.contains(onlyDef)) {
+                                defVal = onlyDef.getValue();
+                            } else {
+                                defVal = null;
+                            }
+                        }
                         if (defVal != null) {
                             instruction.replaceUseTo(defVal);
                             instruction.removeFromList();
@@ -133,6 +170,8 @@ public class PtrMem2Reg {
                     throw new RuntimeException("这里 load 和 store 的指针应该只能是 gep 或者全局对象");
                 }
             }
+            
+            done.add(instruction);
             instruction = (Instruction) instruction.getNext();
         }
         
@@ -160,9 +199,48 @@ public class PtrMem2Reg {
         
         for (BasicBlock next : idoms) {
             if (nextDefMap == null) {
-                dfsIdoms(next, new HashMap<>(), new HashMap<>());
+                dfsIdoms(next, new HashMap<>(), new HashMap<>(), new HashSet<>(done));
             } else {
-                dfsIdoms(next, nextDefMap, nextKeyMap);
+                dfsIdoms(next, nextDefMap, nextKeyMap, new HashSet<>(done));
+            }
+        }
+    }
+    
+    private static void clearSameRoot(Value root, HashMap<String, Value> defMap,
+                                      HashMap<String, GEPInstr> keyMap) {
+        Iterator<String> it = defMap.keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            if (keyMap.get(key).getRoot().equals(root)) {
+                it.remove();
+                keyMap.remove(key);
+            }
+        }
+    }
+    
+    private static void removeUselessStore(List<Function> functions) {
+        for (Function function : functions) {
+            BasicBlock basicBlock = (BasicBlock) function.getBasicBlocks().getHead();
+            while (basicBlock != null) {
+                Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
+                while (instruction != null) {
+                    if (instruction instanceof StoreInstr) {
+                        Value ptr = ((StoreInstr) instruction).getPtr();
+                        if (ptr instanceof GEPInstr) {
+                            boolean mightBeUsed = (rootsDefinitelyUsed.contains(((GEPInstr) ptr).getRoot())
+                                    && ((GEPInstr) ptr).hasNonConstIndex());
+                            if (!gepHashUsed.contains(((GEPInstr) ptr).myHash()) &&
+                                    !rootsIndefinitelyUsed.contains(((GEPInstr) ptr).getRoot()) &&
+                                    !mightBeUsed) {
+                                instruction.removeFromList();
+                            }
+                        } else if (!(ptr instanceof GlobalObject)) {
+                            throw new RuntimeException("这里 load 和 store 的指针应该只能是 gep 或者全局对象");
+                        }
+                    }
+                    instruction = (Instruction) instruction.getNext();
+                }
+                basicBlock = (BasicBlock) basicBlock.getNext();
             }
         }
     }
