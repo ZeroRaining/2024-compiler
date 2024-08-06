@@ -23,11 +23,15 @@ public class AnalysisLoop {
     private static ArrayList<Loop> allLoop = new ArrayList<>();
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
-            init(function);
-            findAllLoop(function);
-            fillInLoop();
-            finalized(function);
+            execute4func(function);
         }
+    }
+
+    public static void execute4func(Function function) {
+        init(function);
+        findAllLoop(function);
+        fillInLoop();
+        finalized(function);
     }
 
     private static void dfs4loopDom(BasicBlock block, BasicBlock otherBlk, HashSet<BasicBlock> linked, ArrayList<BasicBlock> loopBlks) {
@@ -346,164 +350,6 @@ public class AnalysisLoop {
         String opName = ((BinaryOperation) itAlu).getOperationName();
         if (opName.contains("add") || opName.contains("sub") || opName.contains("mul")) {
             loop.setIndVar(itVar, itInit, itEnd, itAlu, itStep, cond);
-        }
-    }
-
-    public static void rotateLoop(ArrayList<Function> functions) {
-        execute(functions);
-        for (Function function : functions) {
-            for (Loop loop : function.getOuterLoop()) {
-                dfs4rotate(loop);
-            }
-        }
-    }
-
-    private static void dfs4rotate(Loop loop) {
-        for (Loop in : loop.getInnerLoops()) {
-            dfs4rotate(in);
-        }
-        loop4doWhile(loop);
-    }
-
-    private static void loop4doWhile(Loop loop) {
-        BasicBlock header = loop.getHeader();
-        BasicBlock exiting;
-        if (loop.getExitings().size() == 1) {
-            exiting = loop.getExitings().get(0);
-        } else {
-            return;
-        }
-        /*
-        *   anon:
-        *    1.header = cond1
-        *    2.从header到exiting，全部克隆到latch的后面
-        *    3.放在bbs中最后的那个latch块之后
-        *    4.
-        *
-        * */
-
-
-        Procedure procedure = (Procedure) header.getParent().getOwner();
-        BasicBlock latch = loop.getBlks().get(loop.getBlks().size() - 1);
-        if (!loop.getLatchs().contains(latch)) {
-            loop.LoopPrint();
-        }
-        BasicBlock body = (BasicBlock) exiting.getNext();
-        BasicBlock newBlk = new BasicBlock(body.getLoopDepth(), procedure.getAndAddBlkIndex());
-        HashMap<Value, Value> old2new = new HashMap<>();
-
-        /*
-         * anon:将条件块中的phi变到body中
-         *      先把值存起来
-         * */
-        HashMap<PhiInstr, Value> phiInHeader = new HashMap<>();
-        CustomList.Node phi = header.getInstructions().getHead();
-        while (phi instanceof PhiInstr) {
-            Value value;
-            for (BasicBlock pre : header.getPres()) {
-                int index = ((PhiInstr) phi).getPrtBlks().indexOf(pre);
-                value = ((PhiInstr) phi).getValues().get(index);
-                phiInHeader.put((PhiInstr) phi, value);
-            }
-            phi = phi.getNext();
-        }
-
-
-//        old2new.put(body, newBlk);
-        clone4cond(header, body, latch, newBlk, old2new, procedure);
-        //修改cond块中对于phi的使用
-        BasicBlock tmp = header;
-        HashSet<BasicBlock> condBlks = new HashSet<>();
-        while (tmp != body) {
-            condBlks.add(tmp);
-            tmp = (BasicBlock) tmp.getNext();
-        }
-
-        for (PhiInstr phiInstr : phiInHeader.keySet()) {
-            phiInstr.replaceUseInRange(condBlks, phiInHeader.get(phiInstr));
-        }
-
-        exiting.getEndInstr().removeFromList();
-        exiting.getEndInstr().getParentBB().setRet(false);
-        exiting.addInstruction(new JumpInstr(body));
-        latch.getEndInstr().modifyUse(header, newBlk);
-
-        int phiCnt = procedure.getPhiIndex();
-        for (PhiInstr ins : phiInHeader.keySet()) {
-            ArrayList<Value> values = new ArrayList<>();
-            ArrayList<BasicBlock> prtBlks = new ArrayList<>();
-            for (BasicBlock pre : body.getPres()) {
-                Value phiValue = null;
-                if (pre == header) {
-                    for (BasicBlock blk : header.getPres()) {
-                        phiValue = ins.getValues().get(ins.getPrtBlks().indexOf(blk));
-                    }
-                } else if (pre == newBlk) {
-                    for (BasicBlock blk : newBlk.getPres()) {
-                        PhiInstr newIns = (PhiInstr) old2new.get(ins);
-                        phiValue = newIns.getValues().get(newIns.getPrtBlks().indexOf(blk));
-                    }
-                }
-                if (phiValue == null) {
-                    throw new RuntimeException("manMadePhi: body: " + body + " pre: " + pre + " header: " + header + "newBlk: " + newBlk);
-                }
-                values.add(phiValue);
-                prtBlks.add(pre);
-            }
-            PhiInstr newPhi = new PhiInstr(phiCnt++, values.get(0).getDataType(), values, prtBlks);
-            body.addInstrToHead(newPhi);
-            ins.replaceUseTo(newPhi);
-        }
-    }
-
-    /*  anon: 从cond1到stopBlk的前一个  */
-    private static void clone4cond(BasicBlock cond1Blk, BasicBlock stopBlk, BasicBlock latch, BasicBlock cond2Blk,
-                                   HashMap<Value, Value> old2new, Procedure procedure) {
-        BasicBlock curBB = cond1Blk;
-        ArrayList<BasicBlock> newBlks = new ArrayList<>();
-        while (curBB != stopBlk) {
-            BasicBlock newBB = curBB == cond1Blk ? cond2Blk : new BasicBlock(curBB.getLoopDepth(), procedure.getAndAddBlkIndex());
-            old2new.put(curBB, newBB);
-            newBlks.add(newBB);
-
-            Instruction curIns = (Instruction) curBB.getInstructions().getHead();
-            while (curIns != null) {
-                Instruction newIns = curIns.cloneShell(procedure);
-                newBB.addInstruction(newIns);
-                old2new.put(curIns, newIns);
-                curIns = (Instruction) curIns.getNext();
-            }
-
-            curBB = (BasicBlock) curBB.getNext();
-        }
-
-        BasicBlock last = latch;
-
-        for (BasicBlock newBB : newBlks) {
-            Instruction newIns = (Instruction) newBB.getInstructions().getHead();
-            while (newIns != null) {
-                if (newIns instanceof PhiInstr) {
-                    ((PhiInstr) newIns).renewBlocks(old2new);
-                }
-
-                ArrayList<Value> usedValues = new ArrayList<>(newIns.getUseValueList());
-                for (Value toReplace : usedValues) {
-                    if (!old2new.containsKey(toReplace)) {
-                        if (newIns instanceof ReturnInstr && toReplace == newBB) {
-                            continue;
-                        }
-//                        if (!(toReplace instanceof ConstValue) && !(toReplace instanceof GlobalObject)) {
-//                            throw new RuntimeException("使用了未曾设想的 value " + toReplace.toString());
-//                        }
-                    } else {
-                        newIns.modifyUse(toReplace, old2new.get(toReplace));
-                    }
-                }
-                newIns = (Instruction) newIns.getNext();
-            }
-
-            newBB.insertAfter(last);
-            last = newBB;
         }
     }
 
