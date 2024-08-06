@@ -6,6 +6,7 @@ import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.PhiInstr;
@@ -36,6 +37,7 @@ public class Function extends Value implements FuncDef {
     private boolean isTailRecursive = false;
     private final boolean main;
     private boolean neverUsed = false;
+    private int recursiveCallCnt = 0;
     
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
         if (funcDef == null) {
@@ -60,8 +62,9 @@ public class Function extends Value implements FuncDef {
         astFParams = funcDef.getFParams();
         fParams = new ArrayList<>();
         FUNCTION_MAP.put(name, this);
-        procedure = new Procedure(returnType, astFParams, funcDef.getBody(), symTab, myImmediateCallee, this, fParams);
-        initAllCallee();
+        ArrayList<Function> immediateCalleeList = new ArrayList<>();
+        procedure = new Procedure(returnType, astFParams, funcDef.getBody(), symTab, immediateCalleeList, this, fParams);
+        initAllCallee(immediateCalleeList);
     }
     
     public static Function getFunction(String name) {
@@ -146,8 +149,12 @@ public class Function extends Value implements FuncDef {
         return true;
     }
     
-    public List<Ast.FuncFParam> getFParams() {
+    public List<Ast.FuncFParam> getAstFParams() {
         return astFParams;
+    }
+    
+    public List<FParam> getFParams() {
+        return fParams;
     }
     
     @Override
@@ -198,10 +205,16 @@ public class Function extends Value implements FuncDef {
     }
     
     public boolean isRecursive() {
-        return this.allCallee.contains(this);
+        return this.recursiveCallCnt > 0;
     }
     
-    private void initAllCallee() {
+    private void initAllCallee(List<Function> immediateCalleeList) {
+        for (Function callee : immediateCalleeList) {
+            myImmediateCallee.add(callee);
+            if (callee == this) {
+                this.recursiveCallCnt++;
+            }
+        }
         for (Function callee : myImmediateCallee) {
             if (callee != this) {
                 this.allCallee.addAll(callee.allCallee);
@@ -372,7 +385,37 @@ public class Function extends Value implements FuncDef {
     public boolean isTailRecursive() {
         return isTailRecursive;
     }
-
+    
+    public boolean mightBeAbleToBeMemorized() {
+        if (this.recursiveCallCnt <= 1) {
+            return false;
+        }
+        for (Function callee : this.allCallee) {
+            if (!callee.checkNoSideEffect()) {
+                return false;
+            }
+            if (callee.haveLoad()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    private boolean haveLoad() {
+        BasicBlock basicBlock = (BasicBlock) this.procedure.getBasicBlocks().getHead();
+        while (basicBlock != null) {
+            Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
+            while (instruction != null) {
+                if (instruction instanceof LoadInstr) {
+                    return true;
+                }
+                instruction = (Instruction) instruction.getNext();
+            }
+            basicBlock = (BasicBlock) basicBlock.getNext();
+        }
+        return false;
+    }
+    
     /**
      * 目前检查函数无副作用的标准就是没有 I/O 且没有修改内存
      * 自定义函数肯定没有 I/O

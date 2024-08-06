@@ -45,16 +45,17 @@ public class Procedure {
     private final Stack<BasicBlock> whileBegins;
     private final Stack<BasicBlock> whileEnds;
     private final List<FParam> fParamValueList;
-    private final HashSet<Function> myCallee;
+    private final ArrayList<Function> myImmCallee;
     private final Function parentFunc;
     private final HashSet<CallInstr> selfCallingInstrSet = new HashSet<>();
 
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block,
-                     SymTab funcSymTab, HashSet<Function> myCallee, Function parentFunc, List<FParam> fParamValueList) {
+                     SymTab funcSymTab, ArrayList<Function> myImmCallee, Function parentFunc,
+                     List<FParam> fParamValueList) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
         }
-        this.myCallee = myCallee;
+        this.myImmCallee = myImmCallee;
         this.parentFunc = parentFunc;
         this.fParamValueList = fParamValueList;
         BasicBlock firstBasicBlock = new BasicBlock(curDepth, curBlkIndex++);
@@ -934,8 +935,8 @@ public class Procedure {
                 throw new RuntimeException("不是哥们，你这是什么函数啊？" + name);
             }
             myFunc.addCall();
-            myCallee.add(myFunc);
-            List<Ast.FuncFParam> fParams = myFunc.getFParams();
+            myImmCallee.add(myFunc);
+            List<Ast.FuncFParam> fParams = myFunc.getAstFParams();
             funcParamConv(fParams, rParams);
             callInstr = myFunc.makeCall(curRegIndex++, rParams);
             if (myFunc == this.parentFunc) {
