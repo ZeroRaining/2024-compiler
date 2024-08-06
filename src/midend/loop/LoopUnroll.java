@@ -110,7 +110,7 @@ public class LoopUnroll {
             headPhis.add((PhiInstr) instr);
             instr = instr.getNext();
         }
-
+        loop.LoopPrint();
         //
         BasicBlock loopExit = loop.getExits().get(0);
         BasicBlock latch = loop.getLatchs().get(0);
@@ -150,7 +150,7 @@ public class LoopUnroll {
         Instruction phi = (Instruction) loopExit.getInstructions().getHead();
         while (phi instanceof PhiInstr) {
             for (Value value : ((PhiInstr) phi).getValues()) {
-                if (value instanceof Instruction && ((Instruction) value).getParentBB() == header) {
+                if (value instanceof Instruction) {
                     phi.modifyUse(value, begin2end.get(value));
                     ((PhiInstr) phi).modifyPrtBlk(latch, lastLatch);
                 }

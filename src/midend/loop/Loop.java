@@ -1,6 +1,7 @@
 package midend.loop;
 
 import frontend.ir.Value;
+import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.BinaryOperation;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
@@ -193,12 +194,12 @@ public class Loop {
             sb.append("prtLoop " + this.prtLoop + "\n");
         }
         if (hasIndVar) {
-            sb.append("itVar: " + var + "\n");
+            sb.append("itVar: " + ((Instruction)var).print() + "\n");
             sb.append("itInit: " + begin + "\n");
             sb.append("itEnd: " + end + "\n");
-            sb.append("itAlu: " + alu + "\n");
+            sb.append("itAlu: " + ((Instruction)alu).print() + "\n");
             sb.append("itStep: " + step + "\n");
-            sb.append("cond: " + cond + "\n");
+            sb.append("cond: " + ((Instruction) cond).print() + "\n");
         }
         System.out.println(sb);
     }
