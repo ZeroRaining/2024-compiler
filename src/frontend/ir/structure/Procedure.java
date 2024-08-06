@@ -256,7 +256,7 @@ public class Procedure {
         curBlock = endBlk;
     }
 
-    private void clone4cond(BasicBlock cond1Blk, BasicBlock cond2Blk, BasicBlock stopBlk, HashMap<Value, Value> old2new) {
+    private void clone4cond(BasicBlock cond1Blk, BasicBlock cond2Blk, BasicBlock stopBlk, BasicBlock insertBlk, HashMap<Value, Value> old2new) {
         BasicBlock curBB = cond1Blk;
         BasicBlock stop = stopBlk;
         ArrayList<BasicBlock> newBlks = new ArrayList<>();
@@ -276,7 +276,7 @@ public class Procedure {
             curBB = (BasicBlock) curBB.getNext();
         }
 
-        BasicBlock last = cond2Blk;
+        BasicBlock last = insertBlk;
 
         for (BasicBlock newBB : newBlks) {
             Instruction newIns = (Instruction) newBB.getInstructions().getHead();
@@ -297,7 +297,6 @@ public class Procedure {
             newBB.insertAfter(last);
             last = newBB;
         }
-        curBlock = (BasicBlock) basicBlocks.getTail();
     }
 
     private void doWhile(Ast.WhileStmt item, DataType returnType, SymTab symTab) {
@@ -333,12 +332,12 @@ public class Procedure {
         whileEnds.pop();
 
         curBlock.addInstruction(new JumpInstr(cond2Blk));
-        basicBlocks.addToTail(cond2Blk);
+//        basicBlocks.addToTail(cond2Blk);
 
         HashMap<Value, Value> old2new = new HashMap<>();
         old2new.put(endBlk, loopExit);
         old2new.put(loopPreHeader, bodyBlk);
-        clone4cond(cond1Blk, cond2Blk, loopPreHeader, old2new);
+        clone4cond(cond1Blk, cond2Blk, loopPreHeader, curBlock, old2new);
 
         basicBlocks.addToTail(loopExit);
         loopExit.addInstruction(new JumpInstr(endBlk));
