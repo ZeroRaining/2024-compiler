@@ -9,10 +9,7 @@ import frontend.syntax.Ast;
 import frontend.syntax.Parser;
 import midend.RemovePhi;
 import midend.SSA.*;
-import midend.loop.AnalysisLoop;
-import midend.loop.LCSSA;
-import midend.loop.LoopUnroll;
-import midend.loop.LoopInvariantMotion;
+import midend.loop.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -54,7 +51,7 @@ public class Compiler {
         
         // 删除没用的基本块
         DeadBlockRemove.execute(functions);
-        
+
         // 构建初版 DFG
         DFG.execute(functions);
         
@@ -69,20 +66,26 @@ public class Compiler {
             LCSSA.execute(functions);
             LoopUnroll.execute(functions);
         }
-        
+        DFG.execute(functions);
+//        LCSSA.execute(functions);
+        LoopInvariantMotion.execute(functions);
+//        LCSSA.execute(functions);//这里可能会有问题
+        RemoveUseLessPhi.execute(functions);
+
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
-        
+
         SimplifyBranch.execute(functions);
         //合并删减块
         MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
-        //循环分析
+
+        //循环优化2
 //        DFG.execute(functions);
 //        AnalysisLoop.execute(functions);
-//        //LCSSA.execute(functions);
+//        LCSSA.execute(functions);
 //        LoopInvariantMotion.execute(functions);
         
         // second
@@ -95,7 +98,7 @@ public class Compiler {
         MergeBlock.execute(functions, true);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
-        
+
         // third
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
@@ -107,11 +110,10 @@ public class Compiler {
             MergeBlock.execute(functions, true);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
-
-            DFG.execute(functions);
-            AnalysisLoop.execute(functions);
         }
-
+        //为后端维护必要信息
+        DFG.execute(functions);
+        AnalysisLoop.execute(functions);
 
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
         // 中端优化结束

@@ -49,12 +49,11 @@ public class LoopInvariantMotion {
             }
         }
         //TODO: if-do-while 各个blk的归属
-        BasicBlock entering = loop.getEntering();
-        BasicBlock tmpBlk = new BasicBlock(entering.getLoopDepth(), ((Procedure) entering.getParent().getOwner()).getAndAddBlkIndex());
+        BasicBlock preHeader = loop.getPreHeader();
         while (!queue.isEmpty()) {
             Instruction instr = queue.poll();
             instr.removeFromListWithUseRemain();
-            tmpBlk.addInstruction(instr);
+            preHeader.addInstruction(instr);
             Use use = instr.getBeginUse();
             while (use != null) {
                 Instruction user = use.getUser();
@@ -65,15 +64,15 @@ public class LoopInvariantMotion {
                 use = (Use) use.getNext();
             }
         }
-        if (!invariant.isEmpty()) {
-            //修改跳转指令以及phi，并将该块放入procedure中
-            addTmpBlk(entering, tmpBlk, loop.getHeader());
-            //更改loop的相关信息:更改entering，修改父循环的blk内容
-            loop.setEntering(tmpBlk);
-            if (loop.getPrtLoop() != null) {
-                loop.getPrtLoop().addBlk(tmpBlk);
-            }
-        }
+//        if (!invariant.isEmpty()) {
+//            //修改跳转指令以及phi，并将该块放入procedure中
+//            addTmpBlk(entering, tmpBlk, loop.getHeader());
+//            //更改loop的相关信息:更改entering，修改父循环的blk内容
+//            loop.setPreHeader(tmpBlk);
+//            if (loop.getPrtLoop() != null) {
+//                loop.getPrtLoop().addBlk(tmpBlk);
+//            }
+//        }
 //        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth() + " loopExit: " + loop.getExits());
     }
 

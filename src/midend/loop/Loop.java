@@ -1,6 +1,7 @@
 package midend.loop;
 
 import frontend.ir.Value;
+import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.BinaryOperation;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class Loop {
-    private BasicBlock entering; //进入循环的节点，有边指向header
+    private BasicBlock preHeader; //进入循环的节点，有边指向header
     private BasicBlock preCond;
     private BasicBlock header; //循环入口，支配所有循环的节点，回边指向的节点
     private ArrayList<BasicBlock> exits = new ArrayList<>(); //循环跳出后的节点，endBlk & retBlk
@@ -69,12 +70,12 @@ public class Loop {
         return preCond;
     }
 
-    public void setEntering(BasicBlock entering) {
-        this.entering = entering;
+    public void setPreHeader(BasicBlock preHeader) {
+        this.preHeader = preHeader;
     }
 
-    public BasicBlock getEntering() {
-        return entering;
+    public BasicBlock getPreHeader() {
+        return preHeader;
     }
 
     public void setSameLoopDepth(ArrayList<BasicBlock> sameLoopDepth) {
@@ -135,6 +136,10 @@ public class Loop {
         return exits;
     }
 
+    public ArrayList<BasicBlock> getExitings() {
+        return exitings;
+    }
+
     public ArrayList<Loop> getInnerLoops() {
         return innerLoops;
     }
@@ -161,9 +166,10 @@ public class Loop {
         if(exitings.size() != 1){
             return false;
         }
+        BasicBlock latch = latchs.get(0);
         //短路求值
         for(BasicBlock exitingBlock : exitings){
-            if(exitingBlock != header){
+            if(exitingBlock != latch){
                 return false;
             }
         }
@@ -178,7 +184,7 @@ public class Loop {
     public void LoopPrint() {
         StringBuilder sb = new StringBuilder();
         sb.append("header: " + this.header + "\n");
-        sb.append("entering: " + this.entering + "\n");
+        sb.append("entering: " + this.preHeader + "\n");
         sb.append("blks: " + this.blks + "\n");
         sb.append("latchs: " + this.latchs + "\n");
         sb.append("exitings: " + this.exitings + "\n");
@@ -186,6 +192,14 @@ public class Loop {
         sb.append("inners: " + this.innerLoops + "\n");
         if (prtLoop != null) {
             sb.append("prtLoop " + this.prtLoop + "\n");
+        }
+        if (hasIndVar) {
+            sb.append("itVar: " + ((Instruction)var).print() + "\n");
+            sb.append("itInit: " + begin + "\n");
+            sb.append("itEnd: " + end + "\n");
+            sb.append("itAlu: " + ((Instruction)alu).print() + "\n");
+            sb.append("itStep: " + step + "\n");
+            sb.append("cond: " + ((Instruction) cond).print() + "\n");
         }
         System.out.println(sb);
     }
