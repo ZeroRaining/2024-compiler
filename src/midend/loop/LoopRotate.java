@@ -89,12 +89,13 @@ public class LoopRotate {
         }
 
 
-        BasicBlock newLatch = clone4cond(header, body, latch, newBlk, old2new, procedure);
+        BasicBlock newLatch = clone4cond(header, body, latch, newBlk, old2new, procedure, loop);
         //修改cond块中对于phi的使用
         BasicBlock tmp = header;
         HashSet<BasicBlock> condBlks = new HashSet<>();
         while (tmp != body) {
             condBlks.add(tmp);
+            loop.getBlks().remove(tmp);
             tmp = (BasicBlock) tmp.getNext();
         }
 
@@ -164,12 +165,12 @@ public class LoopRotate {
         RemoveUseLessPhi.clear4branchModify(newBlk);
         DFG.execute4func(procedure.getParentFunc());
         AnalysisLoop.execute4func(procedure.getParentFunc());
-//        LCSSA.execute4func(procedure.getParentFunc());
+        LCSSA.execute4func(procedure.getParentFunc());
     }
 
     /*  anon: 从cond1到stopBlk的前一个  */
     private static BasicBlock clone4cond(BasicBlock cond1Blk, BasicBlock stopBlk, BasicBlock latch, BasicBlock cond2Blk,
-                                   HashMap<Value, Value> old2new, Procedure procedure) {
+                                         HashMap<Value, Value> old2new, Procedure procedure, Loop loop) {
         BasicBlock curBB = cond1Blk;
         ArrayList<BasicBlock> newBlks = new ArrayList<>();
         while (curBB != stopBlk) {
@@ -212,7 +213,7 @@ public class LoopRotate {
                 }
                 newIns = (Instruction) newIns.getNext();
             }
-
+            loop.addBlk(newBB);
             newBB.insertAfter(last);
             last = newBB;
         }

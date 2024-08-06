@@ -291,19 +291,18 @@ public class BasicBlock extends Value {
         return (PCInstr) instructions.getHead();
     }
 
-    public BasicBlock clone4while(Procedure procedure) {
+    public BasicBlock clone4while(Procedure procedure, HashMap<Value, Value> old2new) {
         BasicBlock newBlk = new BasicBlock(loopDepth, procedure.getAndAddBlkIndex());
-        HashMap<Value, Value> old2new = new HashMap<>();
         Instruction instr = (Instruction) this.getInstructions().getHead();
         while (instr != null) {
             Instruction newIns = instr.cloneShell(procedure);
+            newBlk.addInstruction(newIns);
             for (Value value : instr.getUseValueList()) {
                 Value newValue = old2new.get(value);
                 if (newValue != null) {
                     newIns.modifyUse(value, newValue);
                 }
             }
-            newBlk.addInstruction(newIns);
             old2new.put(instr, newIns);
             instr = (Instruction) instr.getNext();
         }

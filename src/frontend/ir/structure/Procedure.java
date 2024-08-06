@@ -181,7 +181,7 @@ public class Procedure {
         } else if (item instanceof Ast.Break) {
             dealBreak();
         } else if (item instanceof Ast.WhileStmt) {
-            dealWhile((Ast.WhileStmt)item, returnType, symTab);
+            doWhile((Ast.WhileStmt)item, returnType, symTab);
         } else if (item instanceof Ast.IfStmt) {
             dealIf((Ast.IfStmt) item, returnType, symTab);
         } else if (item instanceof Ast.Return) {
@@ -311,15 +311,22 @@ public class Procedure {
         BasicBlock cond1Blk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock bodyBlk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock endBlk = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock loopHeader = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock loopExit = new BasicBlock(curDepth, curBlkIndex++);
 
         curBlock.addInstruction(new JumpInstr(cond1Blk));//要为condBlk新建一个块吗
 
         basicBlocks.addToTail(cond1Blk);
         curBlock = cond1Blk;
-        Value cond = calculateLOr(item.cond, bodyBlk, endBlk, symTab);
-        curBlock.addInstruction(new BranchInstr(cond, bodyBlk, endBlk));
+        Value cond = calculateLOr(item.cond, loopHeader, endBlk, symTab);
+        curBlock.addInstruction(new BranchInstr(cond, loopHeader, endBlk));
 
-        BasicBlock cond2Blk = cond1Blk.clone4while(this);
+        loopHeader.addInstruction(new JumpInstr(bodyBlk));
+        basicBlocks.addToTail(loopHeader);
+
+        HashMap<Value, Value> old2new = new HashMap<>();
+        old2new.put(endBlk, loopExit);
+        BasicBlock cond2Blk = cond1Blk.clone4while(this, old2new);
 
         //fixme：if和while同时创建一个新end块，会导致没有语句
         basicBlocks.addToTail(bodyBlk);
@@ -338,6 +345,8 @@ public class Procedure {
         curBlock.addInstruction(new JumpInstr(cond2Blk));
         basicBlocks.addToTail(cond2Blk);
 
+        basicBlocks.addToTail(loopExit);
+        loopExit.addInstruction(new JumpInstr(endBlk));
         basicBlocks.addToTail(endBlk);
         curBlock = endBlk;
     }

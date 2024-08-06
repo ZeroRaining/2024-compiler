@@ -49,19 +49,25 @@ public class RemoveUseLessPhi {
         return toBeContinue;
     }
 
-    public static void clear4branchModify(BasicBlock block) {
-        Instruction instruction = (Instruction) block.getInstructions().getHead();
-        while (instruction instanceof PhiInstr) {
-            ArrayList<BasicBlock> toRemove = new ArrayList<>();
-            for (BasicBlock pre : ((PhiInstr) instruction).getPrtBlks()) {
-                if (!block.getPres().contains(pre)) {
-                    toRemove.add(pre);
+    public static void clear4branchModify(BasicBlock blk) {
+        Instruction instr = (Instruction) blk.getInstructions().getHead();
+        while (instr instanceof PhiInstr) {
+            ArrayList<BasicBlock> prts = ((PhiInstr) instr).getPrtBlks();
+            for (int i = 0; i < prts.size(); i++) {
+                if (!blk.getPres().contains(prts.get(i))) {
+                    prts.remove(i);
+                    ((PhiInstr) instr).getValues().remove(i);
+                    i--;
                 }
             }
-            for (BasicBlock pre : toRemove) {
-                instruction.removeUse(pre);
+            if (prts.isEmpty()) {
+                instr.removeFromList();
+            } else if (((PhiInstr) instr).canSimplify()) {
+                Value value = ((PhiInstr) instr).getValues().get(0);
+                instr.replaceUseTo(value);
+                instr.removeFromList();
             }
-            instruction = (Instruction) instruction.getNext();
+            instr = (Instruction) instr.getNext();
         }
     }
 
