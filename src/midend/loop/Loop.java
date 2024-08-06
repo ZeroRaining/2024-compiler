@@ -165,9 +165,10 @@ public class Loop {
         if(exitings.size() != 1){
             return false;
         }
+        BasicBlock latch = latchs.get(0);
         //短路求值
         for(BasicBlock exitingBlock : exitings){
-            if(exitingBlock != header){
+            if(exitingBlock != latch){
                 return false;
             }
         }
@@ -190,6 +191,14 @@ public class Loop {
         sb.append("inners: " + this.innerLoops + "\n");
         if (prtLoop != null) {
             sb.append("prtLoop " + this.prtLoop + "\n");
+        }
+        if (hasIndVar) {
+            sb.append("itVar: " + var + "\n");
+            sb.append("itInit: " + begin + "\n");
+            sb.append("itEnd: " + end + "\n");
+            sb.append("itAlu: " + alu + "\n");
+            sb.append("itStep: " + step + "\n");
+            sb.append("cond: " + cond + "\n");
         }
         System.out.println(sb);
     }
