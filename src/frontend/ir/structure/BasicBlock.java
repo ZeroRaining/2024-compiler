@@ -247,7 +247,8 @@ public class BasicBlock extends Value {
     }
 
     public void printDBG() {
-        StringBuilder str = new StringBuilder();
+        StringBuilder str;
+        DEBUG.dbgPrint("blk: " + value2string());
         DEBUG.dbgPrint("used: ");
         Use use = this.getBeginUse();
         if (use == null) {
