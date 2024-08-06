@@ -66,9 +66,9 @@ public class Compiler {
             LCSSA.execute(functions);
             LoopUnroll.execute(functions);
         }
-        DFG.execute(functions);
+//        DFG.execute(functions);
 //        LCSSA.execute(functions);
-        LoopInvariantMotion.execute(functions);
+//        LoopInvariantMotion.execute(functions);
 //        LCSSA.execute(functions);//这里可能会有问题
         RemoveUseLessPhi.execute(functions);
 
