@@ -32,11 +32,7 @@ public class OIS {
         while (basicBlock != stop) {
             Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
             while (instruction != null) {
-                Value simplified = instruction.operationSimplify();
-                if (simplified != null) {
-                    instruction.replaceUseTo(simplified);
-                    instruction.removeFromList();
-                }
+                simpleOIS4ins(instruction);
                 
                 // 针对累加取模操作的特殊化简
                 if (instruction instanceof SRemInstr) {
@@ -46,10 +42,18 @@ public class OIS {
                         newIns.insertBefore(instruction);
                     }
                 }
-                
                 instruction = (Instruction) instruction.getNext();
             }
             basicBlock = (BasicBlock) basicBlock.getNext();
         }
+    }
+    
+    public static void simpleOIS4ins(Instruction instruction) {
+        Value simplified = instruction.operationSimplify();
+        if (simplified != null) {
+            instruction.replaceUseTo(simplified);
+            instruction.removeFromList();
+        }
+        
     }
 }

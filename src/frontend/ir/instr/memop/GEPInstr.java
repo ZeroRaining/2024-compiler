@@ -1,10 +1,13 @@
 package frontend.ir.instr.memop;
 
+import backend.itemStructure.Group;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.binop.AddInstr;
 import frontend.ir.structure.FParam;
+import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
 
@@ -93,6 +96,24 @@ public class GEPInstr extends MemoryOperation {
         setUse(base);
         for (Value value : indexList) {
             setUse(value);
+        }
+    }
+    
+    public GEPInstr(int result, GEPInstr base, GEPInstr toMerge, AddInstr link, int beginIndex) {
+        super(base.symbol);
+        type = 3;
+        this.result = result;
+        this.indexList = new ArrayList<>(base.indexList);
+        this.indexList.set(this.indexList.size() - 1, link);
+        for (int i = beginIndex; i < toMerge.indexList.size(); i++) {
+            this.indexList.add(toMerge.indexList.get(i));
+        }
+        this.pointerLevel = toMerge.pointerLevel;
+        this.arrayTypeName = base.arrayTypeName;
+        this.ptrVal = base.ptrVal;
+        this.setUse(this.ptrVal);
+        for (Value value : this.indexList) {
+            this.setUse(value);
         }
     }
     
@@ -224,6 +245,25 @@ public class GEPInstr extends MemoryOperation {
             return ((GEPInstr) this.ptrVal).getRoot();
         }
         return this.ptrVal;
+    }
+    
+    public Group<AddInstr, GEPInstr> tryMergePtr(Function function) {
+        if (!(this.ptrVal instanceof GEPInstr)) {
+            return null;
+        }
+        Value baseTail = ((GEPInstr) this.ptrVal).indexList.get(((GEPInstr) this.ptrVal).indexList.size() - 1);
+        AddInstr link;
+        int beginIndex; // 如果是传参的话首位 index 有效，需要和 base 的末位加起来，否则加的是默认的 0
+        if (this.symbol.isArrayFParam()) {
+            link = new AddInstr(function.getAndAddRegIndex(), baseTail, this.indexList.get(0));
+            beginIndex = 1;
+        } else {
+            link = new AddInstr(function.getAndAddRegIndex(), baseTail, ConstInt.Zero);
+            beginIndex = 0;
+        }
+        
+        GEPInstr merged = new GEPInstr(function.getAndAddRegIndex(), (GEPInstr) this.ptrVal, this, link, beginIndex);
+        return new Group<>(link, merged);
     }
     
     @Override

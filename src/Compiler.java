@@ -87,6 +87,7 @@ public class Compiler {
         
         // second
         DFG.execute(functions);
+        MergeGEP.execute(functions);
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
