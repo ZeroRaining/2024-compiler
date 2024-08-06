@@ -3,16 +3,13 @@ package midend.loop;
 import Utils.CustomList;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
-import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.BinaryOperation;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
-import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
-import frontend.ir.structure.Procedure;
 import midend.SSA.DFG;
 
 import java.util.*;
@@ -114,9 +111,9 @@ public class AnalysisLoop {
         for (Loop loop : allLoop) {
             for (BasicBlock blk : loop.getHeader().getPres()) {
                 if (loop.getBlks().contains(blk)) continue;
-                loop.setEntering(blk);
+                loop.setPreHeader(blk);
                 blk.setEntering(true);
-                loop.setPreCond(blk);
+//                loop.setPreCond(blk);
             }
             ArrayList<BasicBlock> sameDepth = new ArrayList<>(loop.getBlks());
             for (Loop in : loop.getInnerLoops()) {
@@ -242,7 +239,7 @@ public class AnalysisLoop {
         }
         //TODO：短路求值？？
 //        loop.LoopPrint();
-        {
+
         /*blk_0: anon: entering
             br label %blk_2
         blk_2: anon: header loopCondition exiting
@@ -256,16 +253,42 @@ public class AnalysisLoop {
         blk_1: anon: exit
             %phi_2 = phi i32 [ %phi_0, %blk_2 ]
             ret i32 %phi_2*/
+
+        /*
+        define i32 @main() {
+        blk_0:
+            br label %blk_2
+        blk_2:
+            %reg_4 = icmp slt i32 0, 20
+            br i1 %reg_4, label %blk_5, label %blk_4
+        blk_5:
+            br label %blk_3 anon: pre-header
+        blk_3:
+            %phi_1 = phi i32 [ 0, %blk_5 ], [ %reg_8, %blk_7 ] anon: header & body
+            %reg_8 = add i32 %phi_1, 3
+            %reg_10 = sub i32 %reg_10, 2
+            br label %blk_7
+        blk_7: anon: latch & exiting
+            %reg_6 = icmp slt i32 %reg_8, 20 anon: cond
+            br i1 %reg_6, label %blk_3, label %blk_6 anon: br
+        blk_6:
+            br label %blk_4 anon: exit
+        blk_4:
+            %phi_0 = phi i32 [ %reg_8, %blk_6 ], [ 0, %blk_2 ]
+            br label %blk_1
+        blk_1:
+            ret i32 0
         }
+        */
         BasicBlock header = loop.getHeader();
+        BasicBlock latch = loop.getLatchs().get(0);
 
         PhiInstr itVar;
         Value itEnd;
-        if (header.getEndInstr() instanceof JumpInstr) {
-//            return;
+        if (latch.getEndInstr() instanceof JumpInstr) {
             throw new RuntimeException(loop + " instr: " + header.getEndInstr().print());
         }
-        BranchInstr br = (BranchInstr) header.getEndInstr();
+        BranchInstr br = (BranchInstr) latch.getEndInstr();
         Value cond = br.getCond();
 
         if (cond instanceof ConstValue) {
@@ -274,32 +297,64 @@ public class AnalysisLoop {
         if (!(cond instanceof Cmp)) {
             throw new RuntimeException("是不是你写的有问题？");
         }
+        Value itAlu;
 
         Value op1 = ((Cmp) cond).getOp1();
         Value op2 = ((Cmp) cond).getOp2();
-        if (op1 instanceof PhiInstr) {
-            itVar = (PhiInstr) op1;
-            itEnd = op2;
-        } else if (op2 instanceof PhiInstr) {
-            itVar = (PhiInstr) op2;
+        //TODO：先常数传播
+        if (op1 instanceof ConstValue) {
+            itAlu = op2;
             itEnd = op1;
+        } else if (op2 instanceof ConstValue) {
+            itAlu = op1;
+            itEnd = op2;
         } else {
             return;
-            /*部分情况下可能没有一个phi作为循环变量，这种的可以直接被优化掉
-            *
-            * TODO：
-            *  int main() {
-            *     int a= 1;
-            *     while (a < 100) {
-            *         a = a + 1;
-            *     }
-            *     return a;
-            *  }
-            *  这种要被循环不变量后提干掉！！
-            *
-            * */
-            //throw new RuntimeException("op1: " + op1 + " op2: " + op2);
         }
+        if (!(itAlu instanceof BinaryOperation)) {
+            return;
+        }
+        op1 = ((BinaryOperation) itAlu).getOp1();
+        op2 = ((BinaryOperation) itAlu).getOp2();
+        Value itStep;
+        if (op1 instanceof PhiInstr) {
+            itVar = (PhiInstr) op1;
+            itStep = op2;
+        } else if (op2 instanceof PhiInstr) {
+            itVar = (PhiInstr) op2;
+            itStep = op1;
+        } else {
+            return;
+        }
+        if (!(itStep instanceof ConstValue)) {
+            return;
+        }
+        BasicBlock preHeader = loop.getPreHeader();//TODO:fix preHeader & preCond
+        Value itInit = itVar.getValues().get(itVar.getPrtBlks().indexOf(preHeader));
+
+//        if (op1 instanceof PhiInstr) {
+//            itVar = (PhiInstr) op1;
+//            itEnd = op2;
+//        } else if (op2 instanceof PhiInstr) {
+//            itVar = (PhiInstr) op2;
+//            itEnd = op1;
+//        } else {
+//            return;
+//            /*部分情况下可能没有一个phi作为循环变量，这种的可以直接被优化掉
+//            *
+//            * TODO：
+//            *  int main() {
+//            *     int a= 1;
+//            *     while (a < 100) {
+//            *         a = a + 1;
+//            *     }
+//            *     return a;
+//            *  }
+//            *  这种要被循环不变量后提干掉！！
+//            *
+//            * */
+//            //throw new RuntimeException("op1: " + op1 + " op2: " + op2);
+//        }
 
         {
         /*blk_0: anon: entering
@@ -317,35 +372,35 @@ public class AnalysisLoop {
             ret i32 %phi_2*/
         }
 
-        Value itAlu;
-        Value itInit;
-        if (itVar.getPrtBlks().size() > 2) {
-            return;
-        }
-        BasicBlock latch = loop.getLatchs().get(0);
-        int index = itVar.getPrtBlks().indexOf(latch);
-        if (index == 1) {
-            itAlu = itVar.getValues().get(1);
-            itInit = itVar.getValues().get(0);
-        } else if (index == 0) {
-            itAlu = itVar.getValues().get(0);
-            itInit = itVar.getValues().get(1);
-        } else {
-            return;
-        }
-
-        Value itStep;
-        if (!(itAlu instanceof BinaryOperation)) {
-            return;
-//            throw new RuntimeException(itAlu.toString());
-        }
-        if (((BinaryOperation) itAlu).getOp1() == itVar) {
-            itStep = ((BinaryOperation) itAlu).getOp2();
-        } else if (((BinaryOperation) itAlu).getOp2() == itVar) {
-            itStep = ((BinaryOperation) itAlu).getOp1();
-        } else {
-            return;
-        }
+//        Value itAlu;
+//        Value itInit;
+//        if (itVar.getPrtBlks().size() > 2) {
+//            return;
+//        }
+//        BasicBlock latch = loop.getLatchs().get(0);
+//        int index = itVar.getPrtBlks().indexOf(latch);
+//        if (index == 1) {
+//            itAlu = itVar.getValues().get(1);
+//            itInit = itVar.getValues().get(0);
+//        } else if (index == 0) {
+//            itAlu = itVar.getValues().get(0);
+//            itInit = itVar.getValues().get(1);
+//        } else {
+//            return;
+//        }
+//
+//        Value itStep;
+//        if (!(itAlu instanceof BinaryOperation)) {
+//            return;
+////            throw new RuntimeException(itAlu.toString());
+//        }
+//        if (((BinaryOperation) itAlu).getOp1() == itVar) {
+//            itStep = ((BinaryOperation) itAlu).getOp2();
+//        } else if (((BinaryOperation) itAlu).getOp2() == itVar) {
+//            itStep = ((BinaryOperation) itAlu).getOp1();
+//        } else {
+//            return;
+//        }
 
         String opName = ((BinaryOperation) itAlu).getOperationName();
         if (opName.contains("add") || opName.contains("sub") || opName.contains("mul")) {

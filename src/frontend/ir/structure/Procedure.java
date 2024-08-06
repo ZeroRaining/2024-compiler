@@ -311,21 +311,22 @@ public class Procedure {
         BasicBlock cond1Blk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock bodyBlk = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock endBlk = new BasicBlock(curDepth, curBlkIndex++);
-        BasicBlock loopHeader = new BasicBlock(curDepth, curBlkIndex++);
+        BasicBlock loopPreHeader = new BasicBlock(curDepth, curBlkIndex++);
         BasicBlock loopExit = new BasicBlock(curDepth, curBlkIndex++);
 
         curBlock.addInstruction(new JumpInstr(cond1Blk));//要为condBlk新建一个块吗
 
         basicBlocks.addToTail(cond1Blk);
         curBlock = cond1Blk;
-        Value cond = calculateLOr(item.cond, loopHeader, endBlk, symTab);
-        curBlock.addInstruction(new BranchInstr(cond, loopHeader, endBlk));
+        Value cond = calculateLOr(item.cond, loopPreHeader, endBlk, symTab);
+        curBlock.addInstruction(new BranchInstr(cond, loopPreHeader, endBlk));
 
-        loopHeader.addInstruction(new JumpInstr(bodyBlk));
-        basicBlocks.addToTail(loopHeader);
+        loopPreHeader.addInstruction(new JumpInstr(bodyBlk));
+        basicBlocks.addToTail(loopPreHeader);
 
         HashMap<Value, Value> old2new = new HashMap<>();
         old2new.put(endBlk, loopExit);
+        old2new.put(loopPreHeader, bodyBlk);
         BasicBlock cond2Blk = cond1Blk.clone4while(this, old2new);
 
         //fixme：if和while同时创建一个新end块，会导致没有语句

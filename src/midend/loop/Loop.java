@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class Loop {
-    private BasicBlock entering; //进入循环的节点，有边指向header
+    private BasicBlock preHeader; //进入循环的节点，有边指向header
     private BasicBlock preCond;
     private BasicBlock header; //循环入口，支配所有循环的节点，回边指向的节点
     private ArrayList<BasicBlock> exits = new ArrayList<>(); //循环跳出后的节点，endBlk & retBlk
@@ -69,12 +69,12 @@ public class Loop {
         return preCond;
     }
 
-    public void setEntering(BasicBlock entering) {
-        this.entering = entering;
+    public void setPreHeader(BasicBlock preHeader) {
+        this.preHeader = preHeader;
     }
 
-    public BasicBlock getEntering() {
-        return entering;
+    public BasicBlock getPreHeader() {
+        return preHeader;
     }
 
     public void setSameLoopDepth(ArrayList<BasicBlock> sameLoopDepth) {
@@ -182,7 +182,7 @@ public class Loop {
     public void LoopPrint() {
         StringBuilder sb = new StringBuilder();
         sb.append("header: " + this.header + "\n");
-        sb.append("entering: " + this.entering + "\n");
+        sb.append("entering: " + this.preHeader + "\n");
         sb.append("blks: " + this.blks + "\n");
         sb.append("latchs: " + this.latchs + "\n");
         sb.append("exitings: " + this.exitings + "\n");
