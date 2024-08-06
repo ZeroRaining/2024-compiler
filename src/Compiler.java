@@ -67,10 +67,10 @@ public class Compiler {
             LoopUnroll.execute(functions);
         }
         DFG.execute(functions);
-        LCSSA.execute(functions);
-        LoopRotate.execute(functions);
-//        LCSSA.execute(functions);这里可能会有问题
-//        RemoveUseLessPhi.execute(functions);
+//        LCSSA.execute(functions);
+        LoopInvariantMotion.execute(functions);
+//        LCSSA.execute(functions);//这里可能会有问题
+        RemoveUseLessPhi.execute(functions);
 
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
@@ -81,10 +81,11 @@ public class Compiler {
         MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
-        //循环分析
+
+        //循环优化2
 //        DFG.execute(functions);
 //        AnalysisLoop.execute(functions);
-//        //LCSSA.execute(functions);
+//        LCSSA.execute(functions);
 //        LoopInvariantMotion.execute(functions);
         
         // second
@@ -109,11 +110,10 @@ public class Compiler {
             MergeBlock.execute(functions, true);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
-
-            DFG.execute(functions);
-            AnalysisLoop.execute(functions);
         }
-
+        //为后端维护必要信息
+        DFG.execute(functions);
+        AnalysisLoop.execute(functions);
 
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
         // 中端优化结束
