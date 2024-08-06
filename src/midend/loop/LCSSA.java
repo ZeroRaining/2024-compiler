@@ -15,10 +15,14 @@ public class LCSSA {
     private static int phiCnt;
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
-            phiCnt = function.getPhiIndex();
-            addPhi(function);
-            function.setCurPhiIndex(phiCnt);
+            execute4func(function);
         }
+    }
+
+    public static void execute4func(Function function) {
+        phiCnt = function.getPhiIndex();
+        addPhi(function);
+        function.setCurPhiIndex(phiCnt);
     }
 
     private static void addPhi(Function function) {
@@ -73,11 +77,14 @@ public class LCSSA {
                         } else {
                             userBlk = user.getParentBB();
                         }
+
                         if(userBlk == prt || loop.getBlks().contains(userBlk)){
                             use = (Use) use.getNext();
                             continue;
                         }
-
+                        if (userBlk == null) {
+                            throw new RuntimeException("phi: " + user.print() + "used: " + instr.print());
+                        }
                         PhiInstr phi = getPhiValue(exit2phi, userBlk, loop);
 
                         user.modifyUse(instr, phi);
@@ -95,6 +102,10 @@ public class LCSSA {
             return phi;
         }
         BasicBlock iDomor = userBlk.getiDomor();
+        if (iDomor == null) {
+            userBlk.printDBG();
+            throw new RuntimeException("");
+        }
         if (!loop.getBlks().contains(iDomor)) {
             phi = getPhiValue(exit2phi, iDomor, loop);
             exit2phi.put(userBlk, phi);

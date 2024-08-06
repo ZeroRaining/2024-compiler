@@ -48,4 +48,27 @@ public class RemoveUseLessPhi {
         }
         return toBeContinue;
     }
+
+    public static void clear4branchModify(BasicBlock blk) {
+        Instruction instr = (Instruction) blk.getInstructions().getHead();
+        while (instr instanceof PhiInstr) {
+            ArrayList<BasicBlock> prts = ((PhiInstr) instr).getPrtBlks();
+            for (int i = 0; i < prts.size(); i++) {
+                if (!blk.getPres().contains(prts.get(i))) {
+                    prts.remove(i);
+                    ((PhiInstr) instr).getValues().remove(i);
+                    i--;
+                }
+            }
+            if (prts.isEmpty()) {
+                instr.removeFromList();
+            } else if (((PhiInstr) instr).canSimplify()) {
+                Value value = ((PhiInstr) instr).getValues().get(0);
+                instr.replaceUseTo(value);
+                instr.removeFromList();
+            }
+            instr = (Instruction) instr.getNext();
+        }
+    }
+
 }

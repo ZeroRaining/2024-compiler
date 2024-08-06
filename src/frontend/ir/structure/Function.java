@@ -251,7 +251,7 @@ public class Function extends Value implements FuncDef {
                             continue;
                         }
                         if (!(toReplace instanceof ConstValue) && !(toReplace instanceof GlobalObject)) {
-                            throw new RuntimeException("使用了未曾设想的 value");
+                            throw new RuntimeException(newIns.print() + "使用了未曾设想的 value " + toReplace);
                         }
                     } else {
                         newIns.modifyUse(toReplace, old2new.get(toReplace));

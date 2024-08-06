@@ -9,14 +9,11 @@ import java.util.*;
 public class DFG {
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
-            makeDoms(function);
-            makeIDoms(function);
-            makeDF(function);
-            makeDomTree(function);
+            execute4func(function);
         }
     }
 
-    public static void singleExecute(Function function) {
+    public static void execute4func(Function function) {
             makeDoms(function);
             makeIDoms(function);
             makeDF(function);
