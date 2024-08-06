@@ -9,10 +9,7 @@ import frontend.syntax.Ast;
 import frontend.syntax.Parser;
 import midend.RemovePhi;
 import midend.SSA.*;
-import midend.loop.AnalysisLoop;
-import midend.loop.LCSSA;
-import midend.loop.LoopUnroll;
-import midend.loop.LoopInvariantMotion;
+import midend.loop.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -64,14 +61,16 @@ public class Compiler {
         
         // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
-            DFG.execute(functions);
-            AnalysisLoop.execute(functions);
-            LCSSA.execute(functions);
-            LoopUnroll.execute(functions);
+//            DFG.execute(functions);
+//            AnalysisLoop.execute(functions);
+//            LCSSA.execute(functions);
+//            LoopUnroll.execute(functions);
         }
         DFG.execute(functions);
-        AnalysisLoop.rotateLoop(functions);
-        RemoveUseLessPhi.execute(functions);
+//        LCSSA.execute(functions);
+        LoopRotate.execute(functions);
+//        LCSSA.execute(functions);这里可能会有问题
+//        RemoveUseLessPhi.execute(functions);
         
 //        DeadCodeRemove.execute(functions);
 //        OIS.execute(functions);
