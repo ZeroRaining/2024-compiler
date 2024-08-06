@@ -13,7 +13,9 @@ import frontend.ir.structure.Function;
 import midend.SSA.DFG;
 
 import java.util.*;
-
+/*
+* anon: 目前每次AnalysisLoop都会建立一次新的loop,而不是更新以前的loop
+* */
 public class AnalysisLoop {
     private static HashMap<BasicBlock, Loop> header2loop = new HashMap<>();
     private static ArrayList<Loop> outLoop = new ArrayList<>();
@@ -112,8 +114,6 @@ public class AnalysisLoop {
             for (BasicBlock blk : loop.getHeader().getPres()) {
                 if (loop.getBlks().contains(blk)) continue;
                 loop.setPreHeader(blk);
-                blk.setEntering(true);
-//                loop.setPreCond(blk);
             }
             ArrayList<BasicBlock> sameDepth = new ArrayList<>(loop.getBlks());
             for (Loop in : loop.getInnerLoops()) {
