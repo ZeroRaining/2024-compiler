@@ -1,6 +1,7 @@
 package midend.SSA;
 
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.GEPInstr;
 import frontend.ir.instr.memop.LoadInstr;
@@ -150,10 +151,11 @@ public class PtrMem2Reg {
                         if (onlyDef == null) {
                             defVal = defMap.get(key);
                         } else {
+                            // 这里是为了避免 load 出现在第一次显示 store 之前（这种情况下应该用 0）
                             if (done.contains(onlyDef)) {
                                 defVal = onlyDef.getValue();
                             } else {
-                                defVal = null;
+                                defVal = ConstInt.Zero;
                             }
                         }
                         if (defVal != null) {
