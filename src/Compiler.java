@@ -40,15 +40,17 @@ public class Compiler {
         // 中端优化开始
         if (arg.toTime()) { optimizeStartTime = System.currentTimeMillis(); }
         
+        // 获取函数列表用于优化
+        ArrayList<Function> functions = program.getFunctionList();
+        
         // 函数内联，之后删除没用的函数定义
-        FI.execute(program.getFunctionList());
+        FI.execute(functions);
         program.removeUselessFunc();
+        // 递归函数记忆化
+        FuncMemorize.execute(functions, program.getGlobalSymTab());/*
         // 全局变量简化，之后删掉没用的全局变量定义
         GlobalValueSimplify.execute(program.getGlobalVars());
         program.deleteUselessGlobalVars();
-        
-        // 获取函数列表用于优化
-        ArrayList<Function> functions = program.getFunctionList();
         
         // 删除没用的基本块
         DeadBlockRemove.execute(functions);
@@ -111,13 +113,12 @@ public class Compiler {
             MergeBlock.execute(functions, true);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
-            
-            FuncMemorize.execute(functions, program.getGlobalSymTab());
         }
+        
         //为后端维护必要信息
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
-
+*/
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
         // 中端优化结束
 

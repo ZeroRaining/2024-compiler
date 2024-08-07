@@ -6,6 +6,7 @@ import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
+import frontend.ir.instr.memop.GEPInstr;
 import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
@@ -427,8 +428,8 @@ public class Function extends Value implements FuncDef {
             if (!callee.checkNoSideEffect()) {
                 return false;
             }
-            // 不能有 load
-            if (callee.haveLoad()) {
+            // 不能有针对数组的 load
+            if (callee.loadingArrayElement()) {
                 return false;
             }
         }
@@ -436,12 +437,12 @@ public class Function extends Value implements FuncDef {
         return true;
     }
     
-    private boolean haveLoad() {
+    private boolean loadingArrayElement() {
         BasicBlock basicBlock = (BasicBlock) this.procedure.getBasicBlocks().getHead();
         while (basicBlock != null) {
             Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
             while (instruction != null) {
-                if (instruction instanceof LoadInstr) {
+                if (instruction instanceof LoadInstr && ((LoadInstr) instruction).getPtr() instanceof GEPInstr) {
                     return true;
                 }
                 instruction = (Instruction) instruction.getNext();
@@ -452,7 +453,7 @@ public class Function extends Value implements FuncDef {
     }
     
     /**
-     * 目前检查函数无副作用的标准就是没有 I/O 且没有修改内存
+     * 目前检查函数无副作用的标准就是没有 I/O 且没有修改内存（这里特指针对数组元素的修改，因为其它都会被 mem2reg 干掉）
      * 自定义函数肯定没有 I/O
      */
     public boolean checkNoSideEffect() {
@@ -460,7 +461,7 @@ public class Function extends Value implements FuncDef {
         while (basicBlock != null) {
             Instruction ins = (Instruction) basicBlock.getInstructions().getHead();
             while (ins != null) {
-                if (ins instanceof StoreInstr) {
+                if (ins instanceof StoreInstr && ((StoreInstr) ins).getPtr() instanceof GEPInstr) {
                     return false;
                 }
                 ins = (Instruction) ins.getNext();

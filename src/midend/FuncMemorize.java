@@ -129,6 +129,9 @@ public class FuncMemorize {
                 // 将两个新块插入函数头
                 function.getBasicBlocks().addToHead(preRetBlk);
                 function.getBasicBlocks().addToHead(hashBlk);
+                
+                // 重新将 alloca 提前到新的头
+                function.allocaRearrangement();
             }
         }
     }
