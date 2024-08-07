@@ -60,14 +60,14 @@ public class GEPInstr extends MemoryOperation {
         }
     }
     
-    public GEPInstr(int result, GEPInstr base, Symbol symbol) {
+    public GEPInstr(int result, MemoryOperation base, Symbol symbol, String arrayTypeName) {
         super(symbol);
         type = 2;
         this.result = result;
         this.indexList = new ArrayList<>();
         indexList.add(new ConstInt(0));
-        this.pointerLevel = base.pointerLevel - 1;
-        this.arrayTypeName = base.printBaseType();
+        this.pointerLevel = base.getPointerLevel() - 1;
+        this.arrayTypeName = arrayTypeName;
         this.ptrVal = base;
         setUse(base);
     }
@@ -104,7 +104,12 @@ public class GEPInstr extends MemoryOperation {
         type = 3;
         this.result = result;
         this.indexList = new ArrayList<>(base.indexList);
-        this.indexList.set(this.indexList.size() - 1, link);
+        if (this.indexList.isEmpty()) {
+            this.indexList.add(link);
+        } else {
+            this.indexList.set(this.indexList.size() - 1, link);
+        }
+
         for (int i = beginIndex; i < toMerge.indexList.size(); i++) {
             this.indexList.add(toMerge.indexList.get(i));
         }
@@ -122,7 +127,7 @@ public class GEPInstr extends MemoryOperation {
         if (type == 1) {
             return new GEPInstr(procedure.getAndAddRegIndex(), new ArrayList<>(indexList), ptrVal, symbol);
         } else if (type == 2) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), (GEPInstr) ptrVal, symbol);
+            return new GEPInstr(procedure.getAndAddRegIndex(), (MemoryOperation) ptrVal, symbol, arrayTypeName);
         } else if (type == 3) {
             return new GEPInstr(procedure.getAndAddRegIndex(), ptrVal, new ArrayList<>(indexList), symbol);
         } else {
@@ -251,7 +256,14 @@ public class GEPInstr extends MemoryOperation {
         if (!(this.ptrVal instanceof GEPInstr)) {
             return null;
         }
-        Value baseTail = ((GEPInstr) this.ptrVal).indexList.get(((GEPInstr) this.ptrVal).indexList.size() - 1);
+        List<Value> baseIndexList = ((GEPInstr) this.ptrVal).indexList;
+        Value baseTail;
+        if (baseIndexList.isEmpty()) {
+            baseTail = ConstInt.Zero;
+        } else {
+            baseTail = baseIndexList.get(((GEPInstr) this.ptrVal).indexList.size() - 1);
+        }
+
         AddInstr link;
         int beginIndex; // 如果是传参的话首位 index 有效，需要和 base 的末位加起来，否则加的是默认的 0
         if (this.symbol.isArrayFParam()) {

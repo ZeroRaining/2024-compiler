@@ -28,12 +28,20 @@ public class LoopInvariantMotion {
             findInvar4loop(loop);
         }
     }
+    /*
+    * anon:
+    *  不被使用的量后提
+    *  若有多个exiting块则不能处理, 因为不知道循环的结束条件?
+    *  要找到结束的值, 进行替换
+    *  只被定义不被使用
+    *
+    * */
 
     private static void findInvar4loop(Loop loop) {
         for (Loop inner : loop.getInnerLoops()) {
             findInvar4loop(inner);
         }
-        loop.LoopPrint();
+//        loop.LoopPrint();
         //System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         Queue<Instruction> queue = new LinkedList<>();
         HashSet<Value> invariant = new HashSet<>();
@@ -75,16 +83,17 @@ public class LoopInvariantMotion {
             cnt++;
             last = instr;
         }
-//        if (!invariant.isEmpty()) {
-//            //修改跳转指令以及phi，并将该块放入procedure中
-//            addTmpBlk(entering, tmpBlk, loop.getHeader());
-//            //更改loop的相关信息:更改entering，修改父循环的blk内容
-//            loop.setPreHeader(tmpBlk);
-//            if (loop.getPrtLoop() != null) {
-//                loop.getPrtLoop().addBlk(tmpBlk);
+
+//        for (BasicBlock block : loop.getSameLoopDepth()) {
+//            Instruction instr = (Instruction) block.getInstructions().getHead();
+//            while (instr != null) {
+//                if (defOutOfLoop(instr, loop, invariant)) {
+//                    queue.add(instr);
+//                    invariant.add(instr);
+//                }
+//                instr = (Instruction) instr.getNext();
 //            }
 //        }
-//        System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth() + " loopExit: " + loop.getExits());
     }
 
     private static void addTmpBlk(BasicBlock entering, BasicBlock tmpBlk, BasicBlock next) {
@@ -106,10 +115,10 @@ public class LoopInvariantMotion {
 //        if (instr instanceof LoadInstr || instr instanceof StoreInstr) {
 //            return false;
 //        }
-        if (instr instanceof LoadInstr && ((LoadInstr) instr).mayBeStored(loop.getBlks())) {
+        if (instr instanceof LoadInstr/* && ((LoadInstr) instr).mayBeStored(loop.getBlks())*/) {
             return false;
         }
-        if (instr instanceof StoreInstr && ((StoreInstr) instr).mayBeLoaded(loop.getBlks())) {
+        if (instr instanceof StoreInstr/* && ((StoreInstr) instr).mayBeLoaded(loop.getBlks())*/) {
             return false;
         }
         if (instr instanceof CallInstr) {
