@@ -43,12 +43,12 @@ public class Compiler {
         // 获取函数列表用于优化
         ArrayList<Function> functions = program.getFunctionList();
         
-        // 函数内联，之后删除没用的函数定义
+        // 函数内联（内联之前删掉没用且无副作用的调用），之后删除没用的函数定义
         FI.execute(functions);
         program.removeUselessFunc();
         // 递归函数记忆化，只针对性能点
         if (arg.getOptLevel() == 1) {
-            FuncMemorize.execute(functions, program.getGlobalSymTab());
+//            FuncMemorize.execute(functions, program.getGlobalSymTab());
         }
         
         // 全局变量简化，之后删掉没用的全局变量定义
@@ -90,6 +90,7 @@ public class Compiler {
 
         //second
         DFG.execute(functions);
+        MergeGEP.execute(functions);
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
