@@ -66,31 +66,23 @@ public class Compiler {
             LCSSA.execute(functions);
             LoopUnroll.execute(functions);
         }
-//        DFG.execute(functions);
-//        LCSSA.execute(functions);
-//        LoopInvariantMotion.execute(functions);
-//        LCSSA.execute(functions);//这里可能会有问题
+        DFG.execute(functions);
+        AnalysisLoop.execute(functions);
+        LoopInvariantMotion.execute(functions);
         RemoveUseLessPhi.execute(functions);
 
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
-
+//
+//        //合并删减块
         SimplifyBranch.execute(functions);
-        //合并删减块
         MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
 
-        //循环优化2
-//        DFG.execute(functions);
-//        AnalysisLoop.execute(functions);
-//        LCSSA.execute(functions);
-//        LoopInvariantMotion.execute(functions);
-        
-        // second
+        //second
         DFG.execute(functions);
-        MergeGEP.execute(functions);
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);

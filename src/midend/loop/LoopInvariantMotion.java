@@ -33,6 +33,7 @@ public class LoopInvariantMotion {
         for (Loop inner : loop.getInnerLoops()) {
             findInvar4loop(inner);
         }
+        loop.LoopPrint();
         //System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         Queue<Instruction> queue = new LinkedList<>();
         HashSet<Value> invariant = new HashSet<>();
@@ -50,19 +51,29 @@ public class LoopInvariantMotion {
         }
         //TODO: if-do-while 各个blk的归属
         BasicBlock preHeader = loop.getPreHeader();
+        int cnt = 0;
+        Instruction last = null;
         while (!queue.isEmpty()) {
             Instruction instr = queue.poll();
             instr.removeFromListWithUseRemain();
-            preHeader.addInstruction(instr);
+            if (cnt == 0) {
+                preHeader.addInstrToHead(instr);
+            } else {
+                instr.insertAfter(last);
+            }
             Use use = instr.getBeginUse();
             while (use != null) {
                 Instruction user = use.getUser();
                 if (defOutOfLoop(user, loop, invariant)) {
-                    invariant.add(user);
-                    queue.add(user);
+                    if (!invariant.contains(user)) {
+                        invariant.add(user);
+                        queue.add(user);
+                    }
                 }
                 use = (Use) use.getNext();
             }
+            cnt++;
+            last = instr;
         }
 //        if (!invariant.isEmpty()) {
 //            //修改跳转指令以及phi，并将该块放入procedure中
