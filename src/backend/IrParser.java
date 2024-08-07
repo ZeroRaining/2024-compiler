@@ -1,9 +1,9 @@
 package backend;
 
-import backend.asmInstr.AsmInstr;
+import Utils.CustomList.Node;
+import backend.asmInstr.asmBinary.*;
 import backend.asmInstr.asmBr.AsmBnez;
 import backend.asmInstr.asmBr.AsmJ;
-import backend.asmInstr.asmBinary.*;
 import backend.asmInstr.asmConv.AsmFtoi;
 import backend.asmInstr.asmConv.AsmitoF;
 import backend.asmInstr.asmLS.*;
@@ -11,27 +11,33 @@ import backend.asmInstr.asmTermin.AsmCall;
 import backend.asmInstr.asmTermin.AsmRet;
 import backend.itemStructure.*;
 import backend.regs.AsmFVirReg;
-import backend.regs.AsmReg;
 import backend.regs.AsmVirReg;
 import backend.regs.RegGeter;
+import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
+import frontend.ir.constvalue.ConstInt;
+import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.convop.ConversionOperation;
+import frontend.ir.instr.memop.AllocaInstr;
+import frontend.ir.instr.memop.GEPInstr;
+import frontend.ir.instr.memop.LoadInstr;
+import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.MoveInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.otherop.cmp.CmpCond;
-import frontend.ir.instr.terminator.*;
-import frontend.ir.instr.memop.*;
+import frontend.ir.instr.terminator.BranchInstr;
+import frontend.ir.instr.terminator.JumpInstr;
+import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.instr.unaryop.FNegInstr;
 import frontend.ir.structure.*;
-import frontend.ir.Value;
-import frontend.ir.constvalue.ConstInt;
-import frontend.ir.instr.Instruction;
 import frontend.ir.symbols.Symbol;
-import Utils.CustomList.Node;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 import static backend.regs.RegGeter.ZERO;
 import static frontend.ir.DataType.*;
@@ -880,15 +886,47 @@ public class IrParser {
             asmBlock.addInstrTail(asmSra2);
         } else {
             int absValue = Math.abs(value);
-            AsmDiv asmDiv = new AsmDiv(dst, src1, parseConstIntOperand(absValue, 0, f, bb));
-            asmDiv.isWord = true;
-            asmBlock.addInstrTail(asmDiv);
+            long nc = ((long) 1 << 31) - (((long) 1 << 31) % absValue) - 1;
+            long p = 32;
+            while (((long) 1 << p) <= nc * (absValue - ((long) 1 << p) % absValue)) {
+                p++;
+            }
+            long m = ((((long) 1 << p) + (long) absValue - ((long) 1 << p) % absValue) / (long) absValue);
+            int n = (int) ((m << 32) >>> 32);
+            int shift = (int) (p - 32);
+            AsmOperand tmp0 = genTmpReg(f);
+            AsmMove asmMove = new AsmMove(tmp0, new AsmImm32(n));
+            asmBlock.addInstrTail(asmMove);
+            AsmOperand tmp1 = genTmpReg(f);
+            AsmOperand tmp3 = genTmpReg(f);
+            if (m >= 0x80000000L) {
+                AsmMul asmMul = new AsmMul(tmp1, src1, tmp0);
+                asmBlock.addInstrTail(asmMul);
+                AsmSra asmMul2 = new AsmSra(tmp3, tmp1, new AsmImm12(32));
+                asmBlock.addInstrTail(asmMul2);
+                AsmAdd asmAdd = new AsmAdd(tmp3, tmp3, src1);
+                asmBlock.addInstrTail(asmAdd);
+            } else {
+                AsmMul asmMul = new AsmMul(tmp1, src1, tmp0);
+                asmBlock.addInstrTail(asmMul);
+                AsmSra asmMul2 = new AsmSra(tmp3, tmp1, new AsmImm12(32));
+                asmBlock.addInstrTail(asmMul2);
+            }
+            AsmOperand tmp2 = genTmpReg(f);
+            AsmSra asmSra = new AsmSra(tmp2, tmp3, new AsmImm12(shift));
+            asmBlock.addInstrTail(asmSra);
+            AsmOperand tmp4 = genTmpReg(f);
+            AsmSra asmSra2 = new AsmSra(tmp4, tmp2, new AsmImm12(31));
+            asmBlock.addInstrTail(asmSra2);
+            AsmSub asmSub = new AsmSub(dst, tmp2, tmp4);
+            asmBlock.addInstrTail(asmSub);
         }
         if (value < 0) {
             AsmSub asmSub = new AsmSub(dst, ZERO, dst);
             asmSub.isWord = true;
             asmBlock.addInstrTail(asmSub);
         }
+        blockDivExp2Res.put(new Group<>(asmBlock, new Group<>(src1, new AsmImm32(value))), dst);
     }
 
     private void parseFDiv(FDivInstr instr, BasicBlock bb, Function f) {
@@ -1308,9 +1346,40 @@ public class IrParser {
             asmBlock.addInstrTail(asmSra2);
         } else {
             int absValue = Math.abs(value);
-            AsmDiv asmDiv = new AsmDiv(dst, src1, parseConstIntOperand(absValue, 0, f, bb));
-            asmDiv.isWord = true;
-            asmBlock.addInstrTail(asmDiv);
+            long nc = ((long) 1 << 31) - (((long) 1 << 31) % absValue) - 1;
+            long p = 32;
+            while (((long) 1 << p) <= nc * (absValue - ((long) 1 << p) % absValue)) {
+                p++;
+            }
+            long m = ((((long) 1 << p) + (long) absValue - ((long) 1 << p) % absValue) / (long) absValue);
+            int n = (int) ((m << 32) >>> 32);
+            int shift = (int) (p - 32);
+            AsmOperand tmp0 = genTmpReg(f);
+            AsmMove asmMove = new AsmMove(tmp0, new AsmImm32(n));
+            asmBlock.addInstrTail(asmMove);
+            AsmOperand tmp1 = genTmpReg(f);
+            AsmOperand tmp3 = genTmpReg(f);
+            if (m >= 0x80000000L) {
+                AsmMul asmMul = new AsmMul(tmp1, src1, tmp0);
+                asmBlock.addInstrTail(asmMul);
+                AsmSra asmMul2 = new AsmSra(tmp3, tmp1, new AsmImm12(32));
+                asmBlock.addInstrTail(asmMul2);
+                AsmAdd asmAdd = new AsmAdd(tmp3, tmp3, src1);
+                asmBlock.addInstrTail(asmAdd);
+            } else {
+                AsmMul asmMul = new AsmMul(tmp1, src1, tmp0);
+                asmBlock.addInstrTail(asmMul);
+                AsmSra asmMul2 = new AsmSra(tmp3, tmp1, new AsmImm12(32));
+                asmBlock.addInstrTail(asmMul2);
+            }
+            AsmOperand tmp2 = genTmpReg(f);
+            AsmSra asmSra = new AsmSra(tmp2, tmp3, new AsmImm12(shift));
+            asmBlock.addInstrTail(asmSra);
+            AsmOperand tmp4 = genTmpReg(f);
+            AsmSra asmSra2 = new AsmSra(tmp4, tmp2, new AsmImm12(31));
+            asmBlock.addInstrTail(asmSra2);
+            AsmSub asmSub = new AsmSub(dst, tmp2, tmp4);
+            asmBlock.addInstrTail(asmSub);
         }
         if (value < 0) {
             AsmSub asmSub = new AsmSub(dst, ZERO, dst);
