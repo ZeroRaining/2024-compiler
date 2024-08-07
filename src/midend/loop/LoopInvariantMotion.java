@@ -41,7 +41,7 @@ public class LoopInvariantMotion {
         for (Loop inner : loop.getInnerLoops()) {
             findInvar4loop(inner);
         }
-        loop.LoopPrint();
+//        loop.LoopPrint();
         //System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         Queue<Instruction> queue = new LinkedList<>();
         HashSet<Value> invariant = new HashSet<>();
