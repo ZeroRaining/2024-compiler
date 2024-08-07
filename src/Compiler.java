@@ -58,7 +58,8 @@ public class Compiler {
         // 简化代码
         Mem2Reg.execute(functions);
         ArrayFParamMem2Reg.execute(functions);
-        
+
+
         // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
