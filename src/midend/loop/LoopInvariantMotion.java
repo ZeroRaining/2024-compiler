@@ -28,6 +28,12 @@ public class LoopInvariantMotion {
             findInvar4loop(loop);
         }
     }
+    /*
+    * anon:
+    *  不被使用的量后提
+    *  若有多个exiting块则不能处理，因为不知道循环的结束条件？
+    *
+    * */
 
     private static void findInvar4loop(Loop loop) {
         for (Loop inner : loop.getInnerLoops()) {
