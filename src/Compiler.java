@@ -67,6 +67,7 @@ public class Compiler {
             LoopUnroll.execute(functions);
         }
         DFG.execute(functions);
+        AnalysisLoop.execute(functions);
         LoopInvariantMotion.execute(functions);
         RemoveUseLessPhi.execute(functions);
 
