@@ -64,7 +64,8 @@ public class Compiler {
         // 简化代码
         Mem2Reg.execute(functions);
         ArrayFParamMem2Reg.execute(functions);
-        
+
+
         // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
@@ -73,30 +74,22 @@ public class Compiler {
             LoopUnroll.execute(functions);
         }
         DFG.execute(functions);
-//        LCSSA.execute(functions);
+        AnalysisLoop.execute(functions);
         LoopInvariantMotion.execute(functions);
-//        LCSSA.execute(functions);//这里可能会有问题
         RemoveUseLessPhi.execute(functions);
 
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
-
+//
+//        //合并删减块
         SimplifyBranch.execute(functions);
-        //合并删减块
         MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
 
-        //循环优化2
-//        DFG.execute(functions);
-//        AnalysisLoop.execute(functions);
-//        LCSSA.execute(functions);
-//        LoopInvariantMotion.execute(functions);
-        
-        // second
+        //second
         DFG.execute(functions);
-        MergeGEP.execute(functions);
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);

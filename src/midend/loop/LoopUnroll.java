@@ -110,8 +110,7 @@ public class LoopUnroll {
             headPhis.add((PhiInstr) instr);
             instr = instr.getNext();
         }
-        loop.LoopPrint();
-        //
+//        loop.LoopPrint();
         BasicBlock loopExit = loop.getExits().get(0);
         BasicBlock latch = loop.getLatchs().get(0);
 

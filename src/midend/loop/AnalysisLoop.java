@@ -319,7 +319,7 @@ public class AnalysisLoop {
         if (opName.contains("add") || opName.contains("sub") || opName.contains("mul")) {
             loop.setIndVar(itVar, itInit, itEnd, itAlu, itStep, cond);
         }
-        loop.LoopPrint();
+//        loop.LoopPrint();
     }
 
 }

@@ -190,6 +190,7 @@ public class Loop {
         sb.append("exitings: " + this.exitings + "\n");
         sb.append("exits: " + this.exits + "\n");
         sb.append("inners: " + this.innerLoops + "\n");
+        sb.append("sameDepth: " + this.sameLoopDepth + "\n");
         if (prtLoop != null) {
             sb.append("prtLoop " + this.prtLoop + "\n");
         }
