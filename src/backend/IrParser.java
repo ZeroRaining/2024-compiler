@@ -14,6 +14,7 @@ import backend.regs.AsmFVirReg;
 import backend.regs.AsmVirReg;
 import backend.regs.RegGeter;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstBool;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
@@ -997,8 +998,8 @@ public class IrParser {
         Value cond = instr.getCond();
         BasicBlock trueBB = instr.getThenTarget();
         BasicBlock falseBB = instr.getElseTarget();
-        if (cond instanceof ConstInt) {
-            int value = ((ConstInt) cond).getNumber();
+        if (cond instanceof ConstBool) {
+            int value = ((ConstBool) cond).getNumber();
             if (value != 0) {
                 AsmJ asmJ = new AsmJ(blockMap.get(trueBB));
                 asmBlock.addInstrTail(asmJ);
