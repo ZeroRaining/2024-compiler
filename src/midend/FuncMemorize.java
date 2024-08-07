@@ -24,7 +24,6 @@ import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 /**
  * （递归）函数记忆化，通过全局数组减少递归运算
@@ -54,8 +53,8 @@ public class FuncMemorize {
                 globalSymTab.addSym(globalUsed);
                 
                 // 建立两个基本块，并准备两个常数对象
-                BasicBlock bbHash = new BasicBlock(0, function.getAndAddBlkIndex());
-                BasicBlock bbRet  = new BasicBlock(0, function.getAndAddBlkIndex());
+                BasicBlock hashBlk = new BasicBlock(0, function.getAndAddBlkIndex());
+                BasicBlock preRetBlk  = new BasicBlock(0, function.getAndAddBlkIndex());
                 
                 ConstInt baseVal = new ConstInt(hash_base);
                 ConstInt modVal  = new ConstInt(hash_mod);
@@ -67,7 +66,7 @@ public class FuncMemorize {
                         castArgs.add(fParam);
                     } else {
                         Fp2Si cast = new Fp2Si(function.getAndAddRegIndex(), fParam);
-                        bbHash.addInstruction(cast);
+                        hashBlk.addInstruction(cast);
                         castArgs.add(cast);
                     }
                 }
@@ -76,15 +75,15 @@ public class FuncMemorize {
                 Value hashVal = castArgs.get(0);
                 if (castArgs.size() == 1) {
                     hashVal = new SRemInstr(function.getAndAddRegIndex(), hashVal, modVal);
-                    bbHash.addInstruction((Instruction) hashVal);
+                    hashBlk.addInstruction((Instruction) hashVal);
                 } else {
                     for (int i = 1; i < castArgs.size(); i++) {
                         hashVal = new MulInstr(function.getAndAddRegIndex(), hashVal, baseVal);
-                        bbHash.addInstruction((Instruction) hashVal);
+                        hashBlk.addInstruction((Instruction) hashVal);
                         hashVal = new AddInstr(function.getAndAddRegIndex(), hashVal, castArgs.get(i));
-                        bbHash.addInstruction((Instruction) hashVal);
+                        hashBlk.addInstruction((Instruction) hashVal);
                         hashVal = new SRemInstr(function.getAndAddRegIndex(), hashVal, modVal);
-                        bbHash.addInstruction((Instruction) hashVal);
+                        hashBlk.addInstruction((Instruction) hashVal);
                     }
                 }
                 
@@ -93,24 +92,43 @@ public class FuncMemorize {
                 indexList.add(hashVal);
                 GEPInstr dataPtr = new GEPInstr(function.getAndAddRegIndex(), new ArrayList<>(indexList), globalData);
                 GEPInstr usedPtr = new GEPInstr(function.getAndAddRegIndex(), new ArrayList<>(indexList), globalUsed);
-                bbHash.addInstruction(dataPtr);
-                bbHash.addInstruction(usedPtr);
+                hashBlk.addInstruction(dataPtr);
+                hashBlk.addInstruction(usedPtr);
                 
                 // 检查一下之前有没有算过这个值，如果算过进入准备返回，否则正常开始计算
                 LoadInstr usedVal = new LoadInstr(function.getAndAddRegIndex(), globalUsed, usedPtr);
-                bbHash.addInstruction(usedVal);
+                hashBlk.addInstruction(usedVal);
                 Cmp usedCond = new ICmpInstr(function.getAndAddRegIndex(), CmpCond.EQ, usedVal, ConstInt.Zero);
-                bbHash.addInstruction(usedCond);
-                BranchInstr branch = new BranchInstr(usedCond, (BasicBlock) function.getBasicBlocks().getHead(), bbRet);
-                bbHash.addInstruction(branch);
+                hashBlk.addInstruction(usedCond);
+                BranchInstr branch = new BranchInstr(usedCond, (BasicBlock) function.getBasicBlocks().getHead(), preRetBlk);
+                hashBlk.addInstruction(branch);
                 
                 // 构建直接返回块：取出对应的记录结果并返回
                 LoadInstr dataVal = new LoadInstr(function.getAndAddRegIndex(), globalData, dataPtr);
-                bbRet.addInstruction(dataVal);
+                preRetBlk.addInstruction(dataVal);
                 StoreInstr storeRetData = new StoreInstr(dataVal, function.getFuncSymTab().getSym(""));
-                bbRet.addInstruction(storeRetData);
+                preRetBlk.addInstruction(storeRetData);
                 JumpInstr jump = new JumpInstr((BasicBlock) function.getBasicBlocks().getTail());
-                bbRet.addInstruction(jump);
+                preRetBlk.addInstruction(jump);
+                
+                // 在返回之前加一个 store 存储计算数值
+                BasicBlock retBlk = (BasicBlock) function.getBasicBlocks().getTail();
+                for (BasicBlock toRet : retBlk.getPres()) {
+                    if (toRet == preRetBlk) {
+                        continue;
+                    }
+                    Instruction jump2ret = toRet.getEndInstr();
+                    LoadInstr loadData   = new LoadInstr(function.getAndAddRegIndex(), function.getFuncSymTab().getSym(""));
+                    loadData.insertBefore(jump2ret);
+                    StoreInstr storeData = new StoreInstr(loadData, globalData, dataPtr);
+                    storeData.insertBefore(jump2ret);
+                    StoreInstr storeUsed = new StoreInstr(ConstInt.One, globalUsed, usedPtr);
+                    storeUsed.insertBefore(jump2ret);
+                }
+                
+                // 将两个新块插入函数头
+                function.getBasicBlocks().addToHead(preRetBlk);
+                function.getBasicBlocks().addToHead(hashBlk);
             }
         }
     }
