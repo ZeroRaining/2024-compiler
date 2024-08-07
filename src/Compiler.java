@@ -48,7 +48,7 @@ public class Compiler {
         program.removeUselessFunc();
         // 递归函数记忆化，只针对性能点
         if (arg.getOptLevel() == 1) {
-//            FuncMemorize.execute(functions, program.getGlobalSymTab());
+            FuncMemorize.execute(functions, program.getGlobalSymTab());
         }
         
         // 全局变量简化，之后删掉没用的全局变量定义

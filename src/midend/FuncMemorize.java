@@ -24,14 +24,17 @@ import frontend.ir.symbols.SymTab;
 import frontend.ir.symbols.Symbol;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * （递归）函数记忆化，通过全局数组减少递归运算
  * 因为需要跳转到结束块，所以必须放在合并块之前
  */
 public class FuncMemorize {
-    private static final int hash_base = 31;
-    private static final int hash_mod = 1007;
+    private static final int hash_base = 114;
+    private static final int hash_base2 = 514;
+    private static final int hash_mod = 1919810;
+    private static final int hash_mod2 = 10086;
     
     public static void execute(ArrayList<Function> functions, SymTab globalSymTab) {
         for (Function function : functions) {
@@ -56,8 +59,10 @@ public class FuncMemorize {
                 BasicBlock hashBlk = new BasicBlock(0, function.getAndAddBlkIndex());
                 BasicBlock preRetBlk  = new BasicBlock(0, function.getAndAddBlkIndex());
                 
-                ConstInt baseVal = new ConstInt(hash_base);
-                ConstInt modVal  = new ConstInt(hash_mod);
+                ConstInt baseVal  = new ConstInt(hash_base);
+                ConstInt modVal   = new ConstInt(hash_mod);
+//                ConstInt baseVal2 = new ConstInt(hash_base2);
+//                ConstInt modVal2  = new ConstInt(hash_mod2);
                 
                 // 将所有的参数转化为整数以备哈希
                 ArrayList<Value> castArgs = new ArrayList<>();
@@ -72,20 +77,8 @@ public class FuncMemorize {
                 }
                 
                 // 哈希计算
-                Value hashVal = castArgs.get(0);
-                if (castArgs.size() == 1) {
-                    hashVal = new SRemInstr(function.getAndAddRegIndex(), hashVal, modVal);
-                    hashBlk.addInstruction((Instruction) hashVal);
-                } else {
-                    for (int i = 1; i < castArgs.size(); i++) {
-                        hashVal = new MulInstr(function.getAndAddRegIndex(), hashVal, baseVal);
-                        hashBlk.addInstruction((Instruction) hashVal);
-                        hashVal = new AddInstr(function.getAndAddRegIndex(), hashVal, castArgs.get(i));
-                        hashBlk.addInstruction((Instruction) hashVal);
-                        hashVal = new SRemInstr(function.getAndAddRegIndex(), hashVal, modVal);
-                        hashBlk.addInstruction((Instruction) hashVal);
-                    }
-                }
+                Value hashVal  = hashCal(hashBlk, function, castArgs, modVal,  baseVal);
+//                Value hashVal2 = hashCal(hashBlk, function, castArgs, modVal2, baseVal2);
                 
                 // 找到数组对应的位置并检查是否已经计算过
                 ArrayList<Value> indexList = new ArrayList<>();
@@ -98,7 +91,7 @@ public class FuncMemorize {
                 // 检查一下之前有没有算过这个值，如果算过进入准备返回，否则正常开始计算
                 LoadInstr usedVal = new LoadInstr(function.getAndAddRegIndex(), globalUsed, usedPtr);
                 hashBlk.addInstruction(usedVal);
-                Cmp usedCond = new ICmpInstr(function.getAndAddRegIndex(), CmpCond.EQ, usedVal, ConstInt.Zero);
+                Cmp usedCond = new ICmpInstr(function.getAndAddRegIndex(), CmpCond.NE, usedVal, castArgs.get(0));
                 hashBlk.addInstruction(usedCond);
                 BranchInstr branch = new BranchInstr(usedCond, (BasicBlock) function.getBasicBlocks().getHead(), preRetBlk);
                 hashBlk.addInstruction(branch);
@@ -122,7 +115,7 @@ public class FuncMemorize {
                     loadData.insertBefore(jump2ret);
                     StoreInstr storeData = new StoreInstr(loadData, globalData, dataPtr);
                     storeData.insertBefore(jump2ret);
-                    StoreInstr storeUsed = new StoreInstr(ConstInt.One, globalUsed, usedPtr);
+                    StoreInstr storeUsed = new StoreInstr(castArgs.get(0), globalUsed, usedPtr);
                     storeUsed.insertBefore(jump2ret);
                 }
                 
@@ -134,5 +127,25 @@ public class FuncMemorize {
                 function.allocaRearrangement();
             }
         }
+    }
+    
+    private static Value hashCal(BasicBlock hashBlk, Function function, List<Value> castArgs, Value modVal, Value baseVal) {
+        Value hashVal = castArgs.get(0);
+        
+        hashVal = new SRemInstr(function.getAndAddRegIndex(), hashVal, modVal);
+        hashBlk.addInstruction((Instruction) hashVal);
+        
+        if (castArgs.size() > 1) {
+            for (int i = 1; i < castArgs.size(); i++) {
+                hashVal = new MulInstr(function.getAndAddRegIndex(), hashVal, baseVal);
+                hashBlk.addInstruction((Instruction) hashVal);
+                hashVal = new AddInstr(function.getAndAddRegIndex(), hashVal, castArgs.get(i));
+                hashBlk.addInstruction((Instruction) hashVal);
+                hashVal = new SRemInstr(function.getAndAddRegIndex(), hashVal, modVal);
+                hashBlk.addInstruction((Instruction) hashVal);
+            }
+        }
+        
+        return hashVal;
     }
 }
