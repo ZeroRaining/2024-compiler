@@ -34,6 +34,14 @@ public class FI {
                         continue;
                     }
                     Function callee = (Function) (((CallInstr) instr).getFuncDef());
+                    
+                    // 对于返回值无用而且没有副作用的函数调用可以直接删掉
+                    if (instr.getBeginUse() == null && callee.checkNoSideEffect()) {
+                        instr.removeFromList();
+                        instr = (Instruction) instr.getNext();
+                        continue;
+                    }
+                    
                     boolean doNotInline = callee.getCalledCnt() > 3 && callee.checkInsTooMany();
                     doNotInline = doNotInline && !(instr.getParentBB().getLoopDepth() > 1);
                     if (callee.isRecursive()/* || doNotInline */) { // 现版本不做更多限制，能联都联

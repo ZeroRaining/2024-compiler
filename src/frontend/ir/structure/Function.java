@@ -454,15 +454,22 @@ public class Function extends Value implements FuncDef {
     
     /**
      * 目前检查函数无副作用的标准就是没有 I/O 且没有修改内存（这里特指针对数组元素的修改，因为其它都会被 mem2reg 干掉）
-     * 自定义函数肯定没有 I/O
      */
     public boolean checkNoSideEffect() {
+        if (!this.allLibCallee.isEmpty()) {
+            return false;
+        }
+        
         BasicBlock basicBlock = (BasicBlock) this.procedure.getBasicBlocks().getHead();
         while (basicBlock != null) {
             Instruction ins = (Instruction) basicBlock.getInstructions().getHead();
             while (ins != null) {
-                if (ins instanceof StoreInstr && ((StoreInstr) ins).getPtr() instanceof GEPInstr) {
-                    return false;
+                if (ins instanceof StoreInstr) {
+                    Value ptr = ((StoreInstr) ins).getPtr();
+                    if (ptr instanceof GEPInstr || ptr instanceof GlobalObject) {
+                        return false;
+                    }
+                    
                 }
                 ins = (Instruction) ins.getNext();
             }
