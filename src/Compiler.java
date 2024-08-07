@@ -46,8 +46,11 @@ public class Compiler {
         // 函数内联，之后删除没用的函数定义
         FI.execute(functions);
         program.removeUselessFunc();
-        // 递归函数记忆化
-        FuncMemorize.execute(functions, program.getGlobalSymTab());/*
+        // 递归函数记忆化，只针对性能点
+        if (arg.getOptLevel() == 1) {
+            FuncMemorize.execute(functions, program.getGlobalSymTab());
+        }
+        
         // 全局变量简化，之后删掉没用的全局变量定义
         GlobalValueSimplify.execute(program.getGlobalVars());
         program.deleteUselessGlobalVars();
@@ -118,7 +121,7 @@ public class Compiler {
         //为后端维护必要信息
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
-*/
+
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
         // 中端优化结束
 

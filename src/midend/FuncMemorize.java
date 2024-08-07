@@ -2,9 +2,11 @@ package midend;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.AddInstr;
+import frontend.ir.instr.binop.FMulInstr;
 import frontend.ir.instr.binop.MulInstr;
 import frontend.ir.instr.binop.SRemInstr;
 import frontend.ir.instr.convop.Fp2Si;
@@ -30,7 +32,7 @@ import java.util.ArrayList;
  * 因为需要跳转到结束块，所以必须放在合并块之前
  */
 public class FuncMemorize {
-    private static final int hash_base = 53;
+    private static final int hash_base = 31;
     private static final int hash_mod = 1007;
     
     public static void execute(ArrayList<Function> functions, SymTab globalSymTab) {
