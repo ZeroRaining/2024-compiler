@@ -2,11 +2,9 @@ package midend;
 
 import frontend.ir.DataType;
 import frontend.ir.Value;
-import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.AddInstr;
-import frontend.ir.instr.binop.FMulInstr;
 import frontend.ir.instr.binop.MulInstr;
 import frontend.ir.instr.binop.SRemInstr;
 import frontend.ir.instr.convop.Fp2Si;
