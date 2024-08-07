@@ -3,6 +3,7 @@ package frontend.ir.structure;
 import Utils.CustomList;
 import debug.DEBUG;
 import frontend.ir.DataType;
+import frontend.ir.FuncDef;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
@@ -45,12 +46,12 @@ public class Procedure {
     private final Stack<BasicBlock> whileBegins;
     private final Stack<BasicBlock> whileEnds;
     private final List<FParam> fParamValueList;
-    private final ArrayList<Function> myImmCallee;
+    private final ArrayList<FuncDef> myImmCallee;
     private final Function parentFunc;
     private final HashSet<CallInstr> selfCallingInstrSet = new HashSet<>();
 
     public Procedure(DataType returnType, List<Ast.FuncFParam> fParams, Ast.Block block,
-                     SymTab funcSymTab, ArrayList<Function> myImmCallee, Function parentFunc,
+                     SymTab funcSymTab, ArrayList<FuncDef> myImmCallee, Function parentFunc,
                      List<FParam> fParamValueList) {
         if (fParams == null || block == null) {
             throw new NullPointerException();
@@ -929,6 +930,8 @@ public class Procedure {
         // todo: 数组（指针）类型可能会转换吗？反正现在是不能处理的。。。
         // 现在有 bitcast 指令了，但是暂时没有处理一般化的转换，只做了 memset
         if (libFunc != null) {
+            myImmCallee.add(libFunc);
+            
             List<Ast.FuncFParam> libFParams = libFunc.getFParams();
             funcParamConv(libFParams, rParams);
             callInstr = libFunc.makeCall(curRegIndex++, rParams);

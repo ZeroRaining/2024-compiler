@@ -7,6 +7,7 @@ import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;
 import frontend.syntax.Ast;
 import frontend.syntax.Parser;
+import midend.FuncMemorize;
 import midend.RemovePhi;
 import midend.SSA.*;
 import midend.loop.*;
@@ -110,6 +111,8 @@ public class Compiler {
             MergeBlock.execute(functions, true);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
+            
+            FuncMemorize.execute(functions, program.getGlobalSymTab());
         }
         //为后端维护必要信息
         DFG.execute(functions);

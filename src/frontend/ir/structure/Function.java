@@ -11,6 +11,7 @@ import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
+import frontend.ir.lib.LibFunc;
 import frontend.ir.symbols.SymTab;
 import frontend.lexer.TokenType;
 import frontend.syntax.Ast;
@@ -28,8 +29,9 @@ public class Function extends Value implements FuncDef {
     private final Procedure procedure;
     private final List<Ast.FuncFParam> astFParams;
     private final List<FParam> fParams;
-    private final HashSet<Function> myImmediateCallee = new HashSet<>(); // 被 this 直接调用的自定义函数列表
+    private final HashSet<Function> myImmediateCallee = new HashSet<>(); // 被 this 直接调用的自定义函数集合
     private final HashSet<Function> allCallee = new HashSet<>(); // 本函数执行过程中会调用（包括间接调用）的所有函数，可能包括自己
+    private final HashSet<LibFunc> allLibCallee = new HashSet<>(); // 本函数执行过程中会调用（包括间接调用）的所有库函数
     private ArrayList<Loop> allLoop = new ArrayList<>();
     private HashMap<BasicBlock, Loop> header2loop = new HashMap<>();
     private ArrayList<Loop> outerLoop = new ArrayList<>();
@@ -62,7 +64,7 @@ public class Function extends Value implements FuncDef {
         astFParams = funcDef.getFParams();
         fParams = new ArrayList<>();
         FUNCTION_MAP.put(name, this);
-        ArrayList<Function> immediateCalleeList = new ArrayList<>();
+        ArrayList<FuncDef> immediateCalleeList = new ArrayList<>();
         procedure = new Procedure(returnType, astFParams, funcDef.getBody(), symTab, immediateCalleeList, this, fParams);
         initAllCallee(immediateCalleeList);
     }
@@ -208,16 +210,21 @@ public class Function extends Value implements FuncDef {
         return this.recursiveCallCnt > 0;
     }
     
-    private void initAllCallee(List<Function> immediateCalleeList) {
-        for (Function callee : immediateCalleeList) {
-            myImmediateCallee.add(callee);
-            if (callee == this) {
-                this.recursiveCallCnt++;
+    private void initAllCallee(List<FuncDef> immediateCalleeList) {
+        for (FuncDef callee : immediateCalleeList) {
+            if (callee instanceof Function) {
+                myImmediateCallee.add((Function) callee);
+                if (callee == this) {
+                    this.recursiveCallCnt++;
+                }
+            } else if (callee instanceof LibFunc) {
+                allLibCallee.add((LibFunc) callee);
             }
         }
         for (Function callee : myImmediateCallee) {
             if (callee != this) {
                 this.allCallee.addAll(callee.allCallee);
+                this.allLibCallee.addAll(callee.allLibCallee);
             }
             this.allCallee.add(callee);
         }
@@ -386,18 +393,45 @@ public class Function extends Value implements FuncDef {
         return isTailRecursive;
     }
     
-    public boolean mightBeAbleToBeMemorized() {
+    public boolean canBeMemorized() {
+        // 如果没有返回值不能记忆化
+        if (this.returnType == DataType.VOID) {
+            return false;
+        }
+        
+        // 没有参数的函数不能记忆化
+        if (this.fParams.isEmpty()) {
+            return false;
+        }
+        
+        // 如果传了指针参数则不可以记忆化
+        for (FParam param : this.fParams) {
+            if (param.getPointerLevel() > 0) {
+                return false;
+            }
+        }
+        
+        // 只有调用自身多次做记忆化才有意义
         if (this.recursiveCallCnt <= 1) {
             return false;
         }
+        
+        if (!this.allLibCallee.isEmpty()) {
+            // 不能调用库函数，库函数有 I/O
+            return false;
+        }
+        
         for (Function callee : this.allCallee) {
+            // 函数执行过程中不能有副作用，包括 I/O 和修改内存
             if (!callee.checkNoSideEffect()) {
                 return false;
             }
+            // 不能有 load
             if (callee.haveLoad()) {
                 return false;
             }
         }
+        // todo: 检查一下以上条件
         return true;
     }
     

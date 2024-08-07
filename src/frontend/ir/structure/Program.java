@@ -59,6 +59,10 @@ public class Program {
         return globalSymTab.getSymbolList();
     }
     
+    public SymTab getGlobalSymTab() {
+        return globalSymTab;
+    }
+    
     public void deleteUselessGlobalVars() {
         globalSymTab.removeLocalizedSym();
     }
