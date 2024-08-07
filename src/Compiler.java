@@ -59,7 +59,6 @@ public class Compiler {
         Mem2Reg.execute(functions);
         ArrayFParamMem2Reg.execute(functions);
 
-
         // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
@@ -95,15 +94,15 @@ public class Compiler {
 
         // third
         if (arg.getOptLevel() == 1) {
-//            DFG.execute(functions);
-//            PtrMem2Reg.execute(functions);
-//            DeadCodeRemove.execute(functions);
-//            OIS.execute(functions);
-//            GVN.execute(functions);
-//            SimplifyBranch.execute(functions);
-//            MergeBlock.execute(functions, true);
-//            DeadBlockRemove.execute(functions);
-//            RemoveUseLessPhi.execute(functions);
+            DFG.execute(functions);
+            PtrMem2Reg.execute(functions);
+            DeadCodeRemove.execute(functions);
+            OIS.execute(functions);
+            GVN.execute(functions);
+            SimplifyBranch.execute(functions);
+            MergeBlock.execute(functions, true);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
         }
         //为后端维护必要信息
         DFG.execute(functions);
