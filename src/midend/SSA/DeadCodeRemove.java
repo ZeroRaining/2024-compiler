@@ -36,9 +36,6 @@ public class DeadCodeRemove {
             while (instr != null) {
                 if (instr.getBeginUse() == null && checkNoSideEffect(instr)) {
                     noUse.add(instr);
-                } else if (instr instanceof GEPInstr && ((GEPInstr) instr).isUseless()) {
-                    instr.replaceUseTo(((GEPInstr) instr).getPtrVal());
-                    noUse.add(instr);
                 }
                 instr = (Instruction) instr.getNext();
             }

@@ -9,6 +9,9 @@ import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
 
+/**
+ * 用来将 GEP 合并，便于判断两个 GEP 是否指向同一个地址，保证一个地址，一次取完（在可合并的情况下）
+ */
 public class MergeGEP {
     public static void execute(ArrayList<Function> functions) {
         if (functions == null) {
@@ -20,6 +23,13 @@ public class MergeGEP {
                 Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
                 while (instruction != null) {
                     if (instruction instanceof GEPInstr) {
+                        if (((GEPInstr) instruction).isUseless()) {
+                            instruction.replaceUseTo(((GEPInstr) instruction).getPtrVal());
+                            instruction.removeFromList();
+                            instruction = (Instruction) instruction.getNext();
+                            continue;
+                        }
+                        
                         Group<AddInstr, GEPInstr> mergedGroup = ((GEPInstr) instruction).tryMergePtr(function);
                         if (mergedGroup != null) {
                             AddInstr link = mergedGroup.getFirst();

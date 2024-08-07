@@ -8,6 +8,7 @@ import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.AddInstr;
 import frontend.ir.structure.FParam;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.GlobalObject;
 import frontend.ir.structure.Procedure;
 import frontend.ir.symbols.Symbol;
 
@@ -72,24 +73,17 @@ public class GEPInstr extends MemoryOperation {
         setUse(base);
     }
     
-    public GEPInstr(int result, Value base, List<Value> indexList, Symbol symbol) {
+    public GEPInstr(int result, Value base, List<Value> indexList, Symbol symbol, String arrayTypeName) {
         super(symbol);
         type = 3;
         this.result = result;
         this.indexList = indexList;
         this.pointerLevel = symbol.getDim() + 1 - indexList.size();
-        String superType;
-        if (base instanceof FParam) {
-            superType = base.type2string();
-        } else if (base instanceof MemoryOperation) {
-            superType = ((MemoryOperation) base).printBaseType();
-        }  else {
-            throw new RuntimeException("未曾设想的基指针类型");
-        }
-        if (superType.charAt(superType.length() - 1) == '*') {
-            this.arrayTypeName = superType.substring(0, superType.length() - 1);
+        
+        if (arrayTypeName.charAt(arrayTypeName.length() - 1) == '*') {
+            this.arrayTypeName = arrayTypeName.substring(0, arrayTypeName.length() - 1);
         } else {
-            this.arrayTypeName = superType;
+            this.arrayTypeName = arrayTypeName;
         }
         
         this.ptrVal = base;
@@ -104,11 +98,7 @@ public class GEPInstr extends MemoryOperation {
         type = 3;
         this.result = result;
         this.indexList = new ArrayList<>(base.indexList);
-        if (this.indexList.isEmpty()) {
-            this.indexList.add(link);
-        } else {
-            this.indexList.set(this.indexList.size() - 1, link);
-        }
+        this.indexList.set(this.indexList.size() - 1, link);
 
         for (int i = beginIndex; i < toMerge.indexList.size(); i++) {
             this.indexList.add(toMerge.indexList.get(i));
@@ -129,7 +119,7 @@ public class GEPInstr extends MemoryOperation {
         } else if (type == 2) {
             return new GEPInstr(procedure.getAndAddRegIndex(), (MemoryOperation) ptrVal, symbol, arrayTypeName);
         } else if (type == 3) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), ptrVal, new ArrayList<>(indexList), symbol);
+            return new GEPInstr(procedure.getAndAddRegIndex(), ptrVal, new ArrayList<>(indexList), symbol, arrayTypeName);
         } else {
             throw new RuntimeException("type 已经穷尽了");
         }
@@ -257,12 +247,7 @@ public class GEPInstr extends MemoryOperation {
             return null;
         }
         List<Value> baseIndexList = ((GEPInstr) this.ptrVal).indexList;
-        Value baseTail;
-        if (baseIndexList.isEmpty()) {
-            baseTail = ConstInt.Zero;
-        } else {
-            baseTail = baseIndexList.get(((GEPInstr) this.ptrVal).indexList.size() - 1);
-        }
+        Value baseTail = baseIndexList.get(baseIndexList.size() - 1);
 
         AddInstr link;
         int beginIndex; // 如果是传参的话首位 index 有效，需要和 base 的末位加起来，否则加的是默认的 0

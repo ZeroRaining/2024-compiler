@@ -115,10 +115,11 @@ public class LoopInvariantMotion {
 //        if (instr instanceof LoadInstr || instr instanceof StoreInstr) {
 //            return false;
 //        }
-        if (instr instanceof LoadInstr/* && ((LoadInstr) instr).mayBeStored(loop.getBlks())*/) {
+        if (instr instanceof LoadInstr && ((LoadInstr) instr).mayBeStored(loop.getBlks())) {
             return false;
         }
         if (instr instanceof StoreInstr/* && ((StoreInstr) instr).mayBeLoaded(loop.getBlks())*/) {
+            // todo: store 不能简单提取，如果在分支里则不能外提，之后可以通过更强力的数组 SSA 或者对循环内部支配关系的解析来解决这个问题
             return false;
         }
         if (instr instanceof CallInstr) {
