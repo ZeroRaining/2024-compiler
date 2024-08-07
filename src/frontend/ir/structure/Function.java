@@ -29,6 +29,7 @@ public class Function extends Value implements FuncDef {
     private final Procedure procedure;
     private final List<Ast.FuncFParam> astFParams;
     private final List<FParam> fParams;
+    private final SymTab funcSymTab;
     private final HashSet<Function> myImmediateCallee = new HashSet<>(); // 被 this 直接调用的自定义函数集合
     private final HashSet<Function> allCallee = new HashSet<>(); // 本函数执行过程中会调用（包括间接调用）的所有函数，可能包括自己
     private final HashSet<LibFunc> allLibCallee = new HashSet<>(); // 本函数执行过程中会调用（包括间接调用）的所有库函数
@@ -47,7 +48,7 @@ public class Function extends Value implements FuncDef {
         }
         name = funcDef.getIdent().getContent();
         main = name.equals("main");
-        SymTab symTab = new SymTab(globalSymTab);
+        this.funcSymTab = new SymTab(globalSymTab);
         switch (funcDef.getType().getType()) {
             case INT:
                 returnType = DataType.INT;
@@ -65,7 +66,7 @@ public class Function extends Value implements FuncDef {
         fParams = new ArrayList<>();
         FUNCTION_MAP.put(name, this);
         ArrayList<FuncDef> immediateCalleeList = new ArrayList<>();
-        procedure = new Procedure(returnType, astFParams, funcDef.getBody(), symTab, immediateCalleeList, this, fParams);
+        procedure = new Procedure(returnType, astFParams, funcDef.getBody(), funcSymTab, immediateCalleeList, this, fParams);
         initAllCallee(immediateCalleeList);
     }
     
@@ -476,5 +477,9 @@ public class Function extends Value implements FuncDef {
         }
 
         return true;
+    }
+    
+    public SymTab getFuncSymTab() {
+        return funcSymTab;
     }
 }
