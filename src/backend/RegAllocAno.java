@@ -1059,13 +1059,13 @@ public class RegAllocAno {
                     if (procedure == 0) {
                         N = 11;
                     } else {
-                        N = 20;
+                        N = 19;
                     }
                 } else {
                     if (procedure == 0) {
                         N = 12;
                     } else {
-                        N = 28;
+                        N = 27;
                     }
                 }
                 if (degree.get(n) >= N) {
@@ -1083,13 +1083,13 @@ public class RegAllocAno {
                     if (procedure == 0) {
                         N = 11;
                     } else {
-                        N = 20;
+                        N = 19;
                     }
                 } else {
                     if (procedure == 0) {
                         N = 12;
                     } else {
-                        N = 28;
+                        N = 27;
                     }
                 }
                 if (degree.get(n) >= N) {
@@ -1176,13 +1176,13 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 20;
+                N = 19;
             }
         } else {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 28;
+                N = 27;
             }
         }
         if (freezeWorkList.contains(v)) {
@@ -1220,13 +1220,13 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 20;
+                N = 19;
             }
         } else {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 28;
+                N = 27;
             }
         }
         for (AsmInstr m : NodeMoves(u)) {
@@ -1504,13 +1504,13 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 20;
+                N = 19;
             }
         } else {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 28;
+                N = 27;
             }
         }
         int k = 0;
@@ -1528,13 +1528,13 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 20;
+                N = 19;
             }
         } else {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 28;
+                N = 27;
             }
         }
         if ((degree.containsKey(t) && degree.get(t) < N) || preColored.containsKey(t) || (adjSet.containsKey(t) && adjSet.get(t).contains(r))) {
@@ -1550,13 +1550,13 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 20;
+                N = 19;
             }
         } else {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 28;
+                N = 27;
             }
         }
         if (!preColored.containsKey(u) && !MoveRelated(u) && degree.get(u) < N) {
@@ -1583,13 +1583,13 @@ public class RegAllocAno {
             if (procedure == 0) {
                 N = 11;
             } else {
-                N = 20;
+                N = 19;
             }
         } else {
             if (procedure == 0) {
                 N = 12;
             } else {
-                N = 28;
+                N = 27;
             }
         }
         if (d == N) {

@@ -72,14 +72,14 @@ public class Compiler {
         RemoveUseLessPhi.execute(functions);
 
         DeadCodeRemove.execute(functions);
-//        OIS.execute(functions);
-//        GVN.execute(functions);
+        OIS.execute(functions);
+        GVN.execute(functions);
 //
-//        SimplifyBranch.execute(functions);
+        SimplifyBranch.execute(functions);
 //        //合并删减块
-//        MergeBlock.execute(functions, false);
-//        DeadBlockRemove.execute(functions);
-//        RemoveUseLessPhi.execute(functions);
+        MergeBlock.execute(functions, false);
+        DeadBlockRemove.execute(functions);
+        RemoveUseLessPhi.execute(functions);
         //循环分析
 //        DFG.execute(functions);
 //        AnalysisLoop.execute(functions);
