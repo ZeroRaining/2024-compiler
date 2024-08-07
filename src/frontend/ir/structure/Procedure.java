@@ -810,7 +810,7 @@ public class Procedure {
                         res = load;
                     } else {
                         if (ptr instanceof GEPInstr) {
-                            Instruction newPtr = new GEPInstr(curRegIndex++, (GEPInstr) ptr, ptr.getSymbol());
+                            Instruction newPtr = new GEPInstr(curRegIndex++, ptr, ptr.getSymbol(), ptr.printBaseType());
                             curBlock.addInstruction(newPtr);
                             res = newPtr;
                         } else {
