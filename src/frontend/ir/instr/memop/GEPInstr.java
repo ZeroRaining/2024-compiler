@@ -60,14 +60,14 @@ public class GEPInstr extends MemoryOperation {
         }
     }
     
-    public GEPInstr(int result, GEPInstr base, Symbol symbol) {
+    public GEPInstr(int result, MemoryOperation base, Symbol symbol, String arrayTypeName) {
         super(symbol);
         type = 2;
         this.result = result;
         this.indexList = new ArrayList<>();
         indexList.add(new ConstInt(0));
-        this.pointerLevel = base.pointerLevel - 1;
-        this.arrayTypeName = base.printBaseType();
+        this.pointerLevel = base.getPointerLevel() - 1;
+        this.arrayTypeName = arrayTypeName;
         this.ptrVal = base;
         setUse(base);
     }
@@ -122,7 +122,7 @@ public class GEPInstr extends MemoryOperation {
         if (type == 1) {
             return new GEPInstr(procedure.getAndAddRegIndex(), new ArrayList<>(indexList), ptrVal, symbol);
         } else if (type == 2) {
-            return new GEPInstr(procedure.getAndAddRegIndex(), (GEPInstr) ptrVal, symbol);
+            return new GEPInstr(procedure.getAndAddRegIndex(), (MemoryOperation) ptrVal, symbol, arrayTypeName);
         } else if (type == 3) {
             return new GEPInstr(procedure.getAndAddRegIndex(), ptrVal, new ArrayList<>(indexList), symbol);
         } else {
