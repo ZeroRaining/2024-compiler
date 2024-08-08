@@ -7,26 +7,31 @@ import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
+import midend.loop.BlockType;
 
 import java.util.ArrayList;
 
 public class SimplifyBranch {
     private static boolean toBeContinue = false;
-    public static void execute(ArrayList<Function> functions) {
+    public static void execute(ArrayList<Function> functions, boolean isAggressive) {
         toBeContinue = true;
         while (toBeContinue) {
             toBeContinue = false;
             for (Function function : functions) {
-                Simplify(function);
+                Simplify(function, isAggressive);
             }
             toBeContinue = toBeContinue || RemoveUseLessPhi.execute(functions);
         }
 
     }
     //会出现两个块跳到同一个地方吗？//如果if内的语句为空？
-    private static void Simplify(Function function) {
+    private static void Simplify(Function function, boolean isAggressive) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         while (blk != null) {
+            if (blk.isBlockType(BlockType.NOTSIMPLE) && !isAggressive) {
+                blk = (BasicBlock) blk.getNext();
+                continue;
+            }
             Instruction last = blk.getEndInstr();
             if (last instanceof BranchInstr) {
                 Value cond = ((BranchInstr) last).getCond();
