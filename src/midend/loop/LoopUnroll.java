@@ -27,8 +27,11 @@ public class LoopUnroll {
     private static final long codeSize = 1000;
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
-            AnalysisLoop.LoopIndVars(function);
-            SimpleLoopUnroll(function);
+            // 要求在完全内联之后，只对 main 函数做循环展开，递归函数不做展开
+            if (function.isMain()) {
+                AnalysisLoop.LoopIndVars(function);
+                SimpleLoopUnroll(function);
+            }
         }
     }
 
