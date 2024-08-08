@@ -42,9 +42,9 @@ public class FI {
                         continue;
                     }
                     
-                    boolean doNotInline = callee.getCalledCnt() > 3 && callee.checkInsTooMany();
-                    doNotInline = doNotInline && !(instr.getParentBB().getLoopDepth() > 1);
-                    if (callee.isRecursive()/* || doNotInline */) { // 现版本不做更多限制，能联都联
+                    boolean doNotInline = callee.canBeMemorized();    // 优先记忆化（放弃了，性能不好
+                    // doNotInline = callee.getCalledCnt() > 3 && callee.checkInsTooMany() && !(instr.getParentBB().getLoopDepth() > 1);
+                    if (callee.isRecursive()) { // 现版本不做更多限制，能联都联
                         instr = (Instruction) instr.getNext();
                         continue;
                     }

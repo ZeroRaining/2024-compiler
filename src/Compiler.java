@@ -46,14 +46,15 @@ public class Compiler {
         // 函数内联（内联之前删掉没用且无副作用的调用），之后删除没用的函数定义
         FI.execute(functions);
         program.removeUselessFunc();
-        // 递归函数记忆化，只针对性能点
-        if (arg.getOptLevel() == 1) {
-            FuncMemorize.execute(functions, program.getGlobalSymTab());
-        }
         
         // 全局变量简化，之后删掉没用的全局变量定义
         GlobalValueSimplify.execute(program.getGlobalVars());
         program.deleteUselessGlobalVars();
+        
+        // 函数记忆化，只对性能点进行
+        if (arg.getOptLevel() == 1) {
+            FuncMemorize.execute(functions, program.getGlobalSymTab());
+        }
         
         // 删除没用的基本块
         DeadBlockRemove.execute(functions);
