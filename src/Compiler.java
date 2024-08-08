@@ -88,13 +88,13 @@ public class Compiler {
         /*anon: mul 4, 1*/
         LoopSimplify.execute(functions);
         RemoveUseLessLoop.execute(functions);
-        DeadCodeRemove.execute(functions);
-        OIS.execute(functions);
-        GVN.execute(functions);
-        SimplifyBranch.execute(functions, true);
-        MergeBlock.execute(functions, true);
-        DeadBlockRemove.execute(functions);
-        RemoveUseLessPhi.execute(functions);
+//        DeadCodeRemove.execute(functions);
+//        OIS.execute(functions);
+//        GVN.execute(functions);
+//        SimplifyBranch.execute(functions, true);
+//        MergeBlock.execute(functions, true);
+//        DeadBlockRemove.execute(functions);
+//        RemoveUseLessPhi.execute(functions);
 
         // third
         if (arg.getOptLevel() == 1) {
