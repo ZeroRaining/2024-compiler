@@ -5,6 +5,8 @@ import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.*;
 import frontend.ir.instr.otherop.PhiInstr;
+import frontend.ir.instr.otherop.cmp.Cmp;
+import frontend.ir.instr.otherop.cmp.CmpCond;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
@@ -58,6 +60,10 @@ public class LoopSimplify {
         }
         //计算times
         /* (init - end - 1) / step + 1 */
+        Cmp cmp = loop.getCond();
+        if (!(cmp.getCond().equals(CmpCond.LT))) {
+            return;
+        }
         Value init = loop.getBegin();
         Value end = loop.getEnd();
         Value step = loop.getStep();
