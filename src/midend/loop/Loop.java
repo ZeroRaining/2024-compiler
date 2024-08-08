@@ -205,6 +205,10 @@ public class Loop {
         System.out.println(sb);
     }
 
+    public void clearIndVar() {
+        this.hasIndVar = false;
+    }
+
     public void setIndVar(PhiInstr itVar, Value itInit, Value itEnd, Value itAlu, Value itStep, Value cond) {
         this.var = itVar;
         this.begin = itInit;
@@ -215,21 +219,28 @@ public class Loop {
         hasIndVar = true;
     }
 
-    public void colorBlk(int depth) {
+    public void colorBlk() {
         for (BasicBlock block : latchs) {
             block.setBlockType(BlockType.LATCH);
         }
         for (BasicBlock block : exits) {
-            block.setBlockType(BlockType.EXIT);
+            block.setBlockType(BlockType.LOOPEXIT);
+        }
+        if (exits.size() == 1) {
+            for (BasicBlock blk : exits) {
+                blk.setBlockType(BlockType.EXIT);
+            }
         }
         for (BasicBlock block : exitings) {
             block.setBlockType(BlockType.EXITING);
         }
         for (BasicBlock block : blks) {
             block.setBlockType(BlockType.INLOOP);
-            block.setLoopDepth(depth);
         }
         header.setBlockType(BlockType.HEADER);
+        if (preHeader != null) {
+            preHeader.setBlockType(BlockType.PREHEADER);
+        }
     }
 
 }

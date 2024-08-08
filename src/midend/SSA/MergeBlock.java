@@ -12,9 +12,9 @@ import midend.loop.Loop;
 import java.util.ArrayList;
 
 public class MergeBlock {
-    public static void execute(ArrayList<Function> functions, boolean isAgressive) {
+    public static void execute(ArrayList<Function> functions, boolean isAggressive) {
         for (Function function : functions) {
-            merge(function, isAgressive);
+            merge(function, isAggressive);
         }
         RemoveUseLessPhi.execute(functions);
     }
@@ -32,14 +32,14 @@ public class MergeBlock {
         return true;
     }
 
-    private static void merge(Function function, boolean isAgressive) {
+    private static void merge(Function function, boolean isAggressive) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead().getNext();
         //合并不要的块
         while (blk != null) {
             Instruction last = blk.getEndInstr();
 
             if (check4merge(last)) {
-                if (!isAgressive && check4Loop(last)) {
+                if (blk.isBlockType(BlockType.NOTSIMPLE) && !isAggressive) {
                     blk = (BasicBlock) blk.getNext();
                     continue;
                 }
