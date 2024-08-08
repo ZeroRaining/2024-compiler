@@ -13,25 +13,21 @@ import java.util.ArrayList;
 
 public class SimplifyBranch {
     private static boolean toBeContinue = false;
-    public static void execute(ArrayList<Function> functions, boolean isAggressive) {
+    public static void execute(ArrayList<Function> functions) {
         toBeContinue = true;
         while (toBeContinue) {
             toBeContinue = false;
             for (Function function : functions) {
-                Simplify(function, isAggressive);
+                Simplify(function);
             }
             toBeContinue = toBeContinue || RemoveUseLessPhi.execute(functions);
         }
 
     }
     //会出现两个块跳到同一个地方吗？//如果if内的语句为空？
-    private static void Simplify(Function function, boolean isAggressive) {
+    private static void Simplify(Function function) {
         BasicBlock blk = (BasicBlock) function.getBasicBlocks().getHead();
         while (blk != null) {
-            if (blk.isBlockType(BlockType.NOTSIMPLE) && !isAggressive) {
-                blk = (BasicBlock) blk.getNext();
-                continue;
-            }
             Instruction last = blk.getEndInstr();
             if (last instanceof BranchInstr) {
                 Value cond = ((BranchInstr) last).getCond();

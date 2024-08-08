@@ -76,7 +76,7 @@ public class Compiler {
         GVN.execute(functions);
 
         //合并删减块
-        SimplifyBranch.execute(functions, false);
+        SimplifyBranch.execute(functions);
         MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
@@ -88,25 +88,25 @@ public class Compiler {
         /*anon: mul 4, 1*/
         LoopSimplify.execute(functions);
         RemoveUseLessLoop.execute(functions);
-//        DeadCodeRemove.execute(functions);
-//        OIS.execute(functions);
-//        GVN.execute(functions);
-//        SimplifyBranch.execute(functions, true);
-//        MergeBlock.execute(functions, true);
-//        DeadBlockRemove.execute(functions);
-//        RemoveUseLessPhi.execute(functions);
+        DeadCodeRemove.execute(functions);
+        OIS.execute(functions);
+        GVN.execute(functions);
+        SimplifyBranch.execute(functions);
+        MergeBlock.execute(functions, true);
+        DeadBlockRemove.execute(functions);
+        RemoveUseLessPhi.execute(functions);
 
         // third
         if (arg.getOptLevel() == 1) {
-//            DFG.execute(functions);
-//            PtrMem2Reg.execute(functions);
-//            DeadCodeRemove.execute(functions);
-//            OIS.execute(functions);
-//            GVN.execute(functions);
-//            SimplifyBranch.execute(functions);
-//            MergeBlock.execute(functions, true);
-//            DeadBlockRemove.execute(functions);
-//            RemoveUseLessPhi.execute(functions);
+            DFG.execute(functions);
+            PtrMem2Reg.execute(functions);
+            DeadCodeRemove.execute(functions);
+            OIS.execute(functions);
+            GVN.execute(functions);
+            SimplifyBranch.execute(functions);
+            MergeBlock.execute(functions, true);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
         }
         //为后端维护必要信息
         DFG.execute(functions);
