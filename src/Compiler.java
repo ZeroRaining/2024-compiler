@@ -149,7 +149,9 @@ public class Compiler {
             allocAno.run(asmModule);
 //            RegAllocLinear alloc = RegAllocLinear.getInstance(parser.downOperandMap);
 //            alloc.debug(asmModule);
+            BlockSort.getInstance().run(asmModule);
             DeleteUnusedBlock.run(asmModule);
+            PeepHole.run(asmModule);
             BackendPrinter backendPrinter = new BackendPrinter(asmModule, true, output);
             backendPrinter.printBackend();
         }
