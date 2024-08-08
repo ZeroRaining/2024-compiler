@@ -29,7 +29,7 @@ public class Compiler {
         if (arg.toTime()) {
             startTime = System.currentTimeMillis();
         }
-        
+
         // 词法分析，得到 TokenList
         TokenList tokenList = Lexer.getInstance().lex(source);
         // 语法分析，得到 AST
@@ -83,8 +83,8 @@ public class Compiler {
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
-//
-//        //合并删减块
+
+        //合并删减块
         SimplifyBranch.execute(functions);
         MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);
@@ -93,6 +93,9 @@ public class Compiler {
         //second
         DFG.execute(functions);
         MergeGEP.execute(functions);
+        PtrMem2Reg.execute(functions);
+        /*anon: mul 4, 1*/
+
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
@@ -100,7 +103,8 @@ public class Compiler {
         MergeBlock.execute(functions, true);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
-
+        LoopSimplify.execute(functions);
+        RemoveUseLessLoop.execute(functions);
         // third
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
