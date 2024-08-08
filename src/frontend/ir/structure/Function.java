@@ -413,8 +413,8 @@ public class Function extends Value implements FuncDef {
             }
         }
         
-        // 只有调用自身多次做记忆化才有意义
-        if (this.recursiveCallCnt <= 1) {
+        // 只有调用自身多次（考虑新增：或者被外界重复调用）做记忆化才有意义
+        if (this.recursiveCallCnt <= 1/* && this.calledCnt - this.recursiveCallCnt <= 2*/) {
             return false;
         }
         
@@ -428,22 +428,28 @@ public class Function extends Value implements FuncDef {
             if (!callee.checkNoSideEffect()) {
                 return false;
             }
-            // 不能有针对数组的 load
-            if (callee.loadingArrayElement()) {
-                return false;
+            // 不能有针对数组或者全局对象的 load
+            if (callee.loadingNonRegElement()) {
+                if (this.calledCnt - this.recursiveCallCnt > 1) {
+                    // todo: 现在认为如果一个函数只被外界调用过一次可以忽略 load 的限制
+                    return false;
+                }
             }
         }
         // todo: 检查一下以上条件
         return true;
     }
     
-    private boolean loadingArrayElement() {
+    private boolean loadingNonRegElement() {
         BasicBlock basicBlock = (BasicBlock) this.procedure.getBasicBlocks().getHead();
         while (basicBlock != null) {
             Instruction instruction = (Instruction) basicBlock.getInstructions().getHead();
             while (instruction != null) {
-                if (instruction instanceof LoadInstr && ((LoadInstr) instruction).getPtr() instanceof GEPInstr) {
-                    return true;
+                if (instruction instanceof LoadInstr) {
+                    Value ptr = ((LoadInstr) instruction).getPtr();
+                    if (ptr instanceof GEPInstr || ptr instanceof GlobalObject) {
+                        return true;
+                    }
                 }
                 instruction = (Instruction) instruction.getNext();
             }
