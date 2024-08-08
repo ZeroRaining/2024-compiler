@@ -61,10 +61,10 @@ public class Compiler {
 
         // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
-//            DFG.execute(functions);
-//            AnalysisLoop.execute(functions);
-//            LCSSA.execute(functions);
-//            LoopUnroll.execute(functions);
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+            LCSSA.execute(functions);
+            LoopUnroll.execute(functions);
         }
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
