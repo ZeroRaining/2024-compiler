@@ -61,21 +61,24 @@ public class Compiler {
 
         // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
-            DFG.execute(functions);
-            AnalysisLoop.execute(functions);
-            LCSSA.execute(functions);
-            LoopUnroll.execute(functions);
+//            DFG.execute(functions);
+//            AnalysisLoop.execute(functions);
+//            LCSSA.execute(functions);
+//            LoopUnroll.execute(functions);
         }
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
+        LoopSimplify.execute(functions);
+        RemoveUseLessLoop.execute(functions);
+        /*anon: mul 4, 1*/
         LoopInvariantMotion.execute(functions);
         RemoveUseLessPhi.execute(functions);
 
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
-//
-//        //合并删减块
+
+        //合并删减块
         SimplifyBranch.execute(functions);
         MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);

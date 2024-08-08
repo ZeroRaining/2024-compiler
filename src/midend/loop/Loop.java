@@ -205,6 +205,10 @@ public class Loop {
         System.out.println(sb);
     }
 
+    public void clearIndVar() {
+        this.hasIndVar = false;
+    }
+
     public void setIndVar(PhiInstr itVar, Value itInit, Value itEnd, Value itAlu, Value itStep, Value cond) {
         this.var = itVar;
         this.begin = itInit;

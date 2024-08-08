@@ -7,7 +7,8 @@ import java.util.Objects;
 public class ConstInt extends ConstValue {
     private final int value;
     public static final ConstInt Zero = new ConstInt(0);
-    
+    public static final ConstInt One  = new ConstInt(1);
+
     public ConstInt(int init) {
         value = init;
     }

@@ -3,7 +3,11 @@ package midend.loop;
 import Utils.CustomList;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
+import frontend.ir.instr.Instruction;
+import frontend.ir.instr.binop.AddInstr;
 import frontend.ir.instr.binop.BinaryOperation;
+import frontend.ir.instr.binop.FAddInstr;
+import frontend.ir.instr.binop.SubInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.terminator.BranchInstr;
@@ -322,4 +326,106 @@ public class AnalysisLoop {
 //        loop.LoopPrint();
     }
 
+    public static void singleLiftAnalysis(Loop loop) {
+        loop.clearIndVar();
+        if(!loop.isSimpleLoop()) {
+            return;
+        }
+        BasicBlock header = loop.getHeader();
+        BasicBlock latch = loop.getLatchs().get(0);
+
+        PhiInstr itVar;
+        Value itEnd;
+        if (latch.getEndInstr() instanceof JumpInstr) {
+            throw new RuntimeException(loop + " instr: " + header.getEndInstr().print());
+        }
+        BranchInstr br = (BranchInstr) latch.getEndInstr();
+        Value cond = br.getCond();
+
+        if (cond instanceof ConstValue) {
+            return;
+        }
+        if (!(cond instanceof Cmp)) {
+            throw new RuntimeException("是不是你写的有问题？");
+        }
+        Value itAlu;
+
+        Value op1 = ((Cmp) cond).getOp1();
+        Value op2 = ((Cmp) cond).getOp2();
+        //TODO：先常数传播
+        if (op1 instanceof ConstValue) {
+            itAlu = op2;
+            itEnd = op1;
+        } else if (op2 instanceof ConstValue) {
+            itAlu = op1;
+            itEnd = op2;
+        } else if (op1 instanceof Instruction && op2 instanceof Instruction) {
+            if (loop.getBlks().contains(((Instruction) op1).getParentBB())) {
+                /*op1是alu， op2是end*/
+                itAlu = op1;
+                itEnd = op2;
+            } else if (loop.getBlks().contains(((Instruction) op2).getParentBB())) {
+                itAlu = op2;
+                itEnd = op1;
+            } else {
+                return;
+            }
+        } else {
+            throw new RuntimeException("op1: " +  op1 + "op2: " + op2);
+        }
+
+        if (!(itAlu instanceof BinaryOperation)) {
+            return;
+        }
+        op1 = ((BinaryOperation) itAlu).getOp1();
+        op2 = ((BinaryOperation) itAlu).getOp2();
+        Value itStep;
+        if (op1 instanceof PhiInstr) {
+            itVar = (PhiInstr) op1;
+            itStep = op2;
+        } else if (op2 instanceof PhiInstr) {
+            itVar = (PhiInstr) op2;
+            itStep = op1;
+        } else {
+            return;
+        }
+        if (!(itStep instanceof ConstValue)) {
+            return;
+        }
+        BasicBlock preHeader = loop.getPreHeader();//TODO:fix preHeader & preCond
+        Value itInit = itVar.getValues().get(itVar.getPrtBlks().indexOf(preHeader));
+
+        String opName = ((BinaryOperation) itAlu).getOperationName();
+        if (opName.contains("add") || opName.contains("sub")/* || opName.contains("mul")*/) {
+            loop.setIndVar(itVar, itInit, itEnd, itAlu, itStep, cond);
+        }
+        /*
+        define i32 @main() {
+        blk_0:
+            %reg_4 = call i32 @getint()
+            br label %blk_2
+        blk_2:
+            %reg_7 = icmp slt i32 0, %reg_4
+            br i1 %reg_7, label %blk_6, label %blk_1
+        blk_6:
+            br label %blk_4
+        blk_4:
+            %phi_3 = phi i32 [ %reg_9, %blk_4 ], [ 0, %blk_6 ]
+            %phi_1 = phi i32 [ %reg_11, %blk_4 ], [ 0, %blk_6 ]
+            %reg_9 = add i32 %phi_3, 1 anon: 识别到1，invar
+            %reg_11 = add i32 %phi_1, 1
+            %reg_14 = icmp slt i32 %reg_11, %reg_4 anon: 识别end
+            br i1 %reg_14, label %blk_4, label %blk_7
+        blk_7:
+            anon: getint() or reg / step => times
+            anon: %reg_12 = init + times * invar
+            br label %blk_1
+        blk_1:
+            anon:由于LCSSA，exit块后会有phi的规划，外部所有使用到的值，都会在这进行规范
+            anon:1.在循环内被定义，在循环外被使用 2.本身是一个加法减法指令，运算的值是常值 3.
+            %phi_2 = phi i32 [ 0, %blk_2 ], [ %reg_9, %blk_7 ]
+            ret i32 %phi_2
+        }
+        */
+    }
 }
