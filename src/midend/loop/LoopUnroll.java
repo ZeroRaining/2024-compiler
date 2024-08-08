@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class LoopUnroll {
-    private static long codeSize = 3000;
+    private static final long codeSize = 1000;
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
             AnalysisLoop.LoopIndVars(function);
