@@ -39,9 +39,6 @@ public class FuncMemorize {
     public static void execute(ArrayList<Function> functions, SymTab globalSymTab) {
         for (Function function : functions) {
             if (function.canBeMemorized()) {
-                if(true) {
-                    throw new RuntimeException("hh");
-                }
                 // 建立两个全局数组，data 和 used
                 DataType funcRetType = function.getDataType();
                 ArrayList<Integer> globalDataLimList = new ArrayList<>();
