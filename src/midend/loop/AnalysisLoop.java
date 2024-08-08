@@ -371,7 +371,9 @@ public class AnalysisLoop {
                 return;
             }
         } else {
-            throw new RuntimeException("op1: " +  op1 + "op2: " + op2);
+            /*TODO: 16_k_smallest_fparam*/
+            return;
+//            throw new RuntimeException("op1: " +  op1 + "op2: " + op2);
         }
 
         if (!(itAlu instanceof BinaryOperation)) {
