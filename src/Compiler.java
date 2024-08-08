@@ -68,8 +68,6 @@ public class Compiler {
         }
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
-        
-        /*anon: mul 4, 1*/
         LoopInvariantMotion.execute(functions);
         RemoveUseLessPhi.execute(functions);
 
@@ -78,7 +76,7 @@ public class Compiler {
         GVN.execute(functions);
 
         //合并删减块
-        SimplifyBranch.execute(functions);
+        SimplifyBranch.execute(functions, false);
         MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
@@ -87,12 +85,13 @@ public class Compiler {
         DFG.execute(functions);
         MergeGEP.execute(functions);
         PtrMem2Reg.execute(functions);
+        /*anon: mul 4, 1*/
         LoopSimplify.execute(functions);
         RemoveUseLessLoop.execute(functions);
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
-        SimplifyBranch.execute(functions);
+        SimplifyBranch.execute(functions, true);
         MergeBlock.execute(functions, true);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
