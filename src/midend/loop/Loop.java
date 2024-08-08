@@ -219,7 +219,7 @@ public class Loop {
         hasIndVar = true;
     }
 
-    public void colorBlk(int depth) {
+    public void colorBlk() {
         for (BasicBlock block : latchs) {
             block.setBlockType(BlockType.LATCH);
         }
@@ -236,10 +236,11 @@ public class Loop {
         }
         for (BasicBlock block : blks) {
             block.setBlockType(BlockType.INLOOP);
-            block.setLoopDepth(depth);
         }
         header.setBlockType(BlockType.HEADER);
-        preHeader.setBlockType(BlockType.PREHEADER);
+        if (preHeader != null) {
+            preHeader.setBlockType(BlockType.PREHEADER);
+        }
     }
 
 }

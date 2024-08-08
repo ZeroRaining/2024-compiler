@@ -80,7 +80,7 @@ public class AnalysisLoop {
     }
 
     private static void dfs4color(Loop loop, int depth) {
-        loop.colorBlk(depth);
+        loop.colorBlk();
         for (Loop inner : loop.getInnerLoops()) {
             dfs4color(inner, depth + 1);
         }
@@ -93,7 +93,6 @@ public class AnalysisLoop {
         CustomList.Node block =  function.getBasicBlocks().getHead();
         while (block != null) {
             ((BasicBlock) block).setBlockType(BlockType.OUTOFLOOP);
-            ((BasicBlock) block).setLoopDepth(0);
             block =  block.getNext();
         }
     }
