@@ -301,6 +301,11 @@ public class AnalysisLoop {
         if (!(itAlu instanceof BinaryOperation)) {
             return;
         }
+        String opName = ((BinaryOperation) itAlu).getOperationName();
+        if (opName.contains("add") || opName.contains("sub") || opName.contains("mul")) {
+        } else {
+            return;
+        }
         op1 = ((BinaryOperation) itAlu).getOp1();
         op2 = ((BinaryOperation) itAlu).getOp2();
         Value itStep;
@@ -319,10 +324,8 @@ public class AnalysisLoop {
         BasicBlock preHeader = loop.getPreHeader();//TODO:fix preHeader & preCond
         Value itInit = itVar.getValues().get(itVar.getPrtBlks().indexOf(preHeader));
 
-        String opName = ((BinaryOperation) itAlu).getOperationName();
-        if (opName.contains("add") || opName.contains("sub") || opName.contains("mul")) {
-            loop.setIndVar(itVar, itInit, itEnd, itAlu, itStep, cond);
-        }
+
+        loop.setIndVar(itVar, itInit, itEnd, itAlu, itStep, cond);
 //        loop.LoopPrint();
     }
 
@@ -379,6 +382,12 @@ public class AnalysisLoop {
         if (!(itAlu instanceof BinaryOperation)) {
             return;
         }
+        String opName = ((BinaryOperation) itAlu).getOperationName();
+        if (opName.contains("add") || opName.contains("sub")/* || opName.contains("mul")*/) {
+        
+        } else {
+            return;
+        }
         op1 = ((BinaryOperation) itAlu).getOp1();
         op2 = ((BinaryOperation) itAlu).getOp2();
         Value itStep;
@@ -394,13 +403,11 @@ public class AnalysisLoop {
         if (!(itStep instanceof ConstValue)) {
             return;
         }
-        BasicBlock preHeader = loop.getPreHeader();//TODO:fix preHeader & preCond
+        BasicBlock preHeader = loop.getPreHeader();
         Value itInit = itVar.getValues().get(itVar.getPrtBlks().indexOf(preHeader));
 
-        String opName = ((BinaryOperation) itAlu).getOperationName();
-        if (opName.contains("add") || opName.contains("sub")/* || opName.contains("mul")*/) {
-            loop.setIndVar(itVar, itInit, itEnd, itAlu, itStep, cond);
-        }
+
+        loop.setIndVar(itVar, itInit, itEnd, itAlu, itStep, cond);
         /*
         define i32 @main() {
         blk_0:
