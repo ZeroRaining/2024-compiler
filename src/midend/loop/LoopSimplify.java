@@ -33,7 +33,7 @@ public class LoopSimplify {
         if (!loop.hasIndVar()) {
             return;
         }
-        loop.LoopPrint();
+//        loop.LoopPrint();
         BasicBlock loopExit = loop.getExits().get(0);
         BasicBlock exit = null;
         for (BasicBlock blk : loopExit.getSucs()) {
