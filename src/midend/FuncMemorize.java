@@ -31,9 +31,9 @@ import java.util.List;
  * 因为需要跳转到结束块，所以必须放在合并块之前
  */
 public class FuncMemorize {
-    private static final int hash_base = 114;
+    private static final int hash_base = 35;
     private static final int hash_base2 = 514;
-    private static final int hash_mod = 1919810;
+    private static final int hash_mod = 1007;
     private static final int hash_mod2 = 10086;
     
     public static void execute(ArrayList<Function> functions, SymTab globalSymTab) {
