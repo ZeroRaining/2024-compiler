@@ -680,6 +680,17 @@ public class IrParser {
             } else {
                 mulByConst(asmBlock, instr, f, bb);
             }
+        } else if (instr.getPrev() instanceof MoveInstr move && move.getSrc() instanceof ConstInt moveValue) {
+            //不大清楚前端的具体处理，但据观察这样应该是充分的
+            AsmOperand src1 = parseOperand(instr.getOp1(), 0, f, bb);
+            int value = moveValue.getNumber();
+            Group<AsmOperand, AsmOperand> mulExp = new Group<>(src1, new AsmImm32(value));
+            Group<AsmBlock, Group<AsmOperand, AsmOperand>> mulExpInBlock = new Group<>(asmBlock, mulExp);
+            if (blockMulExp2Res.containsKey(mulExpInBlock)) {
+                operandMap.put(instr, blockMulExp2Res.get(mulExpInBlock));
+            } else {
+                mulByConst(asmBlock, instr, f, bb);
+            }
         } else {
             AsmOperand src2 = parseOperand(instr.getOp2(), 0, f, bb);
             AsmOperand dst = parseOperand(instr, 0, f, bb);
@@ -840,6 +851,15 @@ public class IrParser {
         if (instr.getOp2() instanceof ConstInt) {
             //SSA的存在使得记录块中的除法算式不会出错
             int value = ((ConstInt) instr.getOp2()).getNumber();
+            Group<AsmOperand, AsmOperand> divExp = new Group<>(dst, new AsmImm32(value));
+            Group<AsmBlock, Group<AsmOperand, AsmOperand>> divExpInBlock = new Group<>(asmBlock, divExp);
+            if (blockDivExp2Res.containsKey(divExpInBlock)) {
+                operandMap.put(instr, blockDivExp2Res.get(divExpInBlock));
+            } else {
+                divByConst(dst, src1, ((ConstInt) instr.getOp2()).getNumber(), bb, f);
+            }
+        } else if (instr.getPrev() instanceof MoveInstr move && move.getSrc() instanceof ConstInt moveValue) {
+            int value = moveValue.getNumber();
             Group<AsmOperand, AsmOperand> divExp = new Group<>(dst, new AsmImm32(value));
             Group<AsmBlock, Group<AsmOperand, AsmOperand>> divExpInBlock = new Group<>(asmBlock, divExp);
             if (blockDivExp2Res.containsKey(divExpInBlock)) {
@@ -1133,7 +1153,7 @@ public class IrParser {
                 offset += 4;
             }
         }
-        AsmCall asmCall = new AsmCall(instr.getFuncDef().getName(), intArgRegNum, floatArgRegNum);
+        AsmCall asmCall = new AsmCall(instr.getFuncDef().getName(), intArgRegNum, floatArgRegNum, instr.callsLibFunc());
         asmBlock.addInstrTail(asmCall);
         if (instr.getDataType() != VOID) {
             AsmOperand dst = parseOperand(instr, 0, f, bb);

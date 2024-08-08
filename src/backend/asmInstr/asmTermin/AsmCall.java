@@ -7,8 +7,9 @@ public class AsmCall extends AsmInstr {
     public String funcName;
     public int IntArgRegNum;
     public int floatArgRegNum;
+    public boolean isLibCall;
 
-    public AsmCall(String funcName, int IntArgRegNum,int floatArgRegNum) {
+    public AsmCall(String funcName, int IntArgRegNum,int floatArgRegNum,boolean isLibCall) {
         super("AsmCall");
         this.funcName = funcName;
         this.IntArgRegNum = IntArgRegNum;
@@ -19,6 +20,7 @@ public class AsmCall extends AsmInstr {
         for (int i = 0 ; i < floatArgRegNum ; i++) {
             addUseReg(null, RegGeter.AllRegsFloat.get(i + 10));
         }
+        this.isLibCall = isLibCall;
     }
 
     public String getFuncName() {
