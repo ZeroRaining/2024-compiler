@@ -61,7 +61,7 @@ public class LoopSimplify {
         //计算times
         /* (init - end - 1) / step + 1 */
         Cmp cmp = loop.getCond();
-        if (!(cmp.getCond().equals(CmpCond.LT))) {
+        if (!(cmp.getCond().equals(CmpCond.LT)) && !(cmp.getCond().equals(CmpCond.GT))) {
             return;
         }
         Value init = loop.getBegin();
