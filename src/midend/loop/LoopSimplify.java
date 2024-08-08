@@ -105,7 +105,7 @@ public class LoopSimplify {
                 if (!(remOp1Op1 instanceof PhiInstr)) {
                     continue;
                 }
-                Value phiStartValue = ((PhiInstr) remOp1Op1).getValues().get(((PhiInstr) remOp1Op1).getValues().indexOf(preHeader));
+                Value phiStartValue = ((PhiInstr) remOp1Op1).getValues().get(((PhiInstr) remOp1Op1).getPrtBlks().indexOf(preHeader));
 
 
                 SRemInstr timeRem = new SRemInstr(procedure.getAndAddRegIndex(), times, op2);//TODO: 前提？？

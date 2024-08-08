@@ -68,8 +68,6 @@ public class Compiler {
         }
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
-        LoopSimplify.execute(functions);
-        RemoveUseLessLoop.execute(functions);
         /*anon: mul 4, 1*/
         LoopInvariantMotion.execute(functions);
         RemoveUseLessPhi.execute(functions);
@@ -87,6 +85,7 @@ public class Compiler {
         //second
         DFG.execute(functions);
         MergeGEP.execute(functions);
+        PtrMem2Reg.execute(functions);
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
@@ -95,6 +94,8 @@ public class Compiler {
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
 
+        LoopSimplify.execute(functions);
+        RemoveUseLessLoop.execute(functions);
         // third
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
