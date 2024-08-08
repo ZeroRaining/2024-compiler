@@ -224,7 +224,12 @@ public class Loop {
             block.setBlockType(BlockType.LATCH);
         }
         for (BasicBlock block : exits) {
-            block.setBlockType(BlockType.EXIT);
+            block.setBlockType(BlockType.LOOPEXIT);
+        }
+        if (exits.size() == 1) {
+            for (BasicBlock blk : exits) {
+                blk.setBlockType(BlockType.EXIT);
+            }
         }
         for (BasicBlock block : exitings) {
             block.setBlockType(BlockType.EXITING);
@@ -234,6 +239,7 @@ public class Loop {
             block.setLoopDepth(depth);
         }
         header.setBlockType(BlockType.HEADER);
+        preHeader.setBlockType(BlockType.PREHEADER);
     }
 
 }
