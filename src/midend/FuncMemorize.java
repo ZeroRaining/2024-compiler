@@ -35,9 +35,9 @@ import java.util.List;
  * todo: 现在找递归结束条件的原则是直接返回常数或者参数，但是其实更合适的应该是去找最后一个能支配所有递归调用的块，在它那做哈希
  */
 public class FuncMemorize {
-    private static final int hash_base = 35;
+    private static final int hash_base = 32;
     private static final int hash_base2 = 514;
-    private static final int hash_mod = 1007;
+    private static final int hash_mod = 65536;
     private static final int hash_mod2 = 10086;
     
     public static void execute(ArrayList<Function> functions, SymTab globalSymTab) {
