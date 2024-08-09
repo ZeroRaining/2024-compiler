@@ -3,7 +3,6 @@ package midend;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
-import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.AddInstr;
 import frontend.ir.instr.binop.MulInstr;
@@ -35,7 +34,7 @@ import java.util.List;
  * todo: 现在找递归结束条件的原则是直接返回常数或者参数，但是其实更合适的应该是去找最后一个能支配所有递归调用的块，在它那做哈希
  */
 public class FuncMemorize {
-    private static final int hash_base = 32;
+    private static final int hash_base = 100;
     private static final int hash_base2 = 514;
     private static final int hash_mod = 65536;
     private static final int hash_mod2 = 10086;
@@ -79,11 +78,16 @@ public class FuncMemorize {
                     if (fParam.getDataType() == DataType.INT) {
                         castArgs.add(fParam);
                     } else {
+                        // 浮点数乘以一百放大差异
+                        // FMulInstr fMul = new FMulInstr(function.getAndAddRegIndex(), fParam, new ConstFloat(100f));
+                        // hashBlk.addInstruction(fMul);
+
                         Fp2Si cast = new Fp2Si(function.getAndAddRegIndex(), fParam);
                         hashBlk.addInstruction(cast);
                         castArgs.add(cast);
                     }
                 }
+                // final int argSize = castArgs.size();
                 
                 // 哈希计算
                 Value hashVal  = hashCal(hashBlk, function, castArgs, modVal,  baseVal);
@@ -128,44 +132,6 @@ public class FuncMemorize {
                     storeUsed.insertBefore(jump2ret);
                 }
                 
-                /*
-                // 寻找递归结束条件，即哪个返回值是常数或者参数，而且所在块的直接控制者应该是第一个块
-                BasicBlock recursiveEnd = null;     // 用来记录直接返回定值那个块
-                for (BasicBlock toRet : retBlk.getPres()) {
-                    if (toRet == preRetBlk) {
-                        continue;
-                    }
-                    Instruction ins = toRet.getEndInstr();
-                    while (ins != null) {
-                        // 存储在无名对象中的就是返回值
-                        if (ins instanceof StoreInstr && ((StoreInstr) ins).getSymbol().getName().isEmpty()) {
-                            Value retVal = ((StoreInstr) ins).getValue();
-                            if (retVal instanceof ConstValue) {
-                                recursiveEnd = toRet;
-                                break;
-                            } else if (retVal instanceof LoadInstr) {
-                                Value ptr = ((LoadInstr) retVal).getPtr();
-                                BasicBlock beginBlk = (BasicBlock) function.getBasicBlocks().getHead();
-                                Instruction findStore = (Instruction) beginBlk.getInstructions().getHead();
-                                while (findStore != null) {
-                                    if (findStore instanceof StoreInstr && ((StoreInstr) findStore).getPtr().equals(ptr)) {
-                                        if (((StoreInstr) findStore).getValue() instanceof FParam) {
-                                            throw new RuntimeException("heihei");
-                                        }
-                                    }
-                                    findStore = (Instruction) findStore.getNext();
-                                }
-                            }
-                        }
-                        ins = (Instruction) ins.getPrev();
-                    }
-                    
-                    if (recursiveEnd != null) {
-                        break;
-                    }
-                }
-                 */
-                
                 // 将两个新块插入函数头
                 function.getBasicBlocks().addToHead(preRetBlk);
                 function.getBasicBlocks().addToHead(hashBlk);
@@ -176,17 +142,17 @@ public class FuncMemorize {
         }
     }
     
-    private static Value hashCal(BasicBlock hashBlk, Function function, List<Value> castArgs, Value modVal, Value baseVal) {
-        Value hashVal = castArgs.get(0);
+    private static Value hashCal(BasicBlock hashBlk, Function function, List<Value> args, Value modVal, Value baseVal) {
+        Value hashVal = args.get(0);
         
         hashVal = new SRemInstr(function.getAndAddRegIndex(), hashVal, modVal);
         hashBlk.addInstruction((Instruction) hashVal);
         
-        if (castArgs.size() > 1) {
-            for (int i = 1; i < castArgs.size(); i++) {
+        if (args.size() > 1) {
+            for (int i = 1; i < args.size(); i++) {
                 hashVal = new MulInstr(function.getAndAddRegIndex(), hashVal, baseVal);
                 hashBlk.addInstruction((Instruction) hashVal);
-                hashVal = new AddInstr(function.getAndAddRegIndex(), hashVal, castArgs.get(i));
+                hashVal = new AddInstr(function.getAndAddRegIndex(), hashVal, args.get(i));
                 hashBlk.addInstruction((Instruction) hashVal);
                 hashVal = new SRemInstr(function.getAndAddRegIndex(), hashVal, modVal);
                 hashBlk.addInstruction((Instruction) hashVal);
