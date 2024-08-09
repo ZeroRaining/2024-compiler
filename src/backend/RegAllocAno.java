@@ -32,6 +32,10 @@ public class RegAllocAno {
     }
 
     private static int tryN = 0;
+    private int Float_G = 12;
+    private int Int_G = 11;
+    private int Float_T = 27;
+    private int Int_T = 20;
     private int FI = 0;//0代表处理Int型，1代表处理Float型
     private static int K = 27;
     private int procedure = 0;
@@ -217,6 +221,7 @@ public class RegAllocAno {
                     allocRealReg(function);
                     break;
                 } else {
+                    //System.out.println("spilledNodes.size() = " + spilledNodes.size() + " " + spilledNodes + " " + function.getName());
                     addOffSet += RewriteProgram(function);
                 }
             }
@@ -1061,15 +1066,15 @@ public class RegAllocAno {
                 int N = 0;
                 if (FI == 0) {
                     if (procedure == 0) {
-                        N = 11;
+                        N = Int_G;
                     } else {
-                        N = 19;
+                        N = Int_T;
                     }
                 } else {
                     if (procedure == 0) {
-                        N = 12;
+                        N = Float_G;
                     } else {
-                        N = 27;
+                        N = Float_T;
                     }
                 }
                 if (degree.get(n) >= N) {
@@ -1085,15 +1090,15 @@ public class RegAllocAno {
                 int N = 0;
                 if (FI == 0) {
                     if (procedure == 0) {
-                        N = 11;
+                        N = Int_G;
                     } else {
-                        N = 19;
+                        N = Int_T;
                     }
                 } else {
                     if (procedure == 0) {
-                        N = 12;
+                        N = Float_G;
                     } else {
-                        N = 27;
+                        N = Float_T;
                     }
                 }
                 if (degree.get(n) >= N) {
@@ -1178,15 +1183,15 @@ public class RegAllocAno {
         int N = 0;
         if (FI == 0) {
             if (procedure == 0) {
-                N = 11;
+                N = Int_G;
             } else {
-                N = 19;
+                N = Int_T;
             }
         } else {
             if (procedure == 0) {
-                N = 12;
+                N = Float_G;
             } else {
-                N = 27;
+                N = Float_T;
             }
         }
         if (freezeWorkList.contains(v)) {
@@ -1222,15 +1227,15 @@ public class RegAllocAno {
         int N = 0;
         if (FI == 0) {
             if (procedure == 0) {
-                N = 11;
+                N = Int_G;
             } else {
-                N = 19;
+                N = Int_T;
             }
         } else {
             if (procedure == 0) {
-                N = 12;
+                N = Float_G;
             } else {
-                N = 27;
+                N = Float_T;
             }
         }
         for (AsmInstr m : NodeMoves(u)) {
@@ -1506,15 +1511,15 @@ public class RegAllocAno {
         int N = 0;
         if (FI == 0) {
             if (procedure == 0) {
-                N = 11;
+                N = Int_G;
             } else {
-                N = 19;
+                N = Int_T;
             }
         } else {
             if (procedure == 0) {
-                N = 12;
+                N = Float_G;
             } else {
-                N = 27;
+                N = Float_T;
             }
         }
         int k = 0;
@@ -1530,15 +1535,15 @@ public class RegAllocAno {
         int N = 0;
         if (FI == 0) {
             if (procedure == 0) {
-                N = 11;
+                N = Int_G;
             } else {
-                N = 19;
+                N = Int_T;
             }
         } else {
             if (procedure == 0) {
-                N = 12;
+                N = Float_G;
             } else {
-                N = 27;
+                N = Float_T;
             }
         }
         if ((degree.containsKey(t) && degree.get(t) < N) || preColored.containsKey(t) || (adjSet.containsKey(t) && adjSet.get(t).contains(r))) {
@@ -1552,15 +1557,15 @@ public class RegAllocAno {
         int N = 0;
         if (FI == 0) {
             if (procedure == 0) {
-                N = 11;
+                N = Int_G;
             } else {
-                N = 19;
+                N = Int_T;
             }
         } else {
             if (procedure == 0) {
-                N = 12;
+                N = Float_G;
             } else {
-                N = 27;
+                N = Float_T;
             }
         }
         if (!preColored.containsKey(u) && !MoveRelated(u) && degree.get(u) < N) {
@@ -1585,15 +1590,15 @@ public class RegAllocAno {
         int N = 0;
         if (FI == 0) {
             if (procedure == 0) {
-                N = 11;
+                N = Int_G;
             } else {
-                N = 19;
+                N = Int_T;
             }
         } else {
             if (procedure == 0) {
-                N = 12;
+                N = Float_G;
             } else {
-                N = 27;
+                N = Float_T;
             }
         }
         if (d == N) {

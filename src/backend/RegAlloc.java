@@ -145,6 +145,7 @@ public class RegAlloc {
                     allocRealReg(function);
                     break;
                 } else {
+                    //System.out.println("spilledNodes.size() = " + spilledNodes.size() + " " + spilledNodes + " " + function.getName());
                     addOffSet += RewriteProgram(function);
                 }
             }
