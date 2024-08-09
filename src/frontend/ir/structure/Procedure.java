@@ -329,7 +329,7 @@ public class Procedure {
         bodyBlk.setLoopDepth(++curDepth);
         dealStmt(item.body, returnType, new SymTab(symTab));
         cond2Blk.setLoopDepth(curDepth);
-        bodyBlk.setLoopDepth(--curDepth);
+        curDepth--;
         whileBegins.pop();
         whileEnds.pop();
 
