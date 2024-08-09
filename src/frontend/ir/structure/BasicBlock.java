@@ -290,6 +290,10 @@ public class BasicBlock extends Value {
             instr = (Instruction) instr.getNext();
         }
     }
+    
+    public void removeFromListWithInstrRemain() {
+        super.removeFromList();
+    }
 
     public PCInstr getPc() {
         assert instructions.getHead() instanceof PCInstr;
