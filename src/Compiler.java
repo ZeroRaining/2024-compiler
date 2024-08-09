@@ -7,8 +7,7 @@ import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;
 import frontend.syntax.Ast;
 import frontend.syntax.Parser;
-import midend.FMHBR;
-import midend.FuncMemorize;
+import midend.FuncMemorizeVer2;
 import midend.RemovePhi;
 import midend.SSA.*;
 import midend.loop.*;
@@ -52,11 +51,6 @@ public class Compiler {
         GlobalValueSimplify.execute(program.getGlobalVars());
         program.deleteUselessGlobalVars();
         
-        // 函数记忆化，只对性能点进行
-        if (arg.getOptLevel() == 1) {
-            FuncMemorize.execute(functions, program.getGlobalSymTab());
-        }
-        
         // 删除没用的基本块
         DeadBlockRemove.execute(functions);
 
@@ -69,10 +63,9 @@ public class Compiler {
         MergeGEP.execute(functions);
         OIS.execute(functions);
         
+        // 函数记忆化
         if (arg.getOptLevel() == 1) {
-            // 针对做过记忆化的函数，调整其哈希计算的位置，避免无意义计算
-            FMHBR.execute(functions);
-            // 其实这个做完之后必须 DFG，但是考虑到后面的优化之前都有 DFG 了就不加了，该位置的话记得加上
+            FuncMemorizeVer2.execute(functions, program.getGlobalSymTab());
         }
         
         // 循环优化，当前仅在性能测试时开启
