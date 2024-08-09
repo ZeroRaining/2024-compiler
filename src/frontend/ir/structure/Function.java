@@ -42,6 +42,7 @@ public class Function extends Value implements FuncDef {
     private final boolean main;
     private boolean neverUsed = false;
     private int recursiveCallCnt = 0;
+    private boolean memorized = false;
     
     public Function(Ast.FuncDef funcDef, SymTab globalSymTab) {
         if (funcDef == null) {
@@ -495,5 +496,13 @@ public class Function extends Value implements FuncDef {
     
     public SymTab getFuncSymTab() {
         return funcSymTab;
+    }
+    
+    public boolean isMemorized() {
+        return memorized;
+    }
+    
+    public void setMemorized() {
+        this.memorized = true;
     }
 }

@@ -3,6 +3,7 @@ package midend;
 import frontend.ir.DataType;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstInt;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.AddInstr;
 import frontend.ir.instr.binop.MulInstr;
@@ -29,6 +30,9 @@ import java.util.List;
 /**
  * （递归）函数记忆化，通过全局数组减少递归运算
  * 因为需要跳转到结束块，所以必须放在合并块之前
+ * 为了减少哈希计算，决定对于要操作的递归函数，要在递归结束条件判断之后才做哈希
+ * 因为没有控制流图实在不知道怎么找返回值类型了，决定将这个减少哈希计算的操作放到后面 FMHBR 里
+ * todo: 现在找递归结束条件的原则是直接返回常数或者参数，但是其实更合适的应该是去找最后一个能支配所有递归调用的块，在它那做哈希
  */
 public class FuncMemorize {
     private static final int hash_base = 32;
@@ -39,6 +43,9 @@ public class FuncMemorize {
     public static void execute(ArrayList<Function> functions, SymTab globalSymTab) {
         for (Function function : functions) {
             if (function.canBeMemorized()) {
+                // 标记函数被做过记忆化
+                function.setMemorized();
+                
                 // 建立两个全局数组，data 和 used
                 DataType funcRetType = function.getDataType();
                 ArrayList<Integer> globalDataLimList = new ArrayList<>();
@@ -58,6 +65,8 @@ public class FuncMemorize {
                 // 建立两个基本块，并准备两个常数对象
                 BasicBlock hashBlk = new BasicBlock(0, function.getAndAddBlkIndex());
                 BasicBlock preRetBlk  = new BasicBlock(0, function.getAndAddBlkIndex());
+                hashBlk.setTag("hashBlk");
+                preRetBlk.setTag("hashRetBlk");
                 
                 ConstInt baseVal  = new ConstInt(hash_base);
                 ConstInt modVal   = new ConstInt(hash_mod);
@@ -118,6 +127,44 @@ public class FuncMemorize {
                     StoreInstr storeUsed = new StoreInstr(castArgs.get(0), globalUsed, usedPtr);
                     storeUsed.insertBefore(jump2ret);
                 }
+                
+                /*
+                // 寻找递归结束条件，即哪个返回值是常数或者参数，而且所在块的直接控制者应该是第一个块
+                BasicBlock recursiveEnd = null;     // 用来记录直接返回定值那个块
+                for (BasicBlock toRet : retBlk.getPres()) {
+                    if (toRet == preRetBlk) {
+                        continue;
+                    }
+                    Instruction ins = toRet.getEndInstr();
+                    while (ins != null) {
+                        // 存储在无名对象中的就是返回值
+                        if (ins instanceof StoreInstr && ((StoreInstr) ins).getSymbol().getName().isEmpty()) {
+                            Value retVal = ((StoreInstr) ins).getValue();
+                            if (retVal instanceof ConstValue) {
+                                recursiveEnd = toRet;
+                                break;
+                            } else if (retVal instanceof LoadInstr) {
+                                Value ptr = ((LoadInstr) retVal).getPtr();
+                                BasicBlock beginBlk = (BasicBlock) function.getBasicBlocks().getHead();
+                                Instruction findStore = (Instruction) beginBlk.getInstructions().getHead();
+                                while (findStore != null) {
+                                    if (findStore instanceof StoreInstr && ((StoreInstr) findStore).getPtr().equals(ptr)) {
+                                        if (((StoreInstr) findStore).getValue() instanceof FParam) {
+                                            throw new RuntimeException("heihei");
+                                        }
+                                    }
+                                    findStore = (Instruction) findStore.getNext();
+                                }
+                            }
+                        }
+                        ins = (Instruction) ins.getPrev();
+                    }
+                    
+                    if (recursiveEnd != null) {
+                        break;
+                    }
+                }
+                 */
                 
                 // 将两个新块插入函数头
                 function.getBasicBlocks().addToHead(preRetBlk);

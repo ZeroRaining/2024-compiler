@@ -7,6 +7,7 @@ import frontend.lexer.Lexer;
 import frontend.lexer.TokenList;
 import frontend.syntax.Ast;
 import frontend.syntax.Parser;
+import midend.FMHBR;
 import midend.FuncMemorize;
 import midend.RemovePhi;
 import midend.SSA.*;
@@ -67,7 +68,13 @@ public class Compiler {
         ArrayFParamMem2Reg.execute(functions);
         MergeGEP.execute(functions);
         OIS.execute(functions);
-
+        
+        if (arg.getOptLevel() == 1) {
+            // 针对做过记忆化的函数，调整其哈希计算的位置，避免无意义计算
+            FMHBR.execute(functions);
+            // 其实这个做完之后必须 DFG，但是考虑到后面的优化之前都有 DFG 了就不加了，该位置的话记得加上
+        }
+        
         // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
@@ -94,7 +101,6 @@ public class Compiler {
         DFG.execute(functions);
         MergeGEP.execute(functions);
         PtrMem2Reg.execute(functions);
-        /*anon: mul 4, 1*/
 
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);

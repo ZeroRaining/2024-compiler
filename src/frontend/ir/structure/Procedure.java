@@ -984,7 +984,12 @@ public class Procedure {
         }
         for (CustomList.Node basicBlockNode : basicBlocks) {
             BasicBlock block = (BasicBlock) basicBlockNode;
-            writer.append(block.value2string()).append(":\n");
+            writer.append(block.value2string()).append(":");
+            String tag = block.getTag();
+            if (!tag.isEmpty()) {
+                writer.append("\t;").append(tag);
+            }
+            writer.append("\n");
             block.printIR(writer);
         }
         DEBUG.dbgPrint1("\n");
