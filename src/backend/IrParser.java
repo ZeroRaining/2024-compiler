@@ -987,12 +987,10 @@ public class IrParser {
                 AsmOperand dst = parseOperand(instr, 0, f, bb);
                 AsmOperand src = parseOperand(src1, 0, f, bb);
                 int value = ((ConstInt) src2).getNumber();
-                AsmAnd asmAnd = new AsmAnd(dst, src, parseConstIntOperand(value, 12, f, bb));
-                asmBlock.addInstrTail(asmAnd);
                 AsmOperand tmp = genTmpReg(f);
                 AsmSrl asmSrl = new AsmSrl(tmp, src, new AsmImm12(16));
                 asmBlock.addInstrTail(asmSrl);
-                AsmAdd asmAdd = new AsmAdd(dst, dst, tmp);
+                AsmAdd asmAdd = new AsmAdd(dst, src, tmp);
                 asmBlock.addInstrTail(asmAdd);
                 AsmAnd asmAnd2 = new AsmAnd(dst, dst, parseConstIntOperand(value, 12, f, bb));
                 asmBlock.addInstrTail(asmAnd2);
