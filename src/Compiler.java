@@ -114,7 +114,6 @@ public class Compiler {
         // third
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
-            PtrMem2Reg.execute(functions);
             DeadCodeRemove.execute(functions);
             OIS.execute(functions);
             GVN.execute(functions);
