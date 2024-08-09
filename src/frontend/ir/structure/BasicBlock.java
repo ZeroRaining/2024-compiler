@@ -35,6 +35,7 @@ public class BasicBlock extends Value {
     private HashSet<BasicBlock> iDoms;
     private BasicBlock iDomor;
     private HashSet<BasicBlock> DF;
+    private String tag = "";    // 用作一些特殊标记
     
     public BasicBlock(int loopDepth, int labelCnt) {
         super();
@@ -344,5 +345,13 @@ public class BasicBlock extends Value {
 
     public boolean isEntering() {
         return isEntering;
+    }
+    
+    public String getTag() {
+        return tag;
+    }
+    
+    public void setTag(String tag) {
+        this.tag = tag;
     }
 }
