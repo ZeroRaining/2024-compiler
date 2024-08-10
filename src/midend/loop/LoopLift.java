@@ -2,6 +2,7 @@ package midend.loop;
 
 import Utils.CustomList;
 import backend.itemStructure.Group;
+import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.constvalue.ConstBool;
 import frontend.ir.constvalue.ConstValue;
@@ -88,8 +89,21 @@ public class LoopLift {
 //        throw new RuntimeException("caole");
 
 //        throw new RuntimeException("this func may have problem");
-        loop.LoopPrint();
+        PhiInstr itvar = (PhiInstr) loop.getVar();
+        Use use = itvar.getBeginUse();
+        while (use != null) {
+            if (inner.getBlks().contains(use.getUser().getParentBB())) {
+                return;
+            }
+            use = (Use) use.getNext();
+        }
+        
+//        loop.LoopPrint();
         //循环一定会被执行一次
+        if (true) {
+            throw new RuntimeException("caole");
+        }
+        
         LoopUnroll.setIsLift(true);
         isLift = true;
 
@@ -222,6 +236,7 @@ public class LoopLift {
     }
 
     private static boolean loopCanLift(Loop loop) {
+        AnalysisLoop.singleLiftAnalysis(loop);
         if (!loop.hasIndVar()) {
             return false;
         }
