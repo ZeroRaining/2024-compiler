@@ -76,7 +76,6 @@ public class Compiler {
             LoopUnroll.executeOnce(functions);
             OIS.execute(functions);
             /*RemoveUselessPhi 会影响LCSSA吗*/
-            RemoveUseLessPhi.execute(functions);
             LoopUnroll.execute(functions);
             RemoveUseLessPhi.execute(functions);
         }
@@ -94,8 +93,8 @@ public class Compiler {
 //        MergeBlock.execute(functions, false);
 //        DeadBlockRemove.execute(functions);
 //        RemoveUseLessPhi.execute(functions);
-//
-//        /*second*/
+
+        /*second*/
 //        DFG.execute(functions);
 //        MergeGEP.execute(functions);
 //        PtrMem2Reg.execute(functions);
@@ -120,8 +119,8 @@ public class Compiler {
 //            DeadBlockRemove.execute(functions);
 //            RemoveUseLessPhi.execute(functions);
 //        }
-        
-        //为后端维护必要信息
+//
+        /*为后端维护必要信息*/
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
 

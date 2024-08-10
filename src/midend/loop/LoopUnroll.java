@@ -205,10 +205,20 @@ public class LoopUnroll {
         if (!loop.hasIndVar()) {
             return false;
         }
+        loop.LoopPrint();
         Value itInit = loop.getBegin();
         Value itStep = loop.getStep();
         Value itEnd = loop.getEnd();
-        if (!(itInit instanceof ConstValue) || !(itStep instanceof ConstValue) || !(itEnd instanceof ConstValue)) {
+        if (!(itInit instanceof ConstValue)) {
+            if (!(itInit instanceof PhiInstr)) {
+                return false;
+            }
+            if (!((PhiInstr) itInit).simplify2const()) {
+                return false;
+            }
+            itInit = ((PhiInstr) itInit).getValues().get(0);
+        }
+        if (!(itInit instanceof ConstValue)|| !(itStep instanceof ConstValue) || !(itEnd instanceof ConstValue)) {
             return false;
         }
         BinaryOperation itAlu = loop.getAlu();
