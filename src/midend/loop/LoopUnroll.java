@@ -31,8 +31,114 @@ public class LoopUnroll {
             if (function.isMain()) {
                 AnalysisLoop.LoopIndVars(function);
                 SimpleLoopUnroll(function);
+                OnceUnroll(function);
             }
         }
+    }
+
+    private static void OnceUnroll(Function function) {
+        for (Loop outer : function.getOuterLoop()) {
+            dfs4OnceUnroll(outer);
+        }
+    }
+    /*
+    * preheader
+    * body1
+    * cond1 -> newPreHeader
+    *
+    * body2
+    * cond2->
+    *
+    * */
+    private static void dfs4OnceUnroll(Loop loop) {
+        if (loop.getInnerLoops().isEmpty()) {
+            return;
+        }
+        for (Loop inner : loop.getInnerLoops()) {
+            dfs4LoopUnroll(inner);
+        }
+        if (!loop.hasIndVar()) {
+            return;
+        }
+        Value init = loop.getBegin();
+        Value end = loop.getEnd();
+        if (!(init instanceof ConstValue)) {
+            return;
+        }
+        if (!(end instanceof ConstValue)) {
+            return;
+        }
+        BinaryOperation alu = loop.getAlu();
+        Cmp cmp = loop.getCond();
+        if (alu.getOperationName().equals("add") && cmp.getCond().equals(CmpCond.LT)) {
+            if (init.getNumber().intValue() >= end.getNumber().intValue()) {
+                return;
+            }
+        } else if (alu.getOperationName().equals("sub") && cmp.getCond().equals(CmpCond.GT)) {
+            if (init.getNumber().intValue() <= end.getNumber().intValue()) {
+                return;
+            }
+        } else {
+            //TODO implement other cmp
+            return;
+        }
+        //至此一定会被执行
+        HashMap<Value, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
+        HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
+        ArrayList<PhiInstr> headPhis = new ArrayList<>();
+        BasicBlock header = loop.getHeader();
+        CustomList.Node instr = header.getInstructions().getHead();
+        while (instr instanceof PhiInstr) {
+            headPhis.add((PhiInstr) instr);
+            instr = instr.getNext();
+        }
+//        loop.LoopPrint();
+        BasicBlock loopExit = loop.getExits().get(0);
+        BasicBlock latch = loop.getLatchs().get(0);
+
+        for (PhiInstr phi : headPhis) {
+            int index = phi.getPrtBlks().indexOf(latch);
+            Value newValue = phi.getValues().get(index);
+            //先保留phi的value
+            phiInHead.put(phi, newValue);
+            begin2end.put(newValue, newValue);
+        }
+        //TODO：复制后删掉修改跳转
+//        latch.getInstructions().getTail().removeFromList();
+//        latch.setRet(false);
+
+        Procedure procedure = (Procedure) header.getParent().getOwner();
+
+        old2new = new HashMap<>(phiInHead);
+        old2new.put(loop.getPreHeader(), latch);
+        Group<BasicBlock, BasicBlock> oneLoop = new Group<>(header, latch);
+        for (int i = 0; i < times - 1; i++) {
+            oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop());
+        }
+        BasicBlock exit = null;
+        for (BasicBlock b : loopExit.getSucs()) {
+            exit = b;
+        }
+        if (exit == null) {
+            throw new RuntimeException("what's up, bro");
+        }
+
+        BasicBlock lastLatch = oneLoop.getSecond();
+        lastLatch.addInstruction(new JumpInstr(loopExit));
+
+        Instruction phi = (Instruction) loopExit.getInstructions().getHead();
+        while (phi instanceof PhiInstr) {
+            for (Value value : ((PhiInstr) phi).getValues()) {
+                if (value instanceof Instruction) {
+                    phi.modifyUse(value, begin2end.get(value));
+                    ((PhiInstr) phi).modifyPrtBlk(latch, lastLatch);
+                }
+            }
+            phi = (Instruction) phi.getNext();
+        }
+        OIS.OSI4blks(header, oneLoop.getSecond());
+        DeadCodeRemove.removeCode(header, oneLoop.getSecond());
+        MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
     }
 
     private static void SimpleLoopUnroll(Function function) {
