@@ -15,6 +15,7 @@ import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
+import midend.SSA.DFG;
 import midend.SSA.DeadCodeRemove;
 import midend.SSA.MergeBlock;
 import midend.SSA.OIS;
@@ -24,17 +25,21 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class LoopUnroll {
-    private static final long codeSize = 1000;
+    private static final long codeSize = 10000;
     public static void execute(ArrayList<Function> functions) {
+        DFG.execute(functions);
+        AnalysisLoop.execute(functions);
         for (Function function : functions) {
             // 要求在完全内联之后，只对 main 函数做循环展开，递归函数不做展开
             if (function.isMain()) {
+                System.out.println(function.getAllLoop());
                 AnalysisLoop.LoopIndVars(function);
                 SimpleLoopUnroll(function);
             }
         }
     }
     public static void executeOnce(ArrayList<Function> functions) {
+        AnalysisLoop.execute(functions);
         for (Function function : functions) {
             // 要求在完全内联之后，只对 main 函数做循环展开，递归函数不做展开
             if (function.isMain()) {
@@ -63,7 +68,7 @@ public class LoopUnroll {
             return;
         }
         for (Loop inner : loop.getInnerLoops()) {
-            inner.LoopPrint();
+//            inner.LoopPrint();
             dfs4LoopUnroll(inner);
         }
         if (!loop.hasIndVar()) {
@@ -93,7 +98,7 @@ public class LoopUnroll {
         }
         loop.LoopPrint();
         //循环一定会被执行一次
-        HashMap<Value, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
+        HashMap<PhiInstr, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
         HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
         ArrayList<PhiInstr> headPhis = new ArrayList<>();
         BasicBlock header = loop.getHeader();
@@ -144,6 +149,13 @@ public class LoopUnroll {
 
         BasicBlock lastLatch = oneLoop.getSecond();
         BasicBlock preHeader = loop.getPreHeader();
+        BasicBlock newHeader = oneLoop.getFirst();
+
+        for (PhiInstr oldPhi : phiInHead.keySet()) {
+            PhiInstr newPhi = (PhiInstr) old2new.get(oldPhi);
+            int index = newPhi.getPrtBlks().indexOf(latch);
+            newPhi.modifyUse(newPhi.getValues().get(index), phiInHead.get(oldPhi));
+        }
 
         Instruction phi = (Instruction) loopExit.getInstructions().getHead();
         while (phi instanceof PhiInstr) {
@@ -164,6 +176,7 @@ public class LoopUnroll {
         Iterator<Loop> loopIterator = function.getOuterLoop().iterator();
         while (loopIterator.hasNext()) {
             Loop loop = loopIterator.next();
+            loop.LoopPrint();
             if (dfs4LoopUnroll(loop)) {
                 loopIterator.remove();
                 function.getAllLoop().remove(loop);
@@ -229,6 +242,7 @@ public class LoopUnroll {
     }
 
     private static void Unroll4doWhile(Loop loop, int times) {
+        loop.LoopPrint();
         HashMap<Value, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
         HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
         ArrayList<PhiInstr> headPhis = new ArrayList<>();

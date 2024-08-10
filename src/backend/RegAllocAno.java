@@ -583,7 +583,7 @@ public class RegAllocAno {
         while (blockHead != null) {
             AsmInstr instrHead = (AsmInstr) blockHead.getInstrs().getHead();
             while (instrHead != null) {
-                if (instrHead instanceof AsmCall) {
+                if (instrHead instanceof AsmCall && !((AsmCall) instrHead).isLibCall) {
                     AsmCall call = (AsmCall) instrHead;
                     for (AsmReg save : call.LiveOut) {
                         int beColored = 0;
@@ -821,7 +821,7 @@ public class RegAllocAno {
         while (blockHead != null) {
             AsmInstr instrTail = (AsmInstr) blockHead.getInstrs().getTail();
             while (instrTail != null) {
-                if (instrTail.getPrev() != null && instrTail.getPrev() instanceof AsmCall) {
+                if (instrTail.getPrev() != null && instrTail.getPrev() instanceof AsmCall && ((AsmCall) instrTail.getPrev()).isLibCall) {
                     for (AsmOperand m: instrTail.LiveIn) {
                         if (VirCanBeAddToRun(m)) {
                             global.add(m);
