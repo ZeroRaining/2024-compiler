@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class LoopUnroll {
-    private static final long codeSize = 10000;
+    private static final long codeSize = 1000;
     public static void execute(ArrayList<Function> functions) {
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
@@ -96,6 +96,7 @@ public class LoopUnroll {
             //TODO implement other cmp
             return;
         }
+//        throw new RuntimeException("this func may have problem");
         loop.LoopPrint();
         //循环一定会被执行一次
         HashMap<PhiInstr, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
@@ -139,13 +140,6 @@ public class LoopUnroll {
         }
 
         //维护循环块
-//        BasicBlock exit = ;
-//        for (BasicBlock b : loopExit.getSucs()) {
-//            exit = b;
-//        }
-//        if (exit == null) {
-//            throw new RuntimeException("what's up, bro");
-//        }
 
         BasicBlock lastLatch = oneLoop.getSecond();
         BasicBlock preHeader = loop.getPreHeader();
@@ -287,13 +281,6 @@ public class LoopUnroll {
         for (int i = 0; i < times - 1; i++) {
             oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop());
         }
-//        BasicBlock exit = null;
-//        for (BasicBlock b : loopExit.getSucs()) {
-//            exit = b;
-//        }
-//        if (exit == null) {
-//            throw new RuntimeException("what's up, bro");
-//        }
 
         BasicBlock lastLatch = oneLoop.getSecond();
         lastLatch.addInstruction(new JumpInstr(loopExit));
