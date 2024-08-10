@@ -79,33 +79,33 @@ public class Compiler {
             LoopUnroll.execute(functions);
             RemoveUseLessPhi.execute(functions);
         }
-//        DFG.execute(functions);
-//        AnalysisLoop.execute(functions);
-//        LoopInvariantMotion.execute(functions);
-//        RemoveUseLessPhi.execute(functions);
-//
-//        DeadCodeRemove.execute(functions);
-//        OIS.execute(functions);
-//        GVN.execute(functions);
-//
-//        /*合并删减块*/
-//        SimplifyBranch.execute(functions);
-//        MergeBlock.execute(functions, false);
-//        DeadBlockRemove.execute(functions);
-//        RemoveUseLessPhi.execute(functions);
+        DFG.execute(functions);
+        AnalysisLoop.execute(functions);
+        LoopInvariantMotion.execute(functions);
+        RemoveUseLessPhi.execute(functions);
+
+        DeadCodeRemove.execute(functions);
+        OIS.execute(functions);
+        GVN.execute(functions);
+
+        /*合并删减块*/
+        SimplifyBranch.execute(functions);
+        MergeBlock.execute(functions, false);
+        DeadBlockRemove.execute(functions);
+        RemoveUseLessPhi.execute(functions);
 
         /*second*/
-//        DFG.execute(functions);
-//        MergeGEP.execute(functions);
-//        PtrMem2Reg.execute(functions);
+        DFG.execute(functions);
+        MergeGEP.execute(functions);
+        PtrMem2Reg.execute(functions);
 //
-//        DeadCodeRemove.execute(functions);
-//        OIS.execute(functions);
-//        GVN.execute(functions);
-//        SimplifyBranch.execute(functions);
-//        MergeBlock.execute(functions, true);
-//        DeadBlockRemove.execute(functions);
-//        RemoveUseLessPhi.execute(functions);
+        DeadCodeRemove.execute(functions);
+        OIS.execute(functions);
+        GVN.execute(functions);
+        SimplifyBranch.execute(functions);
+        MergeBlock.execute(functions, true);
+        DeadBlockRemove.execute(functions);
+        RemoveUseLessPhi.execute(functions);
 //        LoopSimplify.execute(functions);
 //        RemoveUseLessLoop.execute(functions);
 //         /*third*/
