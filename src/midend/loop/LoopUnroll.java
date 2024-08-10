@@ -225,11 +225,10 @@ public class LoopUnroll {
         int times = calculateLoopTimes(itAlu.getOperationName(), condInstr.getCond(), init, step, end);
         long cnt = dfs4cnt(loop);
 
-        if (!isLift || loop.getPrtLoop() != null || !loop.getInnerLoops().isEmpty()) {
-            if (cnt * times > codeSize) {
-                return false;
-            }
+        if (cnt * times > codeSize) {
+            return false;
         }
+
         Unroll4doWhile(loop, times);
         return true;
     }

@@ -103,21 +103,6 @@ public class Compiler {
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
-
-        /*合并删减块*/
-        SimplifyBranch.execute(functions);
-        MergeBlock.execute(functions, false);
-        DeadBlockRemove.execute(functions);
-        RemoveUseLessPhi.execute(functions);
-
-        /*second*/
-        DFG.execute(functions);
-        MergeGEP.execute(functions);
-        PtrMem2Reg.execute(functions);
-
-        DeadCodeRemove.execute(functions);
-        OIS.execute(functions);
-        GVN.execute(functions);
         SimplifyBranch.execute(functions);
         MergeBlock.execute(functions, true);
         DeadBlockRemove.execute(functions);
