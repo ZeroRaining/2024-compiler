@@ -45,8 +45,11 @@ public class LoopInvariantMotion {
         //System.out.println(loop.getHeader() + " entering " + loop.getEntering() + " " + loop.getSameLoopDepth());
         Queue<Instruction> queue = new LinkedList<>();
         HashSet<Value> invariant = new HashSet<>();
-        //不需要使用dom，由于是ssa，所以可以直接硬提
-        //AnalysisLoop.dom4loop(loop);
+        //不需要使用dom，由于是ssa，所以可以直接硬提 // 会导致时间变慢
+        AnalysisLoop.dom4loop(loop);
+//        for (BasicBlock blk : loop.getBlks()) {
+//            System.out.println(blk + " loopDoms " + blk.getLoopDoms());
+//        }
         for (BasicBlock block : loop.getSameLoopDepth()) {
             Instruction instr = (Instruction) block.getInstructions().getHead();
             while (instr != null) {
@@ -134,9 +137,9 @@ public class LoopInvariantMotion {
         if (instr instanceof PhiInstr) {
             return false;
         }
-//        if (!instr.getParentBB().getLoopDoms().containsAll(loop.getExits())) {
-//            return false;
-//        }
+        if (!instr.getParentBB().getLoopDoms().containsAll(loop.getExits())) {
+            return false;
+        }
         for (Value value : instr.getUseValueList()) {
             if (value instanceof ConstValue) {
                 continue;

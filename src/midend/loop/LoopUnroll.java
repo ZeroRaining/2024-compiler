@@ -31,6 +31,14 @@ public class LoopUnroll {
             if (function.isMain()) {
                 AnalysisLoop.LoopIndVars(function);
                 SimpleLoopUnroll(function);
+            }
+        }
+    }
+    public static void executeOnce(ArrayList<Function> functions) {
+        for (Function function : functions) {
+            // 要求在完全内联之后，只对 main 函数做循环展开，递归函数不做展开
+            if (function.isMain()) {
+                AnalysisLoop.LoopIndVars(function);
                 OnceUnroll(function);
             }
         }
@@ -55,6 +63,7 @@ public class LoopUnroll {
             return;
         }
         for (Loop inner : loop.getInnerLoops()) {
+            inner.LoopPrint();
             dfs4LoopUnroll(inner);
         }
         if (!loop.hasIndVar()) {
@@ -82,7 +91,8 @@ public class LoopUnroll {
             //TODO implement other cmp
             return;
         }
-        //至此一定会被执行
+        loop.LoopPrint();
+        //循环一定会被执行一次
         HashMap<Value, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
         HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
         ArrayList<PhiInstr> headPhis = new ArrayList<>();
@@ -108,23 +118,32 @@ public class LoopUnroll {
 //        latch.setRet(false);
 
         Procedure procedure = (Procedure) header.getParent().getOwner();
-
-        old2new = new HashMap<>(phiInHead);
+        //clone
+        old2new = new HashMap<>();
         old2new.put(loop.getPreHeader(), latch);
         Group<BasicBlock, BasicBlock> oneLoop = new Group<>(header, latch);
-        for (int i = 0; i < times - 1; i++) {
-            oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop());
-        }
-        BasicBlock exit = null;
-        for (BasicBlock b : loopExit.getSucs()) {
-            exit = b;
-        }
-        if (exit == null) {
-            throw new RuntimeException("what's up, bro");
+        oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop());
+
+        //修改关系
+        //维护展开的块
+        latch.getInstructions().getTail().removeFromList();
+        latch.setRet(false);
+        latch.addInstruction(new JumpInstr(oneLoop.getFirst()));
+        for (PhiInstr phi : headPhis) {
+            phi.removeUse(phiInHead.get(phi));
         }
 
+        //维护循环块
+//        BasicBlock exit = ;
+//        for (BasicBlock b : loopExit.getSucs()) {
+//            exit = b;
+//        }
+//        if (exit == null) {
+//            throw new RuntimeException("what's up, bro");
+//        }
+
         BasicBlock lastLatch = oneLoop.getSecond();
-        lastLatch.addInstruction(new JumpInstr(loopExit));
+        BasicBlock preHeader = loop.getPreHeader();
 
         Instruction phi = (Instruction) loopExit.getInstructions().getHead();
         while (phi instanceof PhiInstr) {
@@ -244,13 +263,13 @@ public class LoopUnroll {
         for (int i = 0; i < times - 1; i++) {
             oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop());
         }
-        BasicBlock exit = null;
-        for (BasicBlock b : loopExit.getSucs()) {
-            exit = b;
-        }
-        if (exit == null) {
-            throw new RuntimeException("what's up, bro");
-        }
+//        BasicBlock exit = null;
+//        for (BasicBlock b : loopExit.getSucs()) {
+//            exit = b;
+//        }
+//        if (exit == null) {
+//            throw new RuntimeException("what's up, bro");
+//        }
 
         BasicBlock lastLatch = oneLoop.getSecond();
         lastLatch.addInstruction(new JumpInstr(loopExit));
