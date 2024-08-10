@@ -1048,6 +1048,9 @@ public class IrParser {
             AsmBlock falseAsmBlock = blockMap.get(falseBB);
             AsmBnez asmBnez = new AsmBnez(cmp, trueAsmBlock);
             asmBlock.addInstrTail(asmBnez);
+            if (trueAsmBlock == null) {
+                throw new RuntimeException(instr.print() + " " + instr.getParentBB());
+            }
             trueAsmBlock.addJumpToInstr(asmBnez);
             AsmJ asmJ = new AsmJ(falseAsmBlock);
             asmBlock.addInstrTail(asmJ);
@@ -1061,6 +1064,9 @@ public class IrParser {
         BasicBlock target = instr.getTarget();
         AsmJ asmJ = new AsmJ(blockMap.get(target));
         asmBlock.addInstrTail(asmJ);
+        if (blockMap.get(target) == null) {
+            throw new RuntimeException(instr.print() + " " + instr.getParentBB());
+        }
         blockMap.get(target).addJumpToInstr(asmJ);
         //TODO:setTrueBlock和setFalseBlock?
     }

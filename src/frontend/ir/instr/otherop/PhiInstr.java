@@ -69,6 +69,12 @@ public class PhiInstr extends Instruction {
         return ret.toString();
     }
 
+    public void addUse(Value value, BasicBlock prtBlk) {
+        setUse(value);
+        values.add(value);
+        prtBlks.add(prtBlk);
+    }
+
     public void modifyUse(Value to, BasicBlock block) {
         int index = prtBlks.indexOf(block);
         Value from = values.get(index);

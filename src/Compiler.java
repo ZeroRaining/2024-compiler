@@ -61,8 +61,8 @@ public class Compiler {
         Mem2Reg.execute(functions);
         ArrayFParamMem2Reg.execute(functions);
         MergeGEP.execute(functions);
-        OIS.execute(functions);
-        
+//        OIS.execute(functions);
+
         // 函数记忆化
         if (arg.getOptLevel() == 1) {
             FuncMemorizeVer2.execute(functions, program.getGlobalSymTab());
@@ -75,7 +75,7 @@ public class Compiler {
             LCSSA.execute(functions);
             LoopLift.execute(functions);
 //            LoopUnroll.executeOnce(functions);
-            OIS.execute(functions);
+//            OIS.execute(functions);
             /*RemoveUselessPhi 会影响LCSSA吗*/
             LoopUnroll.execute(functions);
             RemoveUseLessPhi.execute(functions);
@@ -103,10 +103,26 @@ public class Compiler {
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
+
+        /*合并删减块*/
+        SimplifyBranch.execute(functions);
+        MergeBlock.execute(functions, false);
+        DeadBlockRemove.execute(functions);
+        RemoveUseLessPhi.execute(functions);
+
+        /*second*/
+        DFG.execute(functions);
+        MergeGEP.execute(functions);
+        PtrMem2Reg.execute(functions);
+
+        DeadCodeRemove.execute(functions);
+        OIS.execute(functions);
+        GVN.execute(functions);
         SimplifyBranch.execute(functions);
         MergeBlock.execute(functions, true);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
+//        LCSSA.execute(functions);
         LoopSimplify.execute(functions);
         RemoveUseLessLoop.execute(functions);
          /*third*/
@@ -126,7 +142,7 @@ public class Compiler {
         AnalysisLoop.execute(functions);
 
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
-        // 中端优化结束
+//         中端优化结束
 
         // 打印 IR
         if (arg.toPrintIR()) {

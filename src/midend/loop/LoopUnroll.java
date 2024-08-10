@@ -25,7 +25,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public class LoopUnroll {
-    private static final long codeSize = 1000;
+    private static boolean isLift = true;
+
+    public static void setIsLift(boolean isLift) {
+        LoopUnroll.isLift = isLift;
+    }
+
+    private static final long codeSize = 10000;
     public static void execute(ArrayList<Function> functions) {
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
@@ -227,7 +233,7 @@ public class LoopUnroll {
         }
         int times = calculateLoopTimes(itAlu.getOperationName(), condInstr.getCond(), init, step, end);
         long cnt = dfs4cnt(loop);
-        if (cnt * times > codeSize) {
+        if (cnt * times > codeSize && ! isLift) {
             return false;
         }
         Unroll4doWhile(loop, times);

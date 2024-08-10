@@ -87,6 +87,8 @@ public class LoopLift {
 //        throw new RuntimeException("this func may have problem");
         loop.LoopPrint();
         //循环一定会被执行一次
+        LoopUnroll.setIsLift(false);
+
         HashMap<PhiInstr, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
         HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
         ArrayList<PhiInstr> headPhis = new ArrayList<>();
@@ -108,8 +110,7 @@ public class LoopLift {
             begin2end.put(newValue, newValue);
         }
         //TODO：复制后删掉修改跳转
-//        latch.getInstructions().getTail().removeFromList();
-//        latch.setRet(false);
+
 
         BasicBlock innerPreHeader = inner.getPreHeader();
         if (innerPreHeader.getPres().size() != 1) {
@@ -133,7 +134,7 @@ public class LoopLift {
         ConstBool fa = new ConstBool(0);
 
         Value oldHeaderCond = ((BranchInstr) endHeaderIns).getCond();
-        endHeaderIns.modifyUse(oldHeaderCond, fa);
+//        endHeaderIns.modifyUse(oldHeaderCond, fa);
 
 
         Instruction endLarchIns = entry2preHeader.getEndInstr();
@@ -146,7 +147,7 @@ public class LoopLift {
 
 
         Value oldLatchCond = ((BranchInstr) endLarchIns).getCond();
-        endLarchIns.modifyUse(oldLatchCond, fa);
+//        endLarchIns.modifyUse(oldLatchCond, fa);
 
 
         Procedure procedure = (Procedure) header.getParent().getOwner();
@@ -156,15 +157,34 @@ public class LoopLift {
         Group<BasicBlock, BasicBlock> oneLoop = new Group<>(header, latch);
         oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop(), inner);
 
-        //修改关系
-        //维护展开的块
-        endLarchIns.modifyUse(fa, oldLatchCond);
-        endHeaderIns.modifyUse(fa, oldHeaderCond);
+        latch.getEndInstr().modifyUse(header, oneLoop.getFirst());
+
+        BasicBlock beginBlk = innerPreHeader;
+        BasicBlock endBlk = inner.getLatchs().get(0); ///latch.size?
+
+        BasicBlock next = (BasicBlock) old2new.get(endBlk).getNext();
+
+        BasicBlock tmp = (BasicBlock) beginBlk.getNext();
+        while (tmp != endBlk.getNext()) {
+            Instruction instruction = (Instruction) tmp.getInstructions().getHead();
+            while (instruction != null) {
+                old2new.get(instruction).replaceUseTo(instruction);
+                instruction = (Instruction) instruction.getNext();
+            }
+//            old2new.get(tmp).removeFromList();
+            tmp = (BasicBlock) tmp.getNext();
+        }
+
+        BasicBlock newEntry = (BasicBlock) old2new.get(entry2preHeader);
+        System.out.println("+++++" + newEntry.getEndInstr().print());
+        newEntry.getEndInstr().removeFromList();
+        newEntry.setRet(false);
+        newEntry.addInstruction(new JumpInstr(next));
 
 
-        latch.getInstructions().getTail().removeFromList();
-        latch.setRet(false);
-        latch.addInstruction(new JumpInstr(oneLoop.getFirst()));
+//        latch.getInstructions().getTail().removeFromList();
+//        latch.setRet(false);
+//        latch.addInstruction(new JumpInstr(oneLoop.getFirst()));
         for (PhiInstr phi : headPhis) {
             phi.removeUse(phiInHead.get(phi));
         }
@@ -183,17 +203,18 @@ public class LoopLift {
 
         Instruction phi = (Instruction) loopExit.getInstructions().getHead();
         while (phi instanceof PhiInstr) {
-            for (Value value : ((PhiInstr) phi).getValues()) {
-                if (value instanceof Instruction) {
-                    phi.modifyUse(value, begin2end.get(value));
-                    ((PhiInstr) phi).modifyPrtBlk(latch, lastLatch);
-                }
+            int size = ((PhiInstr) phi).getValues().size();
+            for (int i = 0; i < size; i++) {
+                Value value = ((PhiInstr) phi).getValues().get(i);
+//                if (value instanceof Instruction) {
+                ((PhiInstr) phi).addUse(old2new.get(value), lastLatch);
+//                }
             }
             phi = (Instruction) phi.getNext();
         }
-        OIS.OSI4blks(header, oneLoop.getSecond());
-        DeadCodeRemove.removeCode(header, oneLoop.getSecond());
-        MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
+//        OIS.OSI4blks(header, oneLoop.getSecond());
+//        DeadCodeRemove.removeCode(header, oneLoop.getSecond());
+//        MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
     }
 
     private static boolean loopCanLift(Loop loop) {

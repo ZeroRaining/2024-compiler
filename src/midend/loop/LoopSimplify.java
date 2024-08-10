@@ -1,9 +1,11 @@
 package midend.loop;
 
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstFloat;
 import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.*;
+import frontend.ir.instr.convop.Si2Fp;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.otherop.cmp.CmpCond;
@@ -145,6 +147,11 @@ public class LoopSimplify {
                     continue;
                 }
             } else {
+                /*
+                * instr : reg = phi + const
+                *   => phiStartValue + const * times
+                * mul:  const * times
+                * */
                 if (!(op1 instanceof PhiInstr)) {
                     continue;
                 }
@@ -170,6 +177,13 @@ public class LoopSimplify {
                     resSub.insertAfter(last);
                     last = resSub;
                     old2new.put(instr, resSub);
+                } else if (instr instanceof FAddInstr) {
+                    Si2Fp si2Fp = new Si2Fp(procedure.getAndAddRegIndex(), times);
+                    si2Fp.insertAfter(last);
+                    last = si2Fp;
+                    FAddInstr resAdd = new FAddInstr(procedure.getAndAddRegIndex(), phiStartValue, si2Fp);
+                    resAdd.insertAfter(last);
+                    last = resAdd;
                 } else {
                     continue;
                 }
@@ -194,6 +208,9 @@ public class LoopSimplify {
             return true;
         }
         if (value instanceof SRemInstr && ((SRemInstr) value).getOp2() instanceof ConstInt) {//TODO: 可以进一步优化
+            return true;
+        }
+        if (value instanceof FAddInstr && ((FAddInstr) value).getOp2() instanceof ConstFloat) {
             return true;
         }
         return false;

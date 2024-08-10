@@ -140,7 +140,7 @@ public class RemovePhi {
                             } else if (newFalse != null && newFalse.getSucs().contains(blk)) {
                                 newBlk = newFalse;
                             } else {
-                                throw new RuntimeException("illegal branch");
+                                throw new RuntimeException("illegal branch " + branch.print() + " " + blk);
                             }
                         }
                         PCInstr pc = newBlk.getPc();
