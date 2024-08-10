@@ -122,7 +122,9 @@ public class Compiler {
         MergeBlock.execute(functions, true);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
-//        LCSSA.execute(functions);
+        if (!LoopLift.isLift) {
+            LCSSA.execute(functions);
+        }
         LoopSimplify.execute(functions);
         RemoveUseLessLoop.execute(functions);
          /*third*/

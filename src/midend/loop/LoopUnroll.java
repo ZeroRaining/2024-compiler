@@ -31,7 +31,7 @@ public class LoopUnroll {
         LoopUnroll.isLift = isLift;
     }
 
-    private static final long codeSize = 10000;
+    private static final long codeSize = 1000;
     public static void execute(ArrayList<Function> functions) {
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
@@ -60,15 +60,6 @@ public class LoopUnroll {
             dfs4OnceUnroll(outer);
         }
     }
-    /*
-    * preheader
-    * body1
-    * cond1 -> newPreHeader
-    *
-    * body2
-    * cond2->
-    *
-    * */
     private static void dfs4OnceUnroll(Loop loop) {
         if (loop.getInnerLoops().isEmpty()) {
             return;
@@ -233,8 +224,11 @@ public class LoopUnroll {
         }
         int times = calculateLoopTimes(itAlu.getOperationName(), condInstr.getCond(), init, step, end);
         long cnt = dfs4cnt(loop);
-        if (cnt * times > codeSize && ! isLift) {
-            return false;
+
+        if (!isLift || loop.getPrtLoop() != null || !loop.getInnerLoops().isEmpty()) {
+            if (cnt * times > codeSize) {
+                return false;
+            }
         }
         Unroll4doWhile(loop, times);
         return true;

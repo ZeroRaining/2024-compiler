@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class LoopLift {
+    public static boolean isLift = false;
     public static void execute(ArrayList<Function> functions) {
         AnalysisLoop.execute(functions);
         for (Function function : functions) {
@@ -84,10 +85,13 @@ public class LoopLift {
             //TODO implement other cmp
             return;
         }
+//        throw new RuntimeException("caole");
+
 //        throw new RuntimeException("this func may have problem");
         loop.LoopPrint();
         //循环一定会被执行一次
-        LoopUnroll.setIsLift(false);
+        LoopUnroll.setIsLift(true);
+        isLift = true;
 
         HashMap<PhiInstr, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
         HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
