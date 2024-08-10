@@ -69,7 +69,7 @@ public class LoopUnroll {
         }
         for (Loop inner : loop.getInnerLoops()) {
 //            inner.LoopPrint();
-            dfs4LoopUnroll(inner);
+            dfs4OnceUnroll(inner);
         }
         if (!loop.hasIndVar()) {
             return;
