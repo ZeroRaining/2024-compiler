@@ -1,9 +1,9 @@
 package midend.SSA;
 
+import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
-import frontend.ir.instr.otherop.PhiInstr;
+import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.terminator.BranchInstr;
-import frontend.ir.instr.terminator.Terminator;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
@@ -23,7 +23,17 @@ public class ConditionBroadcast {
                 for (BasicBlock pre : pres) {
                     Instruction terminator = pre.getEndInstr();
                     if (terminator instanceof BranchInstr) {
-                        blk.addCond(pre, ((BranchInstr) terminator).getCond());
+                        Value condition = ((BranchInstr) terminator).getCond();
+                        if (!(condition instanceof Cmp)) {
+                            throw new RuntimeException("我觉得条件判断都是比较");
+                        }
+                        if (blk.equals(((BranchInstr) terminator).getThenTarget())) {
+                            blk.addCond(pre, condition);
+                        } else {
+                            // 这个新指令实际上不会被添加到指令序列中，只是一个用于判断的形式，因此不需要正式的寄存器编号
+                            blk.addCond(pre, ((Cmp) condition).getReverseCmp(-1));
+                        }
+                        
                     }
                 }
                 blk = (BasicBlock) blk.getNext();
