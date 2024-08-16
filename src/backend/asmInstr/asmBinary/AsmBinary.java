@@ -38,4 +38,14 @@ public class AsmBinary extends AsmInstr {
     public void ReSetDst(AsmOperand dst) {
         this.dst = dst;
     }
+    public void changeSrc1(AsmOperand src1) {
+        this.src1 = src1;
+    }
+    public void changeSrc2(AsmOperand src2) {
+        this.src2 = src2;
+    }
+
+    public AsmOperand getSrc1() {
+        return src1;
+    }
 }
