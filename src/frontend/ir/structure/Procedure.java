@@ -1027,4 +1027,8 @@ public class Procedure {
     public Function getParentFunc() {
         return parentFunc;
     }
+
+    public int getAndAddPhiIndex() {
+        return curPhiIndex++;
+    }
 }

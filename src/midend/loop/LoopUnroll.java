@@ -94,7 +94,7 @@ public class LoopUnroll {
             return;
         }
 //        throw new RuntimeException("this func may have problem");
-        loop.LoopPrint();
+//        loop.LoopPrint();
         //循环一定会被执行一次
         HashMap<PhiInstr, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
         HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
@@ -167,7 +167,7 @@ public class LoopUnroll {
         Iterator<Loop> loopIterator = function.getOuterLoop().iterator();
         while (loopIterator.hasNext()) {
             Loop loop = loopIterator.next();
-            loop.LoopPrint();
+//            loop.LoopPrint();
             if (dfs4LoopUnroll(loop)) {
                 loopIterator.remove();
                 function.getAllLoop().remove(loop);
@@ -196,7 +196,7 @@ public class LoopUnroll {
         if (!loop.hasIndVar()) {
             return false;
         }
-        loop.LoopPrint();
+//        loop.LoopPrint();
         Value itInit = loop.getBegin();
         Value itStep = loop.getStep();
         Value itEnd = loop.getEnd();
@@ -245,7 +245,7 @@ public class LoopUnroll {
     }
 
     private static void Unroll4doWhile(Loop loop, int times) {
-        loop.LoopPrint();
+//        loop.LoopPrint();
         HashMap<Value, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
         HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
         ArrayList<PhiInstr> headPhis = new ArrayList<>();

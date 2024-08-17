@@ -20,12 +20,12 @@ import java.io.IOException;
 import java.util.*;
 
 public class Mem2Reg {
-    private static int phiCnt;//TODO:!!!!!
+//    private static int phiCnt;//TODO:!!!!!
+    private static Function curFunc;
     public static void execute(ArrayList<Function> functions) throws IOException {
         for (Function function : functions) {
-            phiCnt = function.getPhiIndex();
+            curFunc = function;
             removeAlloc(function);
-            function.setCurPhiIndex(phiCnt);
         }
     }
     
@@ -113,7 +113,7 @@ public class Mem2Reg {
                     values.add(new EmptyInstr(DataType.VOID));
                     prtBlks.add(blk);
                 }
-                Instruction phi = new PhiInstr(phiCnt++, instr.getDataType(), values, prtBlks);
+                Instruction phi = new PhiInstr(curFunc.getAndAddPhiIndex(), instr.getDataType(), values, prtBlks);
                 block.addInstrToHead(phi);
                 useIns.add(phi);
                 defIns.add(phi);

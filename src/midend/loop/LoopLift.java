@@ -194,7 +194,7 @@ public class LoopLift {
         }
 
         BasicBlock newEntry = (BasicBlock) old2new.get(entry2preHeader);
-        System.out.println("+++++" + newEntry.getEndInstr().print());
+//        System.out.println("+++++" + newEntry.getEndInstr().print());
         newEntry.getEndInstr().removeFromList();
         newEntry.setRet(false);
         newEntry.addInstruction(new JumpInstr(next));

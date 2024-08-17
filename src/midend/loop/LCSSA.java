@@ -12,7 +12,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class LCSSA {
-    private static int phiCnt;
+    private static Function curFunc;
+//    private static int phiCnt;
     public static void execute(ArrayList<Function> functions) {
         for (Function function : functions) {
             execute4func(function);
@@ -20,9 +21,8 @@ public class LCSSA {
     }
 
     public static void execute4func(Function function) {
-        phiCnt = function.getPhiIndex();
+        curFunc = function;
         addPhi(function);
-        function.setCurPhiIndex(phiCnt);
     }
 
     private static void addPhi(Function function) {
@@ -59,7 +59,7 @@ public class LCSSA {
                                 phiValues.add(instr);
                                 prts.add(pre);
                             }
-                            PhiInstr phi = new PhiInstr(phiCnt++, instr.getDataType(), phiValues, prts);
+                            PhiInstr phi = new PhiInstr(curFunc.getAndAddPhiIndex(), instr.getDataType(), phiValues, prts);
 //                            System.out.println(phi.print() + " " + phiCnt);
                             exitBlk.addInstrToHead(phi);
                             exit2phi.put(exitBlk, phi);
@@ -117,7 +117,7 @@ public class LCSSA {
             values.add(getPhiValue(exit2phi, pre, loop));
             prtBlks.add(pre);
         }
-        phi = new PhiInstr(phiCnt++, values.get(0).getDataType(), values, prtBlks);
+        phi = new PhiInstr(curFunc.getAndAddPhiIndex(), values.get(0).getDataType(), values, prtBlks);
 //        System.out.println(phi.print() + " " + phiCnt);
         userBlk.addInstrToHead(phi);
         exit2phi.put(userBlk, phi);
