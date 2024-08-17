@@ -111,7 +111,7 @@ public class Compiler {
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
-            LCSSA.execute(functions);
+//            LCSSA.execute(functions);
             LoopSimplify.execute(functions);
             RemoveUseLessLoop.execute(functions);
 

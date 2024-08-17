@@ -52,10 +52,13 @@ public class LoopLift {
                 //TODO: to be implemented
                 return;
             }
+        }
+        for (Loop inner : loop.getInnerLoops()) {
             if (loopCanLift(inner)) {
                 UnrollOnce(loop, inner);
             }
         }
+
     }
 
     private static HashMap<Value, Value> old2new;
@@ -122,6 +125,9 @@ public class LoopLift {
 
         for (PhiInstr phi : headPhis) {
             int index = phi.getPrtBlks().indexOf(latch);
+            if (index < 0) {
+                throw new RuntimeException(phi.print() + " latch: " + latch + " parentBB: "  + phi.getParentBB());
+            }
             Value newValue = phi.getValues().get(index);
             //先保留phi的value
             phiInHead.put(phi, newValue);
