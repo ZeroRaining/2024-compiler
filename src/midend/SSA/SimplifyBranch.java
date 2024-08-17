@@ -7,7 +7,6 @@ import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
-import midend.loop.BlockType;
 
 import java.util.ArrayList;
 
