@@ -107,21 +107,23 @@ public class Compiler {
         MergeBlock.execute(functions, true);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
-//        if (!LoopLift.isLift) {
+        if (!LoopLift.isLift) {
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
             LCSSA.execute(functions);
-//        }
-//        LoopSimplify.execute(functions);
-//        RemoveUseLessLoop.execute(functions);
-//         /*third*/
+        }
+        LoopSimplify.execute(functions);
+        RemoveUseLessLoop.execute(functions);
+         /*third*/
         if (arg.getOptLevel() == 1) {
-//            DFG.execute(functions);
-//            DeadCodeRemove.execute(functions);
-//            OIS.execute(functions);
-//            GVN.execute(functions);
-//            SimplifyBranch.execute(functions);
-//            MergeBlock.execute(functions, true);
-//            DeadBlockRemove.execute(functions);
-//            RemoveUseLessPhi.execute(functions);
+            DFG.execute(functions);
+            DeadCodeRemove.execute(functions);
+            OIS.execute(functions);
+            GVN.execute(functions);
+            SimplifyBranch.execute(functions);
+            MergeBlock.execute(functions, true);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
         }
 
         /*为后端维护必要信息*/

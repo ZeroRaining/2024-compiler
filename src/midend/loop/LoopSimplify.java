@@ -210,9 +210,9 @@ public class LoopSimplify {
         if (value instanceof SRemInstr && ((SRemInstr) value).getOp2() instanceof ConstInt) {//TODO: 可以进一步优化
             return true;
         }
-        if (value instanceof FAddInstr && ((FAddInstr) value).getOp2() instanceof ConstFloat) {
-            return true;
-        }
+//        if (value instanceof FAddInstr && ((FAddInstr) value).getOp2() instanceof ConstFloat) {
+//            return true;
+//        }
         return false;
     }
 }
