@@ -123,6 +123,7 @@ public class Compiler {
             MergeBlock.execute(functions, true);
             DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
+            OIS.execute(functions);
         }
 
         /*为后端维护必要信息*/
