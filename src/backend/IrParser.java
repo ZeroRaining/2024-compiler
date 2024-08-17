@@ -1186,7 +1186,7 @@ public class IrParser {
     private void parseMove(MoveInstr instr, BasicBlock bb, Function f) {
         AsmBlock asmBlock = blockMap.get(bb);
         AsmOperand dst = parseOperand(instr.getDst(), 0, f, bb);
-        AsmOperand src = parseOperand(instr.getSrc(), 0, f, bb);
+        AsmOperand src = parseOperand(instr.getSrc(), 32, f, bb);
         AsmMove asmMove = new AsmMove(dst, src);
         asmBlock.addInstrTail(asmMove);
     }
