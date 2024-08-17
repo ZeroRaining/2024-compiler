@@ -141,7 +141,8 @@ public class PtrMem2Reg {
                 }
             } else if (instruction instanceof LoadInstr) {
                 Value ptr = ((LoadInstr) instruction).getPtr();
-                if (ptr instanceof GEPInstr) {Value defVal;
+                if (ptr instanceof GEPInstr) {
+                    Value defVal;
                     StoreInstr onlyDef;
                     String key = ((GEPInstr) ptr).myHash();
                     onlyDef = onlyDefVal.get(key);
@@ -159,8 +160,12 @@ public class PtrMem2Reg {
                         instruction.replaceUseTo(defVal);
                         instruction.removeFromList();
                     } else {
-                        gepHashUsed.add(((GEPInstr) ptr).myHash());
-                        rootsDefinitelyUsed.add(((GEPInstr) ptr).getRoot());
+                        if (((GEPInstr) ptr).hasNonConstIndex()) {
+                            rootsIndefinitelyUsed.add(((GEPInstr) ptr).getRoot());
+                        } else {
+                            gepHashUsed.add(((GEPInstr) ptr).myHash());
+                            rootsDefinitelyUsed.add(((GEPInstr) ptr).getRoot());
+                        }
                     }
                 } else if (!(ptr instanceof GlobalObject)) {
                     throw new RuntimeException("这里 load 和 store 的指针应该只能是 gep 或者全局对象");
