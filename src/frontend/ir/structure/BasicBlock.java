@@ -56,6 +56,12 @@ public class BasicBlock extends Value {
         blockType = BlockType.OUTOFLOOP.getNum();
     }
 
+    public void removeFromListWithUseRemain() {
+        super.removeFromList();
+        this.setNext(null);
+        this.setPrev(null);
+    }
+
     public boolean isBlockType(BlockType blockType) {
         return (this.blockType & blockType.getNum()) != 0;
     }
