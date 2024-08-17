@@ -152,11 +152,10 @@ public class PtrMem2Reg {
                     Value root = ((GEPInstr) ptr).getRoot();
                     if (((GEPInstr) ptr).hasNonConstIndex()) {
                         clearSameRoot(root, defMap, keyMap);
-                    } else {
-                        String key = ((GEPInstr) ptr).myHash();
-                        defMap.put(key, ((StoreInstr) instruction).getValue());
-                        keyMap.put(key, (GEPInstr) ptr);
                     }
+                    String key = ((GEPInstr) ptr).myHash();
+                    defMap.put(key, ((StoreInstr) instruction).getValue());
+                    keyMap.put(key, (GEPInstr) ptr);
                 } else if (ptr instanceof GlobalObject) {
                     glbObjMap.put((GlobalObject) ptr, ((StoreInstr) instruction).getValue());
                 } else {
@@ -165,30 +164,30 @@ public class PtrMem2Reg {
             } else if (instruction instanceof LoadInstr) {
                 Value ptr = ((LoadInstr) instruction).getPtr();
                 if (ptr instanceof GEPInstr) {
-                    if (!((GEPInstr) ptr).hasNonConstIndex()) {
-                        Value defVal;
-                        StoreInstr onlyDef;
-                        String key = ((GEPInstr) ptr).myHash();
-                        onlyDef = singleDefVal.get(key);
-                        if (onlyDef == null) {
-                            defVal = defMap.get(key);
+                    Value defVal;
+                    StoreInstr onlyDef;
+                    String key = ((GEPInstr) ptr).myHash();
+                    onlyDef = singleDefVal.get(key);
+                    if (onlyDef == null) {
+                        defVal = defMap.get(key);
+                    } else {
+                        // 这里是为了避免 load 出现在第一次显示 store 之前（这种情况下应该用 0）
+                        if (done.contains(onlyDef)) {
+                            defVal = onlyDef.getValue();
                         } else {
-                            // 这里是为了避免 load 出现在第一次显示 store 之前（这种情况下应该用 0）
-                            if (done.contains(onlyDef)) {
-                                defVal = onlyDef.getValue();
-                            } else {
-                                defVal = ConstInt.Zero;
-                            }
+                            defVal = ConstInt.Zero;
                         }
-                        if (defVal != null) {
-                            instruction.replaceUseTo(defVal);
-                            instruction.removeFromList();
+                    }
+                    if (defVal != null) {
+                        instruction.replaceUseTo(defVal);
+                        instruction.removeFromList();
+                    } else {
+                        if (((GEPInstr) ptr).hasNonConstIndex()) {
+                            rootsIndefinitelyUsed.add(((GEPInstr) ptr).getRoot());
                         } else {
                             gepHashUsed.add(((GEPInstr) ptr).myHash());
                             rootsDefinitelyUsed.add(((GEPInstr) ptr).getRoot());
                         }
-                    } else {
-                        rootsIndefinitelyUsed.add(((GEPInstr) ptr).getRoot());
                     }
                 } else if (ptr instanceof GlobalObject) {
                     if (glbObjMap.containsKey(ptr) && singleDefGlbObj.get(ptr) != null) {
