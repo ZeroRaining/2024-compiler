@@ -100,7 +100,7 @@ public class LoopLift {
         
 //        loop.LoopPrint();
         //循环一定会被执行一次
-        if (true) {
+        if (false) {
             throw new RuntimeException("caole");
         }
         
