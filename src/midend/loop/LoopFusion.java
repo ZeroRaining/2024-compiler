@@ -31,6 +31,9 @@ public class LoopFusion {
     }
 
     private static void fusion(Loop loop1, Loop loop2) {
+        if (true) {
+            throw new RuntimeException("caole");
+        }
         //anon: 将latch1的跳转改为到header2的跳转
         //anon: 将latch2的跳转改为到header1的跳转
         //anon: 融合body部分
@@ -246,6 +249,18 @@ public class LoopFusion {
         if (binCnt != 1) {
             return false;
         }
+        for (BasicBlock blk : loop2.getBlks()) {
+            Instruction instruction = (Instruction) blk.getInstructions().getHead();
+            while (instruction != null) {
+                for (Value value : instruction.getUseValueList()) {
+                    if (value instanceof Instruction && loop1.getBlks().contains(((Instruction) value).getParentBB())) {
+                        return false;
+                    }
+                }
+                instruction = (Instruction) instruction.getNext();
+            }
+        }
+
 
         return true;
     }

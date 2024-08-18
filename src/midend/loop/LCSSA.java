@@ -1,7 +1,9 @@
 package midend.loop;
 
+import debug.DEBUG;
 import frontend.ir.Use;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstInt;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.structure.BasicBlock;
@@ -10,6 +12,7 @@ import frontend.ir.structure.Function;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 
 public class LCSSA {
     private static Function curFunc;
@@ -30,6 +33,7 @@ public class LCSSA {
             dfs4addPhi(loop);
         }
     }
+    private static HashMap<BasicBlock, PhiInstr> exit2phi = new HashMap<>();
 
     private static void dfs4addPhi(Loop loop) {
         for (Loop innerLoop : loop.getInnerLoops()) {
@@ -46,7 +50,7 @@ public class LCSSA {
                 //从外界流入的值，在结束快就会出现至少两个来源 => phi
                 if (liveInLoop(instr, loop)) {
                     //在每一个结束块加入phi
-                    HashMap<BasicBlock, PhiInstr> exit2phi = new HashMap<>();
+                    exit2phi.clear();
                     BasicBlock prt = instr.getParentBB();
                     for (BasicBlock exitBlk : loop.getExits()) {
                         //如果当前的指令的父块支配结束块，则会产生一个phi
@@ -69,15 +73,9 @@ public class LCSSA {
                     Use use = instr.getBeginUse();
                     while (use != null) {
                         Instruction user = use.getUser();
-                        BasicBlock userBlk;
+                        BasicBlock userBlk = getUserBlock(instr, user);
                         //phi中的prt与value的parentBB不一定相同！！！！
                         //fixme：？？？？你怎么又没有问题了
-                        if (user instanceof PhiInstr) {
-                            userBlk = ((PhiInstr) user).getPrtBlks().get(((PhiInstr) user).getValues().indexOf(instr));
-                        } else {
-                            userBlk = user.getParentBB();
-                        }
-
                         if(userBlk == prt || loop.getBlks().contains(userBlk)){
                             use = (Use) use.getNext();
                             continue;
@@ -85,9 +83,12 @@ public class LCSSA {
                         if (userBlk == null) {
                             throw new RuntimeException("phi: " + user.print() + "used: " + instr.print());
                         }
-                        PhiInstr phi = getPhiValue(exit2phi, userBlk, loop);
-
-                        user.modifyUse(instr, phi);
+                        PhiInstr phi = getPhiValue(userBlk, loop);
+                        if (phi == null) {
+                            user.modifyUse(instr, ConstInt.Zero);
+                        } else {
+                            user.modifyUse(instr, phi);
+                        }
                         use = (Use) use.getNext();
                     }
                 }
@@ -96,25 +97,23 @@ public class LCSSA {
         }
     }
 
-    private static PhiInstr getPhiValue(HashMap<BasicBlock, PhiInstr> exit2phi, BasicBlock userBlk, Loop loop) {
+    private static PhiInstr getPhiValue(BasicBlock userBlk, Loop loop) {
+        //userBlk: 当前指令在循环后被使用的地方
         PhiInstr phi = exit2phi.get(userBlk);
         if (phi != null) {
             return phi;
         }
         BasicBlock iDomor = userBlk.getiDomor();
-        if (iDomor == null) {
-            userBlk.printDBG();
-            throw new RuntimeException("");
-        }
+        System.out.println("userBlk: " + userBlk + " idomor: " + iDomor);
         if (!loop.getBlks().contains(iDomor)) {
-            phi = getPhiValue(exit2phi, iDomor, loop);
+            phi = getPhiValue(iDomor, loop);
             exit2phi.put(userBlk, phi);
             return phi;
         }
         ArrayList<Value> values = new ArrayList<>();
         ArrayList<BasicBlock> prtBlks = new ArrayList<>();
         for (BasicBlock pre : userBlk.getPres()) {
-            values.add(getPhiValue(exit2phi, pre, loop));
+            values.add(getPhiValue(pre, loop));
             prtBlks.add(pre);
         }
         phi = new PhiInstr(curFunc.getAndAddPhiIndex(), values.get(0).getDataType(), values, prtBlks);
@@ -123,11 +122,25 @@ public class LCSSA {
         exit2phi.put(userBlk, phi);
         return phi;
     }
+
+    public static BasicBlock getUserBlock(Instruction instr, Instruction user){
+        BasicBlock userBlk = user.getParentBB();
+        if(user instanceof PhiInstr phi){
+            int index = phi.getValues().indexOf(instr);
+            if (index < 0) {
+                throw new RuntimeException("user: " + user.print() + "used: " + instr.print());
+            }
+            userBlk = phi.getPrtBlks().get(index);
+        }
+        return userBlk;
+    }
+
     //該指令的所有use的user是否在循环外被使用
     public static boolean liveInLoop(Instruction instr, Loop loop) {
         Use use = instr.getBeginUse();
         while (use != null) {
-            if (!loop.getBlks().contains(use.getUser().getParentBB())) {
+            BasicBlock userBlk = use.getUser().getParentBB();
+            if (!loop.getBlks().contains(userBlk)) {
                 return true;
             }
             use = (Use) use.getNext();

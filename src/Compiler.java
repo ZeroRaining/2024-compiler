@@ -77,7 +77,7 @@ public class Compiler {
 //            LoopUnroll.executeOnce(functions);
             OIS.execute(functions);
             RemoveUseLessPhi.execute(functions);
-            LoopFusion.execute(functions);
+//            LoopFusion.execute(functions);
             /*RemoveUselessPhi 会影响LCSSA吗*/
             LoopUnroll.execute(functions);
             RemoveUseLessPhi.execute(functions);
@@ -113,7 +113,9 @@ public class Compiler {
         if (arg.getOptLevel() == 1) {
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
+            LCSSA.execute(functions);
             LoopSimplify.execute(functions);
+            AnalysisLoop.execute(functions);
             RemoveUseLessLoop.execute(functions);
 
             DFG.execute(functions);
