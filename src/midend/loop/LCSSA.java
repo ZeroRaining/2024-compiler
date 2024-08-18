@@ -139,7 +139,7 @@ public class LCSSA {
     public static boolean liveInLoop(Instruction instr, Loop loop) {
         Use use = instr.getBeginUse();
         while (use != null) {
-            BasicBlock userBlk = use.getUser().getParentBB();
+            BasicBlock userBlk = getUserBlock(instr, use.getUser());
             if (!loop.getBlks().contains(userBlk)) {
                 return true;
             }

@@ -288,6 +288,10 @@ public class LoopUnroll {
         while (phi instanceof PhiInstr) {
             for (Value value : ((PhiInstr) phi).getValues()) {
                 if (value instanceof Instruction) {
+                    if (begin2end.get(value) == null) {
+                        loop.LoopPrint();
+                        throw new RuntimeException("value " + ((Instruction) value).print());
+                    }
                     phi.modifyUse(value, begin2end.get(value));
                     ((PhiInstr) phi).modifyPrtBlk(latch, lastLatch);
                 }

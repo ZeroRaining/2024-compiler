@@ -4,6 +4,7 @@ import frontend.ir.Use;
 import frontend.ir.Value;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.BinaryOperation;
+import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.terminator.JumpInstr;
@@ -31,7 +32,7 @@ public class LoopFusion {
     }
 
     private static void fusion(Loop loop1, Loop loop2) {
-        if (true) {
+        if (false) {
             throw new RuntimeException("caole");
         }
         //anon: 将latch1的跳转改为到header2的跳转
@@ -158,6 +159,7 @@ public class LoopFusion {
         if (loop1 == loop2) {
             return false;
         }
+        //最里层 or 单层？
         if (!loop1.getInnerLoops().isEmpty()) {
             return false;
         }
@@ -249,14 +251,19 @@ public class LoopFusion {
         if (binCnt != 1) {
             return false;
         }
+
         for (BasicBlock blk : loop2.getBlks()) {
             Instruction instruction = (Instruction) blk.getInstructions().getHead();
             while (instruction != null) {
+                if (instruction instanceof CallInstr) {
+                    return false;
+                }
                 for (Value value : instruction.getUseValueList()) {
                     if (value instanceof Instruction && loop1.getBlks().contains(((Instruction) value).getParentBB())) {
                         return false;
                     }
                 }
+
                 instruction = (Instruction) instruction.getNext();
             }
         }

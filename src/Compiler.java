@@ -74,11 +74,24 @@ public class Compiler {
             AnalysisLoop.execute(functions);
             LCSSA.execute(functions);
             LoopLift.execute(functions);
-//            LoopUnroll.executeOnce(functions);
             OIS.execute(functions);
+            DeadCodeRemove.execute(functions);
+            DeadBlockRemove.execute(functions);
             RemoveUseLessPhi.execute(functions);
-//            LoopFusion.execute(functions);
-            /*RemoveUselessPhi 会影响LCSSA吗*/
+
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+            LCSSA.execute(functions);
+            LoopFusion.execute(functions);
+            OIS.execute(functions);
+            DeadCodeRemove.execute(functions);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
+
+            /*RemoveUselessPhi 会影响LCSSA吗 会的*/
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+            LCSSA.execute(functions);
             LoopUnroll.execute(functions);
             RemoveUseLessPhi.execute(functions);
         }
