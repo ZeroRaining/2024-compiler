@@ -182,6 +182,8 @@ public class PtrMem2Reg {
                         instruction.replaceUseTo(defVal);
                         instruction.removeFromList();
                     } else {
+                        defMap.put(key, instruction);
+                        keyMap.put(key, (GEPInstr) ptr);
                         if (((GEPInstr) ptr).hasNonConstIndex()) {
                             rootsIndefinitelyUsed.add(((GEPInstr) ptr).getRoot());
                         } else {
