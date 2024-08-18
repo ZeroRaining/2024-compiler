@@ -38,6 +38,7 @@ public class FI {
                     // 对于返回值无用而且没有副作用的函数调用可以直接删掉
                     if (instr.getBeginUse() == null && callee.checkNoSideEffect()) {
                         instr.removeFromList();
+                        callee.minusCall();
                         instr = (Instruction) instr.getNext();
                         continue;
                     }
