@@ -17,12 +17,10 @@ import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
-import midend.SSA.DeadCodeRemove;
-import midend.SSA.MergeBlock;
-import midend.SSA.OIS;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class LoopLift {
     public static boolean isLift = false;
@@ -458,10 +456,16 @@ public class LoopLift {
         }
         Value init = loop.getBegin();
         Value end = loop.getEnd();
-        Value step = loop.getEnd();
+        Value step = loop.getStep();
         if (init instanceof Instruction) {
-            if (loop.getPrtLoop().getBlks().contains(((Instruction) init).getParentBB())) {
-                return false;
+            if (init instanceof PhiInstr) {
+                if (checkPhiNotFromLoop((PhiInstr) init, loop, new HashSet<>())) {
+                    return false;
+                }
+            } else {
+                if (loop.getPrtLoop().getBlks().contains(((Instruction) init).getParentBB())) {
+                    return false;
+                }
             }
         }
         if (end instanceof Instruction) {
@@ -476,7 +480,33 @@ public class LoopLift {
         }
         return true;
     }
-
+    
+    private static boolean checkPhiNotFromLoop(PhiInstr init, Loop loop, HashSet<PhiInstr> done) {
+        if (done.contains(init)) {
+            return false;
+        }
+        done.add(init);
+        for (Value val : init.getValues()) {
+            if (val instanceof ConstValue) {
+                continue;
+            }
+            if (val instanceof PhiInstr) {
+                if (checkPhiNotFromLoop((PhiInstr) val, loop, done)) {
+                    return true;
+                }
+                continue;
+            }
+            if (val instanceof Instruction) {
+                if (!loop.getBlks().contains(((Instruction) val).getParentBB())) {
+                    return true;
+                }
+            } else {
+                throw new RuntimeException("这里不应该出现其它 value");
+            }
+        }
+        return false;
+    }
+    
     private static Group<BasicBlock, BasicBlock> cloneBlks(Group<BasicBlock, BasicBlock> oneLoop, Procedure procedure,
                                                            HashMap<Value, Value> begin2end, Loop prtLoop, Loop inner) {
         ArrayList<BasicBlock> newBlks = new ArrayList<>();
