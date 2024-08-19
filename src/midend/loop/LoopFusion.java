@@ -5,6 +5,8 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.BinaryOperation;
+import frontend.ir.instr.memop.GEPInstr;
+import frontend.ir.instr.memop.LoadInstr;
 import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.PhiInstr;
@@ -12,9 +14,11 @@ import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
+import frontend.ir.structure.GlobalObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 public class LoopFusion {
     public static void execute(ArrayList<Function> functions) {
@@ -283,17 +287,24 @@ public class LoopFusion {
         if (binCnt != 1) {
             return false;
         }
-        StoreInstr store1 = null;
-        StoreInstr store2 = null;
+//        StoreInstr store1 = null;
+//        StoreInstr store2 = null;
+        HashSet<LoadInstr>  loop1loading = new HashSet<>();
+        HashSet<StoreInstr> loop2storing = new HashSet<>();
+        HashSet<LoadInstr>  loop2loading = new HashSet<>();
+        HashSet<StoreInstr> loop1storing = new HashSet<>();
         for (BasicBlock blk : loop1.getBlks()) {
             Instruction instruction = (Instruction) blk.getInstructions().getHead();
             while (instruction != null) {
                 if (instruction instanceof StoreInstr) {
-                    if (store1 == null) {
-                        store1 = (StoreInstr) instruction;
-                    } else {
-                        return false;
-                    }
+//                    if (store1 == null) {
+//                        store1 = (StoreInstr) instruction;
+//                    } else {
+//                        return false;
+//                    }
+                    loop1storing.add((StoreInstr) instruction);
+                } else if (instruction instanceof LoadInstr) {
+                    loop1loading.add((LoadInstr) instruction);
                 }
                 instruction = (Instruction) instruction.getNext();
             }
@@ -304,11 +315,14 @@ public class LoopFusion {
                 if (instruction instanceof CallInstr) {
                     return false;
                 } else if (instruction instanceof StoreInstr) {
-                    if (store2 == null) {
-                        store2 = (StoreInstr) instruction;
-                    } else {
-                        return false;
-                    }
+//                    if (store2 == null) {
+//                        store2 = (StoreInstr) instruction;
+//                    } else {
+//                        return false;
+//                    }
+                    loop2storing.add((StoreInstr) instruction);
+                } else if (instruction instanceof LoadInstr) {
+                    loop2loading.add((LoadInstr) instruction);
                 }
                 for (Value value : instruction.getUseValueList()) {
                     if (value instanceof PhiInstr && !checkPhiNotFromLoop((PhiInstr) value, loop1, new HashSet<>())) {
@@ -321,13 +335,59 @@ public class LoopFusion {
                 instruction = (Instruction) instruction.getNext();
             }
         }
-        if (store1 != null && store2 != null && !store1.myHash().equals(store2.myHash())) {
-            return false;
+//        if (store1 != null && store2 != null && !store1.myHash().equals(store2.myHash())) { 这个store的比较就是错的
+//            return false;
+//        }
+        
+        for (LoadInstr load : loop1loading) {
+            Value loadPtr = load.getPtr();
+            if (loadPtr instanceof GEPInstr) {
+                for (StoreInstr storeInstr : loop2storing) {
+                    Value storePtr = storeInstr.getPtr();
+                    if (storePtr instanceof GEPInstr) {
+                        if (((GEPInstr) loadPtr).getRoot().equals(((GEPInstr) storePtr).getRoot())) {
+                            return false;
+                        }
+                    }
+                }
+            } else if (loadPtr instanceof GlobalObject) {
+                for (StoreInstr storeInstr : loop2storing) {
+                    if (storeInstr.getPtr().equals(loadPtr)) {
+                        return false;
+                    }
+                }
+            } else {
+                throw new RuntimeException("不应该有其它指针类型");
+            }
+        }
+        
+        // 这里我们认为，需要要求先存后取的地址必须是常数或者 phi（迭代变量）
+        for (StoreInstr store : loop1storing) {
+            if (checkNonSimpleIndex(store.getPtr())) {
+                return false;
+            }
+        }
+        for (LoadInstr load : loop2loading) {
+            if (checkNonSimpleIndex(load.getPtr())) {
+                return false;
+            }
         }
 
         return true;
     }
-
+    
+    private static boolean checkNonSimpleIndex(Value ptr) {
+        if (ptr instanceof GEPInstr) {
+            List<Value> indexList = ((GEPInstr) ptr).getWholeIndexList();
+            for (Value index : indexList) {
+                if (!(index instanceof ConstValue) && !(index instanceof PhiInstr)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     private static boolean checkPhiNotFromLoop(PhiInstr init, Loop loop, HashSet<PhiInstr> done) {
         if (done.contains(init)) {
             return false;
