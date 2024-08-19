@@ -79,14 +79,14 @@ public class Compiler {
 //            DeadBlockRemove.execute(functions);
 //            RemoveUseLessPhi.execute(functions);
 //
-//            DFG.execute(functions);
-//            AnalysisLoop.execute(functions);
-//            LCSSA.execute(functions);
-////            LoopFusion.execute(functions);
-//            OIS.execute(functions);
-//            DeadCodeRemove.execute(functions);
-//            DeadBlockRemove.execute(functions);
-//            RemoveUseLessPhi.execute(functions);
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+            LCSSA.execute(functions);
+            LoopFusion.execute(functions);
+            OIS.execute(functions);
+            DeadCodeRemove.execute(functions);
+            DeadBlockRemove.execute(functions);
+            RemoveUseLessPhi.execute(functions);
 
             /*RemoveUselessPhi 会影响LCSSA吗 会的*/
             DFG.execute(functions);

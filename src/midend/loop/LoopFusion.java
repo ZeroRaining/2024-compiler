@@ -103,6 +103,24 @@ public class LoopFusion {
         //anon: 融合loopExit部分 由于removeUselessPhi, 所以这里只会在exit中存在phi，将exit1放到exit2中
         BasicBlock loopExit2 = loop2.getExits().get(0);
         BasicBlock loopExit1 = loop1.getExits().get(0);
+
+        Instruction phiInloopExit1 = loopExit1.getEndInstr();
+        Instruction lastPhi = (Instruction) loopExit2.getInstructions().getHead();
+        Instruction tmpIns;
+
+        while (phiInloopExit1 != null) {
+            tmpIns = (Instruction) phiInloopExit1.getPrev();
+            if (phiInloopExit1 instanceof PhiInstr) {
+                phiInloopExit1.removeFromListWithUseRemain();
+                phiInloopExit1.insertBefore(lastPhi);
+                ((PhiInstr) phiInloopExit1).modifyPrtBlk(latch1, latch2);
+                lastPhi = phiInloopExit1;
+            }
+            phiInloopExit1 = tmpIns;
+        }
+
+
+
         BasicBlock exit1 = null;
         for (BasicBlock block : loopExit1.getSucs()) {
             exit1 = block;
@@ -127,7 +145,6 @@ public class LoopFusion {
         }
 
         Instruction instr = (Instruction) exit1.getEndInstr().getPrev();
-        Instruction tmpIns;
         while (instr != null) {
             tmpIns = (Instruction) instr.getPrev();
             instr.removeFromListWithUseRemain();
