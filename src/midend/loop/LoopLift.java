@@ -199,11 +199,24 @@ public class LoopLift {
 
         BasicBlock beginBlk = innerPreHeader;
         BasicBlock endBlk = inner.getLatchs().get(0); ///latch.size?
-        //anon: 删块，修改两处phi
         //将内部循环的loopExit中的lcssa的值进行替换
         BasicBlock innerLoopExit = inner.getExits().get(0);
 
-        BasicBlock next = (BasicBlock) old2new.get(endBlk).getNext();
+        BasicBlock next = (BasicBlock) old2new.get(endBlk).getNext();//new inner loop exit
+
+        //anon: 修改dom问题
+        BasicBlock oldInnerExit = (BasicBlock) innerLoopExit.getNext();
+        Instruction phiInOldInnerExit = (Instruction) oldInnerExit.getInstructions().getHead();
+        while (phiInOldInnerExit instanceof PhiInstr) {
+            int index = ((PhiInstr) phiInOldInnerExit).getPrtBlks().indexOf(innerLoopExit);
+            Value phiInOldInnerLoopExit = ((PhiInstr) phiInOldInnerExit).getValues().get(index);
+            if (!(phiInOldInnerLoopExit instanceof PhiInstr)) {
+                throw new RuntimeException("");
+            }
+            Value oldValue = ((PhiInstr) phiInOldInnerLoopExit).getValues().get(0);
+            old2new.get(oldValue).replaceUseTo(phiInOldInnerExit);
+            phiInOldInnerExit = (Instruction) phiInOldInnerExit.getNext();
+        }
 
         BasicBlock tmp = (BasicBlock) beginBlk.getNext();
         while (tmp != endBlk.getNext()) {
@@ -218,10 +231,21 @@ public class LoopLift {
 
         BasicBlock newEntry = (BasicBlock) old2new.get(entry2preHeader);
 //        System.out.println("+++++" + newEntry.getEndInstr().print());
-        newEntry.getEndInstr().removeFromList();
+        newEntry.getEndInstr().removeFromList();//anon: new inner preCond
         newEntry.setRet(false);
         newEntry.addInstruction(new JumpInstr(next));
+        //anon: 删块，修改两处phi
+        Instruction tmpPhi = (Instruction) next.getInstructions().getHead();
+        while (tmpPhi instanceof PhiInstr) {
+            ((PhiInstr) tmpPhi).modifyPrtBlk((BasicBlock) next.getPrev(), newEntry);
+            tmpPhi = (Instruction) tmpPhi.getNext();
+        }
 
+        BasicBlock innerLatch = inner.getLatchs().get(0);
+        BasicBlock newInnerLatch = (BasicBlock) old2new.get(innerLatch);
+        newInnerLatch.getEndInstr().removeFromList();
+        newInnerLatch.setRet(false);
+        newInnerLatch.addInstruction(new JumpInstr(next));
 
 //        latch.getInstructions().getTail().removeFromList();
 //        latch.setRet(false);
@@ -234,7 +258,6 @@ public class LoopLift {
 
         //维护循环块
 
-        BasicBlock lastLatch = (BasicBlock) old2new.get(latch);
         BasicBlock preHeader = loop.getPreHeader();
         BasicBlock newHeader = oneLoop.getFirst();
 
@@ -295,6 +318,8 @@ public class LoopLift {
                     return false;
                 }
             }
+        } else {
+            return false;
         }
         if (end instanceof Instruction) {
             if (loop.getPrtLoop().getBlks().contains(((Instruction) end).getParentBB())) {

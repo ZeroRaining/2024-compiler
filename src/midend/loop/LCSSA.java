@@ -104,6 +104,7 @@ public class LCSSA {
             return phi;
         }
         BasicBlock iDomor = userBlk.getiDomor();
+        System.out.println(userBlk + " " + iDomor);
         if (!loop.getBlks().contains(iDomor)) {
             phi = getPhiValue(iDomor, loop);
             exit2phi.put(userBlk, phi);
