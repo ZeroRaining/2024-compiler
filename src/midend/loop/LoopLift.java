@@ -62,190 +62,6 @@ public class LoopLift {
 
     private static HashMap<Value, Value> old2new;
 
-
-    private static void newLift(Loop loop, Loop inner) {
-        if (!loop.hasIndVar()) {
-            return;
-        }
-        Value init = loop.getBegin();
-        Value end = loop.getEnd();
-        if (!(init instanceof ConstValue)) {
-            return;
-        }
-        if (!(end instanceof ConstValue)) {
-            return;
-        }
-        BinaryOperation alu = loop.getAlu();
-        Cmp cmp = loop.getCond();
-        if (alu.getOperationName().equals("add") && cmp.getCond().equals(CmpCond.LT)) {
-            if (init.getNumber().intValue() >= end.getNumber().intValue()) {
-                return;
-            }
-        } else if (alu.getOperationName().equals("sub") && cmp.getCond().equals(CmpCond.GT)) {
-            if (init.getNumber().intValue() <= end.getNumber().intValue()) {
-                return;
-            }
-        } else {
-            //TODO implement other cmp
-            return;
-        }
-//        throw new RuntimeException("caole");
-
-//        throw new RuntimeException("this func may have problem");
-        PhiInstr itvar = (PhiInstr) loop.getVar();
-        Use use = itvar.getBeginUse();
-        while (use != null) {
-            if (inner.getBlks().contains(use.getUser().getParentBB())) {
-                return;
-            }
-            use = (Use) use.getNext();
-        }
-
-//        loop.LoopPrint();
-        //循环一定会被执行一次
-        if (false) {
-            throw new RuntimeException("caole");
-        }
-
-        LoopUnroll.setIsLift(true);
-        isLift = true;
-
-//        Group<BasicBlock, BasicBlock> oneloop = new Group<>()
-//        cloneBlks()
-
-        HashMap<PhiInstr, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
-        HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
-        ArrayList<PhiInstr> headPhis = new ArrayList<>();
-        BasicBlock header = loop.getHeader();
-        CustomList.Node instr = header.getInstructions().getHead();
-        while (instr instanceof PhiInstr) {
-            headPhis.add((PhiInstr) instr);
-            instr = instr.getNext();
-        }
-//        loop.LoopPrint();
-        BasicBlock loopExit = loop.getExits().get(0);
-        BasicBlock latch = loop.getLatchs().get(0);
-
-        for (PhiInstr phi : headPhis) {
-            int index = phi.getPrtBlks().indexOf(latch);
-            if (index < 0) {
-                throw new RuntimeException(phi.print() + " latch: " + latch + " parentBB: "  + phi.getParentBB());
-            }
-            Value newValue = phi.getValues().get(index);
-            //先保留phi的value
-            phiInHead.put(phi, newValue);
-            begin2end.put(newValue, newValue);
-        }
-        //TODO：复制后删掉修改跳转
-
-
-        BasicBlock innerPreHeader = inner.getPreHeader();
-        if (innerPreHeader.getPres().size() != 1) {
-            return;
-        }
-        BasicBlock entry2preHeader =null;
-        for (BasicBlock block : innerPreHeader.getPres()) {
-            entry2preHeader = block;
-        }
-        if (entry2preHeader == null) {
-            return;
-        }
-        Instruction endHeaderIns = entry2preHeader.getEndInstr();
-        if (endHeaderIns instanceof JumpInstr) {
-            return;
-        }
-        if (!(endHeaderIns instanceof BranchInstr)) {
-            return;
-        }
-
-        ConstBool fa = new ConstBool(0);
-
-        Value oldHeaderCond = ((BranchInstr) endHeaderIns).getCond();
-//        endHeaderIns.modifyUse(oldHeaderCond, fa);
-
-
-        Instruction endLarchIns = entry2preHeader.getEndInstr();
-        if (endLarchIns instanceof JumpInstr) {
-            return;
-        }
-        if (!(endLarchIns instanceof BranchInstr)) {
-            return;
-        }
-
-
-        Value oldLatchCond = ((BranchInstr) endLarchIns).getCond();
-//        endLarchIns.modifyUse(oldLatchCond, fa);
-
-
-        Procedure procedure = (Procedure) header.getParent().getOwner();
-        //clone
-        old2new = new HashMap<>();
-        old2new.put(loop.getPreHeader(), latch);
-        Group<BasicBlock, BasicBlock> oneLoop = new Group<>(header, latch);
-        oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop(), inner);
-
-        latch.getEndInstr().modifyUse(header, oneLoop.getFirst());
-
-        BasicBlock beginBlk = innerPreHeader;
-        BasicBlock endBlk = inner.getLatchs().get(0); ///latch.size?
-
-        BasicBlock next = (BasicBlock) old2new.get(endBlk).getNext();
-
-        BasicBlock tmp = (BasicBlock) beginBlk.getNext();
-        while (tmp != endBlk.getNext()) {
-            Instruction instruction = (Instruction) tmp.getInstructions().getHead();
-            while (instruction != null) {
-                old2new.get(instruction).replaceUseTo(instruction);
-                instruction = (Instruction) instruction.getNext();
-            }
-//            old2new.get(tmp).removeFromList();
-            tmp = (BasicBlock) tmp.getNext();
-        }
-
-        BasicBlock newEntry = (BasicBlock) old2new.get(entry2preHeader);
-//        System.out.println("+++++" + newEntry.getEndInstr().print());
-        newEntry.getEndInstr().removeFromList();
-        newEntry.setRet(false);
-        newEntry.addInstruction(new JumpInstr(next));
-
-
-//        latch.getInstructions().getTail().removeFromList();
-//        latch.setRet(false);
-//        latch.addInstruction(new JumpInstr(oneLoop.getFirst()));
-        for (PhiInstr phi : headPhis) {
-            phi.removeUse(phiInHead.get(phi));
-        }
-
-        //维护循环块
-
-        BasicBlock lastLatch = oneLoop.getSecond();
-        BasicBlock preHeader = loop.getPreHeader();
-        BasicBlock newHeader = oneLoop.getFirst();
-
-        for (PhiInstr oldPhi : phiInHead.keySet()) {
-            PhiInstr newPhi = (PhiInstr) old2new.get(oldPhi);
-            int index = newPhi.getPrtBlks().indexOf(latch);
-            newPhi.modifyUse(newPhi.getValues().get(index), phiInHead.get(oldPhi));
-        }
-
-        Instruction phi = (Instruction) loopExit.getInstructions().getHead();
-        while (phi instanceof PhiInstr) {
-            int size = ((PhiInstr) phi).getValues().size();
-            for (int i = 0; i < size; i++) {
-                Value value = ((PhiInstr) phi).getValues().get(i);
-//                if (value instanceof Instruction) {
-                ((PhiInstr) phi).addUse(old2new.get(value), lastLatch);
-//                }
-            }
-            phi = (Instruction) phi.getNext();
-        }
-//        OIS.OSI4blks(header, oneLoop.getSecond());
-//        DeadCodeRemove.removeCode(header, oneLoop.getSecond());
-//        MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
-    }
-
-
-
     private static void UnrollOnce(Loop loop, Loop inner) {
         if (!loop.hasIndVar()) {
             return;
@@ -369,27 +185,33 @@ public class LoopLift {
         Procedure procedure = (Procedure) header.getParent().getOwner();
         //clone
         old2new = new HashMap<>();
-        BasicBlock newPreHeader = new BasicBlock(header.getLoopDepth(), procedure.getAndAddBlkIndex());
-        old2new.put(loop.getPreHeader(), newPreHeader);
-        Group<BasicBlock, BasicBlock> oneLoop = new Group<>(header, latch);
+//        BasicBlock newPreHeader = new BasicBlock(header.getLoopDepth(), procedure.getAndAddBlkIndex());
+//        newPreHeader.insertAfter(latch);
+//        old2new.put(loop.getPreHeader(), newPreHeader);
+        Group<BasicBlock, BasicBlock> oneLoop = new Group<>(loop.getPreHeader(), loopExit);
         oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop(), inner);
+        BasicBlock newPreHeader = (BasicBlock) old2new.get(loop.getPreHeader());
+        BasicBlock newLoopExit = (BasicBlock) old2new.get(loopExit);
         latch.getEndInstr().modifyUse(header, newPreHeader);
-        latch.getEndInstr().modifyUse(loopExit, exit);
-        newPreHeader.addInstruction(new JumpInstr(oneLoop.getFirst()));
+//        latch.getEndInstr().modifyUse(loopExit, exit);
+//        newPreHeader.addInstruction(new JumpInstr(oneLoop.getFirst()));
 
 
         BasicBlock beginBlk = innerPreHeader;
         BasicBlock endBlk = inner.getLatchs().get(0); ///latch.size?
+        //anon: 删块，修改两处phi
+        //将内部循环的loopExit中的lcssa的值进行替换
+        BasicBlock innerLoopExit = inner.getExits().get(0);
 
         BasicBlock next = (BasicBlock) old2new.get(endBlk).getNext();
 
         BasicBlock tmp = (BasicBlock) beginBlk.getNext();
         while (tmp != endBlk.getNext()) {
             Instruction instruction = (Instruction) tmp.getInstructions().getHead();
-            while (instruction != null) {
-                old2new.get(instruction).replaceUseTo(instruction);
-                instruction = (Instruction) instruction.getNext();
-            }
+//            while (instruction != null) {
+//                old2new.get(instruction).replaceUseTo(instruction);
+//                instruction = (Instruction) instruction.getNext();
+//            }
 //            old2new.get(tmp).removeFromList();
             tmp = (BasicBlock) tmp.getNext();
         }
@@ -408,9 +230,11 @@ public class LoopLift {
             phi.removeUse(phiInHead.get(phi));
         }
 
+        //anon: 把loopexit的lcssa拷贝下来，将那些插入exit
+
         //维护循环块
 
-        BasicBlock lastLatch = oneLoop.getSecond();
+        BasicBlock lastLatch = (BasicBlock) old2new.get(latch);
         BasicBlock preHeader = loop.getPreHeader();
         BasicBlock newHeader = oneLoop.getFirst();
 
@@ -424,23 +248,27 @@ public class LoopLift {
         while (phi instanceof PhiInstr) {
             int index = ((PhiInstr) phi).getPrtBlks().indexOf(loopExit);
             Value value = ((PhiInstr) phi).getValues().get(index);//value is phi
-            if (!(value instanceof PhiInstr)) {
-                throw new RuntimeException("");
-            }
-            int latchIndex = ((PhiInstr) value).getPrtBlks().indexOf(latch);
-            Value latchValue = ((PhiInstr) value).getValues().get(latchIndex);
-            ((PhiInstr) phi).addUse(latchValue, latch);
+            ((PhiInstr) phi).addUse(old2new.getOrDefault(value, value), newLoopExit);
+
+//            int index = ((PhiInstr) phi).getPrtBlks().indexOf(loopExit);
+//            Value value = ((PhiInstr) phi).getValues().get(index);//value is phi
+//            if (!(value instanceof PhiInstr)) {
+//                throw new RuntimeException("");
+//            }
+//            int latchIndex = ((PhiInstr) value).getPrtBlks().indexOf(latch);
+//            Value latchValue = ((PhiInstr) value).getValues().get(latchIndex);
+//            ((PhiInstr) phi).addUse(latchValue, latch);
             phi = (Instruction) phi.getNext();
         }
 
-        phi = (Instruction) loopExit.getInstructions().getHead();
-        while (phi instanceof PhiInstr) {
-            int index = ((PhiInstr) phi).getPrtBlks().indexOf(latch);
-            Value value = ((PhiInstr) phi).getValues().get(index);
-            ((PhiInstr) phi).modifyPrtBlk(latch, lastLatch);
-            ((PhiInstr) phi).modifyUse(old2new.get(value), lastLatch);
-            phi = (Instruction) phi.getNext();
-        }
+//        phi = (Instruction) newLoopExit.getInstructions().getHead();
+//        while (phi instanceof PhiInstr) {
+//            int index = ((PhiInstr) phi).getPrtBlks().indexOf(lastLatch);
+//            Value value = ((PhiInstr) phi).getValues().get(index);
+////            ((PhiInstr) phi).modifyPrtBlk(latch, lastLatch);
+//            ((PhiInstr) phi).modifyUse(old2new.get(value), lastLatch);
+//            phi = (Instruction) phi.getNext();
+//        }
 
 
 //        OIS.OSI4blks(header, oneLoop.getSecond());
@@ -531,7 +359,7 @@ public class LoopLift {
         BasicBlock last = oneLoop.getSecond();
 
         for (BasicBlock newBB : newBlks) {
-            if (prtLoop != null) {
+             if (prtLoop != null) {
                 prtLoop.addBlk(newBB);
             }
             Instruction newIns = (Instruction) newBB.getInstructions().getHead();
