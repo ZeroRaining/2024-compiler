@@ -450,7 +450,7 @@ public class LoopLift {
 
     private static boolean loopCanLift(Loop loop) {
         AnalysisLoop.singleLiftAnalysis(loop);
-        loop.LoopPrint();
+//        loop.LoopPrint();
         if (!loop.hasIndVar()) {
             return false;
         }

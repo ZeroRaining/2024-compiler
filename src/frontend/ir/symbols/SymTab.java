@@ -35,7 +35,7 @@ public class SymTab {
                 // 其实主要是为了 printIR 准备的，正常是不需要保存这个表的
                 return abandonedSymbolMap.get(sym);
             }
-            throw new RuntimeException("No such symbol");
+            throw new RuntimeException("No such symbol" + sym);
         }
         return parent.getSym(sym);
     }

@@ -41,7 +41,7 @@ public class LoopUnroll {
         for (Function function : functions) {
             // 要求在完全内联之后，只对 main 函数做循环展开，递归函数不做展开
             if (function.isMain()) {
-                System.out.println(function.getAllLoop());
+//                System.out.println(function.getAllLoop());
                 AnalysisLoop.LoopIndVars(function);
                 SimpleLoopUnroll(function);
             }
@@ -296,15 +296,15 @@ public class LoopUnroll {
 
         BasicBlock lastLatch = oneLoop.getSecond();
         lastLatch.addInstruction(new JumpInstr(loopExit));
-        BufferedWriter irWriter = new BufferedWriter(new FileWriter("loop" + cnt++));
-        ((Procedure) header.getParent().getOwner()).printIR(irWriter);
-        irWriter.close();
+//        BufferedWriter irWriter = new BufferedWriter(new FileWriter("loop" + cnt++));
+//        ((Procedure) header.getParent().getOwner()).printIR(irWriter);
+//        irWriter.close();
 
         for (PhiInstr phi : exitPhis) {
             for (Value value : phi.getValues()) {
                 if (value instanceof Instruction) {
                     if (begin2end.get(value) == null) {
-                        loop.LoopPrint();
+//                        loop.LoopPrint();
                         throw new RuntimeException("value " + ((Instruction) value).print());
                     }
                     phi.modifyUse(value, begin2end.get(value));

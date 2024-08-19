@@ -65,7 +65,7 @@ public class LoopRotate {
             return;
         }
         if (!loop.getLatchs().contains(latch)) {
-            loop.LoopPrint();
+//            loop.LoopPrint();
             throw new RuntimeException("latch: " + latch);
         }
         BasicBlock body = (BasicBlock) exiting.getNext();

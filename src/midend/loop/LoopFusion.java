@@ -5,6 +5,7 @@ import frontend.ir.Value;
 import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.BinaryOperation;
+import frontend.ir.instr.memop.StoreInstr;
 import frontend.ir.instr.otherop.CallInstr;
 import frontend.ir.instr.otherop.PhiInstr;
 import frontend.ir.instr.otherop.cmp.Cmp;
@@ -249,16 +250,48 @@ public class LoopFusion {
             }
             use = (Use) use.getNext();
         }
-
         if (binCnt != 1) {
             return false;
         }
 
+        binCnt = 0;
+        use = var2.getBeginUse();
+        while (use != null) {
+            Instruction user = use.getUser();
+            if(user instanceof BinaryOperation){
+                binCnt++;
+            }
+            use = (Use) use.getNext();
+        }
+        if (binCnt != 1) {
+            return false;
+        }
+        StoreInstr store1 = null;
+        StoreInstr store2 = null;
+        for (BasicBlock blk : loop1.getBlks()) {
+            Instruction instruction = (Instruction) blk.getInstructions().getHead();
+            while (instruction != null) {
+                if (instruction instanceof StoreInstr) {
+                    if (store1 == null) {
+                        store1 = (StoreInstr) instruction;
+                    } else {
+                        return false;
+                    }
+                }
+                instruction = (Instruction) instruction.getNext();
+            }
+        }
         for (BasicBlock blk : loop2.getBlks()) {
             Instruction instruction = (Instruction) blk.getInstructions().getHead();
             while (instruction != null) {
                 if (instruction instanceof CallInstr) {
                     return false;
+                } else if (instruction instanceof StoreInstr) {
+                    if (store2 == null) {
+                        store2 = (StoreInstr) instruction;
+                    } else {
+                        return false;
+                    }
                 }
                 for (Value value : instruction.getUseValueList()) {
                     if (value instanceof PhiInstr && !checkPhiNotFromLoop((PhiInstr) value, loop1, new HashSet<>())) {
@@ -271,7 +304,9 @@ public class LoopFusion {
                 instruction = (Instruction) instruction.getNext();
             }
         }
-
+        if (store1 != null && store2 != null && !store1.myHash().equals(store2.myHash())) {
+            return false;
+        }
 
         return true;
     }
