@@ -9,6 +9,7 @@ import frontend.ir.instr.Instruction;
 import frontend.ir.instr.memop.AllocaInstr;
 import frontend.ir.instr.memop.MemoryOperation;
 import frontend.ir.instr.otherop.PCInstr;
+import frontend.ir.instr.otherop.cmp.Cmp;
 import frontend.ir.instr.terminator.BranchInstr;
 import frontend.ir.instr.terminator.JumpInstr;
 import frontend.ir.instr.terminator.ReturnInstr;
@@ -36,6 +37,7 @@ public class BasicBlock extends Value {
     private BasicBlock iDomor;
     private HashSet<BasicBlock> DF;
     private String tag = "";    // 用作一些特殊标记
+    private final HashMap<BasicBlock, Value> conditions = new HashMap<>();    // 用来存储进入这个块所必须满足的一系列条件
     
     public BasicBlock(int loopDepth, int labelCnt) {
         super();
@@ -52,6 +54,12 @@ public class BasicBlock extends Value {
         this.labelCnt = labelCnt;
         newTrue = newFalse = null;
         blockType = BlockType.OUTOFLOOP.getNum();
+    }
+
+    public void removeFromListWithUseRemain() {
+        super.removeFromList();
+        this.setNext(null);
+        this.setPrev(null);
     }
 
     public boolean isBlockType(BlockType blockType) {
@@ -357,5 +365,13 @@ public class BasicBlock extends Value {
     
     public void setTag(String tag) {
         this.tag = tag;
+    }
+    
+    public void addCond(BasicBlock from, Value cond) {
+        this.conditions.put(from, cond);
+    }
+    
+    public HashMap<BasicBlock, Value> getConditions() {
+        return conditions;
     }
 }

@@ -26,6 +26,7 @@ public class RemoveUseLessLoop {
         for (Loop inner : loop.getInnerLoops()) {
             dfs4removeLoop(inner);
         }
+//        loop.LoopPrint();
         if (canRemove(loop)) {
             BasicBlock preHeader = loop.getPreHeader();
             BasicBlock loopExit = loop.getExits().get(0);

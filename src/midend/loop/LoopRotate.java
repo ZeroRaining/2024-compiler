@@ -65,7 +65,7 @@ public class LoopRotate {
             return;
         }
         if (!loop.getLatchs().contains(latch)) {
-            loop.LoopPrint();
+//            loop.LoopPrint();
             throw new RuntimeException("latch: " + latch);
         }
         BasicBlock body = (BasicBlock) exiting.getNext();
@@ -109,7 +109,7 @@ public class LoopRotate {
 //        System.out.println(latch.getEndInstr().print());
         latch.getEndInstr().modifyUse(header, newBlk);
 
-        int phiCnt = procedure.getPhiIndex();
+//        int phiCnt = procedure.getPhiIndex();
         for (PhiInstr ins : phiInHeader.keySet()) {
             ArrayList<Value> values = new ArrayList<>();
             ArrayList<BasicBlock> prtBlks = new ArrayList<>();
@@ -131,9 +131,7 @@ public class LoopRotate {
                 values.add(phiValue);
                 prtBlks.add(pre);
             }
-            PhiInstr newPhi = new PhiInstr(phiCnt++, values.get(0).getDataType(), values, prtBlks);
-            procedure.setCurPhiIndex(phiCnt);
-            phiCnt = procedure.getPhiIndex();
+            PhiInstr newPhi = new PhiInstr(procedure.getAndAddPhiIndex(), values.get(0).getDataType(), values, prtBlks);
             body.addInstrToHead(newPhi);
             ins.replaceUseTo(newPhi);
         }

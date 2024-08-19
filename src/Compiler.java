@@ -29,7 +29,7 @@ public class Compiler {
         if (arg.toTime()) {
             startTime = System.currentTimeMillis();
         }
-        
+
         // 词法分析，得到 TokenList
         TokenList tokenList = Lexer.getInstance().lex(source);
         // 语法分析，得到 AST
@@ -53,7 +53,7 @@ public class Compiler {
         
         // 删除没用的基本块
         DeadBlockRemove.execute(functions);
-        
+
         // 构建初版 DFG
         DFG.execute(functions);
         
@@ -70,42 +70,67 @@ public class Compiler {
         
         // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
+//            DFG.execute(functions);
+//            AnalysisLoop.execute(functions);
+//            LCSSA.execute(functions);
+////            LoopLift.execute(functions);
+//            OIS.execute(functions);
+//            DeadCodeRemove.execute(functions);
+//            DeadBlockRemove.execute(functions);
+//            RemoveUseLessPhi.execute(functions);
+//
+//            DFG.execute(functions);
+//            AnalysisLoop.execute(functions);
+//            LCSSA.execute(functions);
+////            LoopFusion.execute(functions);
+//            OIS.execute(functions);
+//            DeadCodeRemove.execute(functions);
+//            DeadBlockRemove.execute(functions);
+//            RemoveUseLessPhi.execute(functions);
+
+            /*RemoveUselessPhi 会影响LCSSA吗 会的*/
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
             LCSSA.execute(functions);
             LoopUnroll.execute(functions);
+            RemoveUseLessPhi.execute(functions);
         }
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
         LoopInvariantMotion.execute(functions);
         RemoveUseLessPhi.execute(functions);
-        
+
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
-        
-        //合并删减块
+
+        /*合并删减块*/
         SimplifyBranch.execute(functions);
         MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
-        
-        //second
+
+        /*second*/
         DFG.execute(functions);
         MergeGEP.execute(functions);
         PtrMem2Reg.execute(functions);
-        
+
         DeadCodeRemove.execute(functions);
         OIS.execute(functions);
         GVN.execute(functions);
         SimplifyBranch.execute(functions);
-        MergeBlock.execute(functions, true);
+        MergeBlock.execute(functions, false);
         DeadBlockRemove.execute(functions);
         RemoveUseLessPhi.execute(functions);
-        LoopSimplify.execute(functions);
-        RemoveUseLessLoop.execute(functions);
-        // third
+         /*third*/
         if (arg.getOptLevel() == 1) {
+            DFG.execute(functions);
+            AnalysisLoop.execute(functions);
+            LCSSA.execute(functions);
+            LoopSimplify.execute(functions);
+            AnalysisLoop.execute(functions);
+            RemoveUseLessLoop.execute(functions);
+
             DFG.execute(functions);
             DeadCodeRemove.execute(functions);
             OIS.execute(functions);
@@ -116,14 +141,14 @@ public class Compiler {
             RemoveUseLessPhi.execute(functions);
             OIS.execute(functions);
         }
-        
-        //为后端维护必要信息
+
+        /*为后端维护必要信息*/
         DFG.execute(functions);
         AnalysisLoop.execute(functions);
-        
+
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
         // 中端优化结束
-        
+
         // 打印 IR
         if (arg.toPrintIR()) {
 //            Function.blkLabelReorder();

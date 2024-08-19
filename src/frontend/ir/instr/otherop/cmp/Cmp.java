@@ -41,6 +41,19 @@ public abstract class Cmp extends Instruction {
         }
         throw new RuntimeException();
     }
+    
+    /**
+     * 获取与这个比较相反的比较
+     * 比如 this == x > 1 ==> \result == x <= 1
+     */
+    public Cmp getReverseCmp(int newRes) {
+        CmpCond newCond = this.cond.getReverse();
+        if (this instanceof ICmpInstr) {
+            return new ICmpInstr(newRes, newCond, op1, op2);
+        } else {
+            return new FCmpInstr(newRes, newCond, op1, op2);
+        }
+    }
 
     public CmpCond getCond() {
         return cond;

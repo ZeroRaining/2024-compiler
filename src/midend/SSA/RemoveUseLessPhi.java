@@ -24,16 +24,17 @@ public class RemoveUseLessPhi {
         while (blk != null) {
             Instruction instr = (Instruction) blk.getInstructions().getHead();
             while (instr instanceof PhiInstr) {
-                ArrayList<BasicBlock> prts = ((PhiInstr) instr).getPrtBlks();
-                for (int i = 0; i < prts.size(); i++) {
-                    if (!blk.getPres().contains(prts.get(i))) {
-                        prts.remove(i);
-                        ((PhiInstr) instr).getValues().remove(i);
-                        i--;
+                ArrayList<BasicBlock> toRemove = new ArrayList<>();
+                for (BasicBlock remove : ((PhiInstr) instr).getPrtBlks()) {
+                    if (!blk.getPres().contains(remove)) {
+                        toRemove.add(remove);
                         toBeContinue = true;
                     }
                 }
-                if (prts.isEmpty()) {
+                for (BasicBlock remove : toRemove) {
+                    instr.removeUse(remove);
+                }
+                if (((PhiInstr) instr).getPrtBlks().isEmpty()) {
                     instr.removeFromList();
                     toBeContinue = true;
                 } else if (((PhiInstr) instr).canSimplify()) {
@@ -52,15 +53,16 @@ public class RemoveUseLessPhi {
     public static void clear4branchModify(BasicBlock blk) {
         Instruction instr = (Instruction) blk.getInstructions().getHead();
         while (instr instanceof PhiInstr) {
-            ArrayList<BasicBlock> prts = ((PhiInstr) instr).getPrtBlks();
-            for (int i = 0; i < prts.size(); i++) {
-                if (!blk.getPres().contains(prts.get(i))) {
-                    prts.remove(i);
-                    ((PhiInstr) instr).getValues().remove(i);
-                    i--;
+            ArrayList<BasicBlock> toRemove = new ArrayList<>();
+            for (BasicBlock remove : ((PhiInstr) instr).getPrtBlks()) {
+                if (!blk.getPres().contains(remove)) {
+                    toRemove.add(remove);
                 }
             }
-            if (prts.isEmpty()) {
+            for (BasicBlock remove : toRemove) {
+                instr.removeUse(remove);
+            }
+            if (((PhiInstr) instr).getPrtBlks().isEmpty()) {
                 instr.removeFromList();
             } else if (((PhiInstr) instr).canSimplify()) {
                 Value value = ((PhiInstr) instr).getValues().get(0);

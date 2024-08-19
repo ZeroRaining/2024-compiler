@@ -46,7 +46,7 @@ public class AnalysisLoop {
         }
         linked.add(block);
         for (BasicBlock next : block.getSucs()) {
-            if (!loopBlks.contains(next)) {
+            if (loopBlks.contains(next)) {
                 if (!linked.contains(next) && next != otherBlk){
                     dfs4loopDom(next, otherBlk, linked, loopBlks);
                 }

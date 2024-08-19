@@ -129,7 +129,7 @@ public class FuncMemorizeVer2 {
                     ArrayList<BasicBlock> prtBlks = new ArrayList<>();
                     prtBlks.add(blks.get(1));
                     prtBlks.add(loadBlk);
-                    PhiInstr phi = new PhiInstr(function.getAndAddRegIndex(), call.getDataType(), values, prtBlks);
+                    PhiInstr phi = new PhiInstr(function.getAndAddPhiIndex(), call.getDataType(), values, prtBlks);
                     call.replaceUseTo(phi);
                     phi.modifyUse(fromCall, call);
                     blks.get(2).addInstrToHead(phi);

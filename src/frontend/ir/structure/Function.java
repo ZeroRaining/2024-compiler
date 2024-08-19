@@ -204,7 +204,10 @@ public class Function extends Value implements FuncDef {
     public int getAndAddRegIndex() {
         return this.procedure.getAndAddRegIndex();
     }
-    
+    public int getAndAddPhiIndex() {
+        return this.procedure.getAndAddPhiIndex();
+    }
+
     public int getAndAddBlkIndex() {
         return this.procedure.getAndAddBlkIndex();
     }

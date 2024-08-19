@@ -15,30 +15,162 @@ import frontend.ir.instr.terminator.ReturnInstr;
 import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 import frontend.ir.structure.Procedure;
+import midend.SSA.DFG;
 import midend.SSA.DeadCodeRemove;
 import midend.SSA.MergeBlock;
 import midend.SSA.OIS;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
 public class LoopUnroll {
+    private static boolean isLift = true;
+
+    public static void setIsLift(boolean isLift) {
+        LoopUnroll.isLift = isLift;
+    }
+
     private static final long codeSize = 1000;
-    public static void execute(ArrayList<Function> functions) {
+    public static void execute(ArrayList<Function> functions) throws IOException {
+        DFG.execute(functions);
+        AnalysisLoop.execute(functions);
         for (Function function : functions) {
             // 要求在完全内联之后，只对 main 函数做循环展开，递归函数不做展开
             if (function.isMain()) {
+//                System.out.println(function.getAllLoop());
                 AnalysisLoop.LoopIndVars(function);
                 SimpleLoopUnroll(function);
             }
         }
     }
+    public static void executeOnce(ArrayList<Function> functions) {
+        AnalysisLoop.execute(functions);
+        for (Function function : functions) {
+            // 要求在完全内联之后，只对 main 函数做循环展开，递归函数不做展开
+            if (function.isMain()) {
+                AnalysisLoop.LoopIndVars(function);
+                OnceUnroll(function);
+            }
+        }
+    }
 
-    private static void SimpleLoopUnroll(Function function) {
+    private static void OnceUnroll(Function function) {
+        for (Loop outer : function.getOuterLoop()) {
+            dfs4OnceUnroll(outer);
+        }
+    }
+    private static void dfs4OnceUnroll(Loop loop) {
+        if (loop.getInnerLoops().isEmpty()) {
+            return;
+        }
+        for (Loop inner : loop.getInnerLoops()) {
+//            inner.LoopPrint();
+            dfs4OnceUnroll(inner);
+        }
+        if (!loop.hasIndVar()) {
+            return;
+        }
+        Value init = loop.getBegin();
+        Value end = loop.getEnd();
+        if (!(init instanceof ConstValue)) {
+            return;
+        }
+        if (!(end instanceof ConstValue)) {
+            return;
+        }
+        BinaryOperation alu = loop.getAlu();
+        Cmp cmp = loop.getCond();
+        if (alu.getOperationName().equals("add") && cmp.getCond().equals(CmpCond.LT)) {
+            if (init.getNumber().intValue() >= end.getNumber().intValue()) {
+                return;
+            }
+        } else if (alu.getOperationName().equals("sub") && cmp.getCond().equals(CmpCond.GT)) {
+            if (init.getNumber().intValue() <= end.getNumber().intValue()) {
+                return;
+            }
+        } else {
+            //TODO implement other cmp
+            return;
+        }
+//        throw new RuntimeException("this func may have problem");
+//        loop.LoopPrint();
+        //循环一定会被执行一次
+        HashMap<PhiInstr, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
+        HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
+        ArrayList<PhiInstr> headPhis = new ArrayList<>();
+        BasicBlock header = loop.getHeader();
+        CustomList.Node instr = header.getInstructions().getHead();
+        while (instr instanceof PhiInstr) {
+            headPhis.add((PhiInstr) instr);
+            instr = instr.getNext();
+        }
+//        loop.LoopPrint();
+        BasicBlock loopExit = loop.getExits().get(0);
+        BasicBlock latch = loop.getLatchs().get(0);
+
+        for (PhiInstr phi : headPhis) {
+            int index = phi.getPrtBlks().indexOf(latch);
+            Value newValue = phi.getValues().get(index);
+            //先保留phi的value
+            phiInHead.put(phi, newValue);
+            begin2end.put(newValue, newValue);
+        }
+        //TODO：复制后删掉修改跳转
+//        latch.getInstructions().getTail().removeFromList();
+//        latch.setRet(false);
+
+        Procedure procedure = (Procedure) header.getParent().getOwner();
+        //clone
+        old2new = new HashMap<>();
+        old2new.put(loop.getPreHeader(), latch);
+        Group<BasicBlock, BasicBlock> oneLoop = new Group<>(header, latch);
+        oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop());
+
+        //修改关系
+        //维护展开的块
+        latch.getInstructions().getTail().removeFromList();
+        latch.setRet(false);
+        latch.addInstruction(new JumpInstr(oneLoop.getFirst()));
+        for (PhiInstr phi : headPhis) {
+            phi.removeUse(phiInHead.get(phi));
+        }
+
+        //维护循环块
+
+        BasicBlock lastLatch = oneLoop.getSecond();
+        BasicBlock preHeader = loop.getPreHeader();
+        BasicBlock newHeader = oneLoop.getFirst();
+
+        for (PhiInstr oldPhi : phiInHead.keySet()) {
+            PhiInstr newPhi = (PhiInstr) old2new.get(oldPhi);
+            int index = newPhi.getPrtBlks().indexOf(latch);
+            newPhi.modifyUse(newPhi.getValues().get(index), phiInHead.get(oldPhi));
+        }
+
+        Instruction phi = (Instruction) loopExit.getInstructions().getHead();
+        while (phi instanceof PhiInstr) {
+            for (Value value : ((PhiInstr) phi).getValues()) {
+                if (value instanceof Instruction) {
+                    phi.modifyUse(value, begin2end.get(value));
+                    ((PhiInstr) phi).modifyPrtBlk(latch, lastLatch);
+                }
+            }
+            phi = (Instruction) phi.getNext();
+        }
+        OIS.OSI4blks(header, oneLoop.getSecond());
+        DeadCodeRemove.removeCode(header, oneLoop.getSecond());
+        MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
+    }
+
+    private static void SimpleLoopUnroll(Function function) throws IOException {
         Iterator<Loop> loopIterator = function.getOuterLoop().iterator();
         while (loopIterator.hasNext()) {
             Loop loop = loopIterator.next();
+//            loop.LoopPrint();
             if (dfs4LoopUnroll(loop)) {
                 loopIterator.remove();
                 function.getAllLoop().remove(loop);
@@ -49,7 +181,7 @@ public class LoopUnroll {
 //        for (int i = 0; i)
     }
 
-    private static boolean dfs4LoopUnroll(Loop loop) {
+    private static boolean dfs4LoopUnroll(Loop loop) throws IOException {
         Iterator<Loop> loopIterator = loop.getInnerLoops().iterator();
         Function function = ((Procedure) loop.getHeader().getParent().getOwner()).getParentFunc();
         while (loopIterator.hasNext()) {
@@ -67,10 +199,20 @@ public class LoopUnroll {
         if (!loop.hasIndVar()) {
             return false;
         }
+//        loop.LoopPrint();
         Value itInit = loop.getBegin();
         Value itStep = loop.getStep();
         Value itEnd = loop.getEnd();
-        if (!(itInit instanceof ConstValue) || !(itStep instanceof ConstValue) || !(itEnd instanceof ConstValue)) {
+        if (!(itInit instanceof ConstValue)) {
+            if (!(itInit instanceof PhiInstr)) {
+                return false;
+            }
+            if (!((PhiInstr) itInit).simplify2const()) {
+                return false;
+            }
+            itInit = ((PhiInstr) itInit).getValues().get(0);
+        }
+        if (!(itInit instanceof ConstValue)|| !(itStep instanceof ConstValue) || !(itEnd instanceof ConstValue)) {
             return false;
         }
         BinaryOperation itAlu = loop.getAlu();
@@ -85,9 +227,11 @@ public class LoopUnroll {
         }
         int times = calculateLoopTimes(itAlu.getOperationName(), condInstr.getCond(), init, step, end);
         long cnt = dfs4cnt(loop);
+
         if (cnt * times > codeSize) {
             return false;
         }
+
         Unroll4doWhile(loop, times);
         return true;
     }
@@ -103,7 +247,8 @@ public class LoopUnroll {
         return cnt;
     }
 
-    private static void Unroll4doWhile(Loop loop, int times) {
+    private static void Unroll4doWhile(Loop loop, int times) throws IOException {
+//        loop.LoopPrint();
         HashMap<Value, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
         HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
         ArrayList<PhiInstr> headPhis = new ArrayList<>();
@@ -122,6 +267,16 @@ public class LoopUnroll {
             Value newValue = phi.getValues().get(index);
             phi.removeUse(newValue);
             phiInHead.put(phi, newValue);
+        }
+        ArrayList<PhiInstr> exitPhis = new ArrayList<>();
+        instr = loopExit.getInstructions().getHead();
+        while (instr instanceof PhiInstr) {
+            exitPhis.add((PhiInstr) instr);
+            instr = instr.getNext();
+        }
+        for (PhiInstr phi : exitPhis) {
+            int index = phi.getPrtBlks().indexOf(latch);
+            Value newValue = phi.getValues().get(index);
             begin2end.put(newValue, newValue);
         }
 
@@ -138,32 +293,45 @@ public class LoopUnroll {
         for (int i = 0; i < times - 1; i++) {
             oneLoop = cloneBlks(oneLoop, procedure, begin2end, loop.getPrtLoop());
         }
-        BasicBlock exit = null;
-        for (BasicBlock b : loopExit.getSucs()) {
-            exit = b;
-        }
-        if (exit == null) {
-            throw new RuntimeException("what's up, bro");
-        }
 
         BasicBlock lastLatch = oneLoop.getSecond();
         lastLatch.addInstruction(new JumpInstr(loopExit));
+//        BufferedWriter irWriter = new BufferedWriter(new FileWriter("loop" + cnt++));
+//        ((Procedure) header.getParent().getOwner()).printIR(irWriter);
+//        irWriter.close();
 
-        Instruction phi = (Instruction) loopExit.getInstructions().getHead();
-        while (phi instanceof PhiInstr) {
-            for (Value value : ((PhiInstr) phi).getValues()) {
+        for (PhiInstr phi : exitPhis) {
+            for (Value value : phi.getValues()) {
                 if (value instanceof Instruction) {
+                    if (begin2end.get(value) == null) {
+//                        loop.LoopPrint();
+                        throw new RuntimeException("value " + ((Instruction) value).print());
+                    }
                     phi.modifyUse(value, begin2end.get(value));
-                    ((PhiInstr) phi).modifyPrtBlk(latch, lastLatch);
+                    phi.modifyPrtBlk(latch, lastLatch);
                 }
             }
-            phi = (Instruction) phi.getNext();
         }
+//        Instruction phi = (Instruction) loopExit.getInstructions().getHead();
+//        while (phi instanceof PhiInstr) {
+//            for (Value value : ((PhiInstr) phi).getValues()) {
+//                if (value instanceof Instruction) {
+//                    if (begin2end.get(value) == null) {
+//                        loop.LoopPrint();
+//                        throw new RuntimeException("value " + ((Instruction) value).print());
+//                    }
+//                    phi.modifyUse(value, begin2end.get(value));
+//                    ((PhiInstr) phi).modifyPrtBlk(latch, lastLatch);
+//                }
+//            }
+//            phi = (Instruction) phi.getNext();
+//        }
         OIS.OSI4blks(header, oneLoop.getSecond());
         DeadCodeRemove.removeCode(header, oneLoop.getSecond());
         MergeBlock.merge4loop(loop.getPrtLoop(), header, oneLoop.getSecond());
-    }
 
+    }
+    static int cnt =0;
     private static void Unroll(Loop loop, int times) {
         HashMap<Value, Value> phiInHead = new HashMap<>();//各个latch到head的phi的取值
         HashMap<Value, Value> begin2end = new HashMap<>();//head中的value被映射的值，维护LCSSA
