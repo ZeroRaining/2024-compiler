@@ -73,7 +73,7 @@ public class Compiler {
             DFG.execute(functions);
             AnalysisLoop.execute(functions);
             LCSSA.execute(functions);
-            LoopLift.execute(functions);
+//            LoopLift.execute(functions);
             OIS.execute(functions);
             DeadCodeRemove.execute(functions);
             DeadBlockRemove.execute(functions);
@@ -149,7 +149,7 @@ public class Compiler {
         if (arg.toTime()) { optimizeEndTime = System.currentTimeMillis(); }
 //         中端优化结束
 
-        // 打印 IR
+//         打印 IR
         if (arg.toPrintIR()) {
 //            Function.blkLabelReorder();
             BufferedWriter irWriter = new BufferedWriter(arg.getIrWriter());

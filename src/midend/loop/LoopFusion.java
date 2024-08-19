@@ -2,6 +2,7 @@ package midend.loop;
 
 import frontend.ir.Use;
 import frontend.ir.Value;
+import frontend.ir.constvalue.ConstValue;
 import frontend.ir.instr.Instruction;
 import frontend.ir.instr.binop.BinaryOperation;
 import frontend.ir.instr.otherop.CallInstr;
@@ -12,6 +13,7 @@ import frontend.ir.structure.BasicBlock;
 import frontend.ir.structure.Function;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class LoopFusion {
     public static void execute(ArrayList<Function> functions) {
@@ -259,7 +261,9 @@ public class LoopFusion {
                     return false;
                 }
                 for (Value value : instruction.getUseValueList()) {
-                    if (value instanceof Instruction && loop1.getBlks().contains(((Instruction) value).getParentBB())) {
+                    if (value instanceof PhiInstr && !checkPhiNotFromLoop((PhiInstr) value, loop1, new HashSet<>())) {
+                       return false;
+                    } else if (value instanceof Instruction && loop1.getBlks().contains(((Instruction) value).getParentBB())) {
                         return false;
                     }
                 }
@@ -270,5 +274,31 @@ public class LoopFusion {
 
 
         return true;
+    }
+
+    private static boolean checkPhiNotFromLoop(PhiInstr init, Loop loop, HashSet<PhiInstr> done) {
+        if (done.contains(init)) {
+            return false;
+        }
+        done.add(init);
+        for (Value val : init.getValues()) {
+            if (val instanceof ConstValue) {
+                continue;
+            }
+            if (val instanceof PhiInstr) {
+                if (checkPhiNotFromLoop((PhiInstr) val, loop, done)) {
+                    return true;
+                }
+                continue;
+            }
+            if (val instanceof Instruction) {
+                if (!loop.getBlks().contains(((Instruction) val).getParentBB())) {
+                    return true;
+                }
+            } else {
+                throw new RuntimeException("这里不应该出现其它 value");
+            }
+        }
+        return false;
     }
 }
