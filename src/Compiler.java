@@ -70,14 +70,14 @@ public class Compiler {
         
         // 循环优化，当前仅在性能测试时开启
         if (arg.getOptLevel() == 1) {
-            DFG.execute(functions);
-            AnalysisLoop.execute(functions);
-            LCSSA.execute(functions);
-            LoopLift.execute(functions);
-            OIS.execute(functions);
-            DeadCodeRemove.execute(functions);
-            DeadBlockRemove.execute(functions);
-            RemoveUseLessPhi.execute(functions);
+//            DFG.execute(functions);
+//            AnalysisLoop.execute(functions);
+//            LCSSA.execute(functions);
+//            LoopLift.execute(functions);
+//            OIS.execute(functions);
+//            DeadCodeRemove.execute(functions);
+//            DeadBlockRemove.execute(functions);
+//            RemoveUseLessPhi.execute(functions);
 
             DFG.execute(functions);
             AnalysisLoop.execute(functions);

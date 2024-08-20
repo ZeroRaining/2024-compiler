@@ -331,6 +331,19 @@ public class LoopLift {
                 return false;
             }
         }
+        for (BasicBlock blk : loop.getBlks()) {
+            Instruction instruction = (Instruction) blk.getInstructions().getHead();
+            if (instruction instanceof PhiInstr) {
+                if (checkPhiNotFromLoop((PhiInstr) instruction, loop, new HashSet<>()))
+                    return false;
+            } else {
+                for (Value value : instruction.getUseValueList()) {
+                    if (value instanceof Instruction && loop.getPrtLoop().getBlks().contains(((Instruction) value).getParentBB()) && !loop.getBlks().contains(((Instruction) value).getParentBB())) {
+                        return false;
+                    }
+                }
+            }
+        }
         return true;
     }
     
